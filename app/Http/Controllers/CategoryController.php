@@ -33,11 +33,14 @@ class CategoryController extends Controller
     /**
      * Show the form for creating a new category
      */
-    public function create()
+    public function create(Request $request)
     {
         $types = Type::orderBy('name')->get();
         
-        return view('categories.create', compact('types'));
+        // Pre-select type if coming from type detail page
+        $selectedTypeId = $request->get('type_id');
+        
+        return view('categories.create', compact('types', 'selectedTypeId'));
     }
 
     /**
@@ -75,22 +78,43 @@ class CategoryController extends Controller
     }
 
     /**
-     * Display the specified category
+     * Display the specified category with detailed statistics
+     * 
+     * OPTIMIZED:
+     * - Using loadCount for efficient queries
+     * - Loading relationships properly
+     * - Avoiding N+1 query problems
      */
     public function show(Category $category)
     {
-        $category->load([
-            'type',
-            'subCategories' => function($query) {
-                $query->withCount('keywords')->orderBy('sort_order');
+        // Eager load relationships and counts efficiently
+        $category->load('type');
+        
+        $category->loadCount([
+            'subCategories',
+            'transactions',
+            'transactions as verified_transactions_count' => function ($query) {
+                $query->where('is_verified', true);
             }
         ]);
 
+        // Load subcategories with their keywords count
+        $category->load(['subCategories' => function($query) {
+            $query->withCount('keywords')
+                  ->orderBy('priority', 'desc')
+                  ->orderBy('sort_order')
+                  ->orderBy('name');
+        }]);
+
+        // Calculate total keywords from all subcategories
+        $totalKeywords = $category->subCategories->sum('keywords_count');
+
+        // Prepare statistics using loaded counts
         $stats = [
-            'total_subcategories' => $category->subCategories()->count(),
-            'total_keywords' => $category->subCategories()->withCount('keywords')->get()->sum('keywords_count'),
-            'total_transactions' => $category->transactions()->count(),
-            'verified_transactions' => $category->transactions()->verified()->count(),
+            'total_subcategories' => $category->sub_categories_count,
+            'total_keywords' => $totalKeywords,
+            'total_transactions' => $category->transactions_count,
+            'verified_transactions' => $category->verified_transactions_count,
         ];
 
         return view('categories.show', compact('category', 'stats'));
@@ -157,11 +181,13 @@ class CategoryController extends Controller
 
     /**
      * Get categories by type (AJAX)
+     * Used for dynamic dropdowns in forms
      */
     public function getByType($typeId)
     {
         try {
             $categories = Category::where('type_id', $typeId)
+                ->orderBy('sort_order')
                 ->orderBy('name')
                 ->get(['id', 'name', 'color']);
 
@@ -179,7 +205,7 @@ class CategoryController extends Controller
     }
 
     /**
-     * Reorder categories
+     * Reorder categories via drag and drop
      */
     public function reorder(Request $request)
     {

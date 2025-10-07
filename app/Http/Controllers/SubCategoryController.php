@@ -26,7 +26,9 @@ class SubCategoryController extends Controller
             ->orderBy('name')
             ->paginate(15);
 
-        $categories = Category::with('type')->orderBy('name')->get();
+        $categories = Category::with('type')
+            ->orderBy('name')
+            ->get();
 
         return view('sub-categories.index', compact('subCategories', 'categories'));
     }
@@ -34,14 +36,17 @@ class SubCategoryController extends Controller
     /**
      * Show the form for creating a new sub category
      */
-    public function create()
+    public function create(Request $request)
     {
         $categories = Category::with('type')
             ->orderBy('name')
             ->get()
             ->groupBy('type.name');
 
-        return view('sub-categories.create', compact('categories'));
+        // Pre-select category if coming from category detail page
+        $selectedCategoryId = $request->get('category_id');
+
+        return view('sub-categories.create', compact('categories', 'selectedCategoryId'));
     }
 
     /**
@@ -72,22 +77,42 @@ class SubCategoryController extends Controller
     }
 
     /**
-     * Display the specified sub category
+     * Display the specified sub category with detailed statistics
+     * 
+     * OPTIMIZED:
+     * - Using loadCount for efficient queries
+     * - Loading relationships properly
+     * - Avoiding N+1 query problems
      */
     public function show(SubCategory $subCategory)
     {
-        $subCategory->load([
-            'category.type',
-            'keywords' => function($query) {
-                $query->orderBy('priority', 'desc');
+        // Eager load relationships
+        $subCategory->load('category.type');
+        
+        // Load counts efficiently
+        $subCategory->loadCount([
+            'keywords',
+            'keywords as active_keywords_count' => function ($query) {
+                $query->where('is_active', true);
+            },
+            'transactions',
+            'transactions as verified_transactions_count' => function ($query) {
+                $query->where('is_verified', true);
             }
         ]);
 
+        // Load keywords with proper ordering for display
+        $subCategory->load(['keywords' => function($query) {
+            $query->orderBy('priority', 'desc')
+                  ->orderBy('created_at', 'desc');
+        }]);
+
+        // Prepare statistics using loaded counts
         $stats = [
-            'total_keywords' => $subCategory->keywords()->count(),
-            'active_keywords' => $subCategory->keywords()->active()->count(),
-            'total_transactions' => $subCategory->transactions()->count(),
-            'verified_transactions' => $subCategory->transactions()->verified()->count(),
+            'total_keywords' => $subCategory->keywords_count,
+            'active_keywords' => $subCategory->active_keywords_count,
+            'total_transactions' => $subCategory->transactions_count,
+            'verified_transactions' => $subCategory->verified_transactions_count,
         ];
 
         return view('sub-categories.show', compact('subCategory', 'stats'));
@@ -157,6 +182,7 @@ class SubCategoryController extends Controller
 
     /**
      * Get sub categories by category (AJAX)
+     * Used for dynamic dropdowns in forms
      */
     public function getByCategory($categoryId)
     {
@@ -180,7 +206,7 @@ class SubCategoryController extends Controller
     }
 
     /**
-     * Reorder sub categories
+     * Reorder sub categories via drag and drop
      */
     public function reorder(Request $request)
     {
@@ -210,7 +236,8 @@ class SubCategoryController extends Controller
     }
 
     /**
-     * Bulk update priority
+     * Bulk update priority for multiple sub categories
+     * Useful for quickly adjusting priority levels
      */
     public function bulkUpdatePriority(Request $request)
     {
@@ -221,10 +248,15 @@ class SubCategoryController extends Controller
         ]);
 
         try {
-            SubCategory::whereIn('id', $request->sub_category_ids)
+            // Decode JSON if it's a string
+            $ids = is_string($request->sub_category_ids) 
+                ? json_decode($request->sub_category_ids, true) 
+                : $request->sub_category_ids;
+
+            SubCategory::whereIn('id', $ids)
                 ->update(['priority' => $request->priority]);
 
-            return back()->with('success', count($request->sub_category_ids) . ' sub categories priority updated.');
+            return back()->with('success', count($ids) . ' sub categories priority updated to ' . $request->priority . '.');
 
         } catch (\Exception $e) {
             return back()->with('error', 'Bulk update failed: ' . $e->getMessage());

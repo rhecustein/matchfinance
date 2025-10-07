@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             SubCategorySeeder::class,
             KeywordSeeder::class,
+            UserSeeder::class
         ]);
 
         $this->command->newLine();

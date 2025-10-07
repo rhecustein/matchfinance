@@ -54,18 +54,37 @@ class TypeController extends Controller
     }
 
     /**
-     * Display the specified type
+     * Display the specified type with detailed statistics
+     * 
+     * PERBAIKAN:
+     * - Menggunakan loadCount untuk efisiensi query
+     * - Menghitung verified transactions dengan conditional count
+     * - Load categories dengan relasi yang dibutuhkan
      */
     public function show(Type $type)
     {
+        // Eager load counts untuk menghindari N+1 query
+        $type->loadCount([
+            'categories',
+            'transactions',
+            'transactions as verified_transactions_count' => function ($query) {
+                $query->where('is_verified', true);
+            }
+        ]);
+
+        // Load categories dengan subcategories count untuk display
         $type->load(['categories' => function($query) {
-            $query->withCount('subCategories')->orderBy('sort_order');
+            $query->withCount('subCategories')
+                  ->orderBy('sort_order')
+                  ->orderBy('name');
         }]);
 
+        // Prepare statistics dari loaded counts
+        // Ini lebih efisien karena tidak melakukan query lagi
         $stats = [
-            'total_categories' => $type->categories()->count(),
-            'total_transactions' => $type->transactions()->count(),
-            'verified_transactions' => $type->transactions()->verified()->count(),
+            'total_categories' => $type->categories_count,
+            'total_transactions' => $type->transactions_count,
+            'verified_transactions' => $type->verified_transactions_count,
         ];
 
         return view('types.show', compact('type', 'stats'));
@@ -127,7 +146,7 @@ class TypeController extends Controller
     }
 
     /**
-     * Reorder types
+     * Reorder types via drag and drop
      */
     public function reorder(Request $request)
     {

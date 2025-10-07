@@ -2,181 +2,137 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Models\Bank;
 use App\Models\BankStatement;
 use App\Models\StatementTransaction;
-use App\Models\Keyword;
+use App\Models\Type;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
     /**
-     * Display the dashboard
+     * Display the dashboard based on user role
      */
-    public function index(Request $request)
+    public function index()
     {
-        // Date range filter (default: current month)
-        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->format('Y-m-d'));
+        if (auth()->user()->isAdmin()) {
+            return $this->adminDashboard();
+        }
+        
+        return $this->userDashboard();
+    }
 
-        // General Statistics
+    /**
+     * Admin Dashboard with full statistics
+     */
+    private function adminDashboard()
+    {
+        // Statistics
         $stats = [
-            'total_banks' => Bank::active()->count(),
-            'total_statements' => BankStatement::count(),
+            'total_users' => User::count(),
+            'total_admins' => User::admins()->count(),
+            'total_regular_users' => User::regularUsers()->count(),
+            'total_banks' => Bank::count(),
+            'total_bank_statements' => BankStatement::count(),
             'total_transactions' => StatementTransaction::count(),
-            'total_keywords' => Keyword::active()->count(),
-            
-            // Statements by status
-            'pending_statements' => BankStatement::status('pending')->count(),
-            'processing_statements' => BankStatement::status('processing')->count(),
-            'completed_statements' => BankStatement::status('completed')->count(),
-            'failed_statements' => BankStatement::status('failed')->count(),
-            
-            // Transactions stats
-            'matched_transactions' => StatementTransaction::matched()->count(),
-            'unmatched_transactions' => StatementTransaction::unmatched()->count(),
-            'verified_transactions' => StatementTransaction::verified()->count(),
-            'low_confidence_transactions' => StatementTransaction::lowConfidence()->count(),
+            'verified_transactions' => StatementTransaction::where('is_verified', true)->count(),
+            'unverified_transactions' => StatementTransaction::where('is_verified', false)->count(),
+            'total_types' => Type::count(),
+            'total_categories' => Category::count(),
         ];
 
+        // Recent Transactions
+        $recentTransactions = StatementTransaction::with([
+            'bankStatement.bank',
+            'subCategory.category.type',
+            'verifiedBy'
+        ])
+        ->latest()
+        ->limit(10)
+        ->get();
+
         // Recent Bank Statements
-        $recentStatements = BankStatement::with(['bank', 'user'])
-            ->latest('uploaded_at')
-            ->limit(10)
+        $recentStatements = BankStatement::with('bank')
+            ->latest()
+            ->limit(5)
             ->get();
 
-        // Transactions by Category (for period)
-        $transactionsByCategory = StatementTransaction::select(
-                'categories.name as category_name',
-                'categories.color',
-                DB::raw('COUNT(*) as total_transactions'),
-                DB::raw('SUM(CASE WHEN transaction_type = "debit" THEN amount ELSE 0 END) as total_debit'),
-                DB::raw('SUM(CASE WHEN transaction_type = "credit" THEN amount ELSE 0 END) as total_credit')
+        // Transaction by Type Chart Data
+        $transactionsByType = StatementTransaction::select(
+                'types.name',
+                DB::raw('COUNT(*) as count'),
+                DB::raw('SUM(amount) as total_amount')
             )
-            ->join('categories', 'statement_transactions.category_id', '=', 'categories.id')
-            ->whereBetween('transaction_date', [$startDate, $endDate])
-            ->groupBy('categories.id', 'categories.name', 'categories.color')
-            ->orderByDesc('total_transactions')
-            ->limit(10)
+            ->join('types', 'statement_transactions.type_id', '=', 'types.id')
+            ->groupBy('types.id', 'types.name')
             ->get();
 
-        // Transactions by Bank (for period)
-        $transactionsByBank = StatementTransaction::select(
-                'banks.name as bank_name',
-                'banks.code',
-                DB::raw('COUNT(*) as total_transactions'),
-                DB::raw('SUM(CASE WHEN transaction_type = "debit" THEN amount ELSE 0 END) as total_debit'),
-                DB::raw('SUM(CASE WHEN transaction_type = "credit" THEN amount ELSE 0 END) as total_credit')
+        // Monthly Transaction Trend (last 6 months)
+        $monthlyTrend = StatementTransaction::select(
+                DB::raw('DATE_FORMAT(transaction_date, "%Y-%m") as month'),
+                DB::raw('COUNT(*) as count'),
+                DB::raw('SUM(amount) as total_amount')
             )
-            ->join('bank_statements', 'statement_transactions.bank_statement_id', '=', 'bank_statements.id')
-            ->join('banks', 'bank_statements.bank_id', '=', 'banks.id')
-            ->whereBetween('transaction_date', [$startDate, $endDate])
-            ->groupBy('banks.id', 'banks.name', 'banks.code')
-            ->orderByDesc('total_transactions')
+            ->where('transaction_date', '>=', now()->subMonths(6))
+            ->groupBy('month')
+            ->orderBy('month')
             ->get();
 
-        // Daily Transaction Trend (last 30 days)
-        $dailyTrend = StatementTransaction::select(
-                DB::raw('DATE(transaction_date) as date'),
-                DB::raw('COUNT(*) as total'),
-                DB::raw('SUM(CASE WHEN transaction_type = "debit" THEN amount ELSE 0 END) as debit'),
-                DB::raw('SUM(CASE WHEN transaction_type = "credit" THEN amount ELSE 0 END) as credit')
-            )
-            ->whereBetween('transaction_date', [
-                Carbon::now()->subDays(30),
-                Carbon::now()
-            ])
-            ->groupBy('date')
-            ->orderBy('date')
+        // Recent Users
+        $recentUsers = User::latest()
+            ->limit(5)
             ->get();
 
-        // Top 10 Keywords by Usage
-        $topKeywords = Keyword::select(
-                'keywords.id',
-                'keywords.keyword',
-                'sub_categories.name as sub_category_name',
-                DB::raw('COUNT(statement_transactions.id) as usage_count')
-            )
-            ->join('statement_transactions', 'keywords.id', '=', 'statement_transactions.matched_keyword_id')
-            ->join('sub_categories', 'keywords.sub_category_id', '=', 'sub_categories.id')
-            ->groupBy('keywords.id', 'keywords.keyword', 'sub_categories.name')
-            ->orderByDesc('usage_count')
-            ->limit(10)
-            ->get();
-
-        // Matching Accuracy
-        $totalMatched = StatementTransaction::matched()->count();
-        $totalTransactions = StatementTransaction::count();
-        $matchingAccuracy = $totalTransactions > 0 
-            ? round(($totalMatched / $totalTransactions) * 100, 2) 
-            : 0;
-
-        // Verification Rate
-        $totalVerified = StatementTransaction::verified()->count();
-        $verificationRate = $totalTransactions > 0 
-            ? round(($totalVerified / $totalTransactions) * 100, 2) 
-            : 0;
-
-        // Recent Unmatched Transactions
-        $unmatchedTransactions = StatementTransaction::with(['bankStatement.bank'])
-            ->unmatched()
-            ->latest('transaction_date')
-            ->limit(10)
-            ->get();
-
-        return view('dashboard', compact(
+        return view('dashboard.admin', compact(
             'stats',
+            'recentTransactions',
             'recentStatements',
-            'transactionsByCategory',
-            'transactionsByBank',
-            'dailyTrend',
-            'topKeywords',
-            'matchingAccuracy',
-            'verificationRate',
-            'unmatchedTransactions',
-            'startDate',
-            'endDate'
+            'transactionsByType',
+            'monthlyTrend',
+            'recentUsers'
         ));
     }
 
     /**
-     * Get statistics for AJAX requests
+     * User Dashboard with limited view
      */
-    public function getStats(Request $request)
+    private function userDashboard()
     {
-        $startDate = $request->input('start_date', Carbon::now()->startOfMonth());
-        $endDate = $request->input('end_date', Carbon::now()->endOfMonth());
-
+        // Statistics for user (limited view)
         $stats = [
-            'total_transactions' => StatementTransaction::whereBetween('transaction_date', [$startDate, $endDate])->count(),
-            'total_debit' => StatementTransaction::where('transaction_type', 'debit')
-                ->whereBetween('transaction_date', [$startDate, $endDate])
-                ->sum('amount'),
-            'total_credit' => StatementTransaction::where('transaction_type', 'credit')
-                ->whereBetween('transaction_date', [$startDate, $endDate])
-                ->sum('amount'),
-            'matched_rate' => $this->calculateMatchedRate($startDate, $endDate),
+            'total_transactions' => StatementTransaction::count(),
+            'verified_transactions' => StatementTransaction::where('is_verified', true)->count(),
+            'unverified_transactions' => StatementTransaction::where('is_verified', false)->count(),
+            'total_bank_statements' => BankStatement::count(),
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $stats
-        ]);
-    }
+        // Recent Transactions (user can only view)
+        $recentTransactions = StatementTransaction::with([
+            'bankStatement.bank',
+            'subCategory.category.type',
+            'verifiedBy'
+        ])
+        ->latest()
+        ->limit(10)
+        ->get();
 
-    /**
-     * Calculate matched rate for period
-     */
-    private function calculateMatchedRate($startDate, $endDate): float
-    {
-        $total = StatementTransaction::whereBetween('transaction_date', [$startDate, $endDate])->count();
-        $matched = StatementTransaction::matched()
-            ->whereBetween('transaction_date', [$startDate, $endDate])
-            ->count();
+        // Transaction by Type Chart Data
+        $transactionsByType = StatementTransaction::select(
+                'types.name',
+                DB::raw('COUNT(*) as count'),
+                DB::raw('SUM(amount) as total_amount')
+            )
+            ->join('types', 'statement_transactions.type_id', '=', 'types.id')
+            ->groupBy('types.id', 'types.name')
+            ->get();
 
-        return $total > 0 ? round(($matched / $total) * 100, 2) : 0;
+        return view('dashboard.user', compact(
+            'stats',
+            'recentTransactions',
+            'transactionsByType'
+        ));
     }
 }
