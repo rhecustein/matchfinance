@@ -144,6 +144,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         Route::put('/{bankStatement}', [BankStatementController::class, 'update'])->name('update');
         Route::delete('/{bankStatement}', [BankStatementController::class, 'destroy'])->name('destroy');
 
+        Route::get('/{bankStatement}/transactions/{transaction}', [BankStatementController::class, 'getTransaction'])
+       ->name('transactions.show');
         // ✅ Upload & Preview (before store)
         Route::post('/upload/preview', [BankStatementController::class, 'uploadAndPreview'])
             ->name('upload.preview');

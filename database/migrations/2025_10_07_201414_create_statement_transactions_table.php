@@ -18,7 +18,7 @@ return new class extends Migration
             $table->date('transaction_date');
             $table->time('transaction_time')->nullable()->comment('Time of transaction if available');
             $table->date('value_date')->nullable()->comment('Effective date of transaction');
-            $table->string('branch_code', 20)->nullable()->comment('Bank branch code');
+            $table->string('branch_code', 100)->nullable()->comment('Bank branch code');
             $table->text('description')->comment('Transaction description from bank');
             $table->string('reference_no', 100)->nullable()->comment('Bank reference number');
             
@@ -27,10 +27,7 @@ return new class extends Migration
             $table->decimal('credit_amount', 15, 2)->default(0)->comment('Incoming amount');
             $table->decimal('balance', 15, 2)->nullable()->comment('Account balance after transaction');
             $table->enum('transaction_type', ['debit', 'credit'])->comment('Type of transaction');
-            $table->decimal('amount', 15, 2)->comment('Transaction amount')->nullable();
-            //amount 
-
-
+            $table->decimal('amount', 15, 2)->nullable()->comment('Transaction amount (absolute value)');
             
             // Matching Results (Denormalized for Performance)
             $table->foreignId('matched_keyword_id')->nullable()->constrained('keywords')->nullOnDelete()->comment('Keyword that matched this transaction');
@@ -62,7 +59,15 @@ return new class extends Migration
             $table->index(['is_verified', 'confidence_score'], 'idx_verification');
             $table->index('matched_keyword_id', 'idx_matched_keyword');
             $table->index('is_manual_category', 'idx_manual_category');
-            $table->fullText('description', 'idx_description_fulltext'); // For search
+            $table->index(['id', 'deleted_at'], 'idx_id_deleted');
+            $table->index(['transaction_date', 'deleted_at'], 'idx_date_deleted');
+            $table->index(['is_verified', 'deleted_at'], 'idx_verified_deleted');
+            $table->index(['matched_keyword_id', 'deleted_at'], 'idx_matched_deleted');
+            $table->index(['confidence_score', 'deleted_at'], 'idx_confidence_deleted');
+            $table->index(['type_id', 'deleted_at'], 'idx_type_deleted');
+            $table->index(['category_id', 'deleted_at'], 'idx_category_deleted');
+            $table->index(['sub_category_id', 'deleted_at'], 'idx_sub_category_deleted');
+            $table->fullText('description', 'idx_description_fulltext');
         });
     }
 
