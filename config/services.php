@@ -44,11 +44,18 @@ return [
     |
     */
 
-    'ocr' => [
-        'url' => env('OCR_API_URL', 'https://your-ocr-api.com/api/process'),
-        'key' => env('OCR_API_KEY', ''),
-        'timeout' => env('OCR_API_TIMEOUT', 120), // seconds
-        'mock_mode' => env('OCR_MOCK_MODE', false), // Use mock response for testing
-    ],
+ /*
+    |--------------------------------------------------------------------------
+    | OCR Service Configuration
+    |--------------------------------------------------------------------------
+    */
 
+    'ocr' => [
+        'url' => env('OCR_API_URL', 'http://38.60.179.13:40040/api/upload-pdf/bank-statement/monthly'),
+        'key' => env('OCR_API_KEY', ''),
+        'timeout' => env('OCR_API_TIMEOUT', 180), // 3 minutes
+        'mock_mode' => env('OCR_MOCK_MODE', false), // Enable for testing
+        'retry_times' => env('OCR_RETRY_TIMES', 3),
+        'retry_delay' => env('OCR_RETRY_DELAY', 2), // seconds
+    ],
 ];

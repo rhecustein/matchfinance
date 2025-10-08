@@ -142,7 +142,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs text-purple-200 mb-1">Account Number</p>
-                            <p id="preview_account_number" class="text-lg font-bold text-white">-</p>
+                            <p id="preview_account_number" class="text-sm font-bold text-white truncate">-</p>
                         </div>
                         <i class="fas fa-credit-card text-3xl text-purple-300/50"></i>
                     </div>
@@ -228,7 +228,6 @@
     <script>
         let previewData = null;
 
-        // File input change event
         document.getElementById('file').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -238,7 +237,6 @@
             }
         });
 
-        // Upload form submit
         document.getElementById('uploadForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
@@ -255,12 +253,10 @@
                 return;
             }
 
-            // Show loading
             document.getElementById('uploadSection').classList.add('hidden');
             document.getElementById('loadingSection').classList.remove('hidden');
             document.getElementById('previewSection').classList.add('hidden');
 
-            // Simulate progress
             let progress = 0;
             const progressInterval = setInterval(() => {
                 progress += 5;
@@ -269,7 +265,6 @@
                 }
             }, 200);
 
-            // Prepare form data
             const formData = new FormData();
             formData.append('bank_id', bankId);
             formData.append('file', fileInput.files[0]);
@@ -280,38 +275,49 @@
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
                     }
                 });
 
                 clearInterval(progressInterval);
                 document.getElementById('progressBar').style.width = '100%';
 
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const htmlText = await response.text();
+                    console.error('Server returned HTML:', htmlText.substring(0, 500));
+                    throw new Error('Server error. Check console or Laravel logs for details.');
+                }
+
                 const result = await response.json();
 
                 if (result.success) {
-                    // Store preview data
                     previewData = result.data;
-                    
-                    // Show preview
                     setTimeout(() => showPreview(result.data), 500);
                 } else {
-                    // Show error
-                    showError(result.message, result.error_type);
+                    showError(result.message || 'Upload failed', result.error_type);
                 }
 
             } catch (error) {
                 clearInterval(progressInterval);
-                showError('An error occurred: ' + error.message);
+                console.error('Upload error:', error);
+                
+                let errorMessage = 'Upload failed: ';
+                if (error.message.includes('JSON') || error.message.includes('Server error')) {
+                    errorMessage += 'Server returned an error. Check Laravel logs at storage/logs/laravel.log';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                showError(errorMessage);
             }
         });
 
-        // Show preview function
         function showPreview(data) {
             document.getElementById('loadingSection').classList.add('hidden');
             document.getElementById('previewSection').classList.remove('hidden');
 
-            // Populate summary
             document.getElementById('preview_period').textContent = data.summary.period;
             document.getElementById('preview_total_transactions').textContent = data.summary.total_transactions;
             document.getElementById('preview_account_number').textContent = data.summary.account_number;
@@ -320,11 +326,9 @@
             document.getElementById('preview_total_debit').textContent = formatCurrency(data.summary.total_debit);
             document.getElementById('preview_closing_balance').textContent = formatCurrency(data.summary.closing_balance);
 
-            // Extract and display keywords
             const keywords = extractKeywords(data.ocr_data.transactions);
             displayKeywords(keywords);
 
-            // Populate transactions list (first 10) - like transaction index view
             const transactionsList = document.getElementById('previewTransactionsList');
             transactionsList.innerHTML = '';
             
@@ -335,14 +339,12 @@
             });
         }
 
-        // Extract unique keywords from transactions
         function extractKeywords(transactions) {
             const keywordMap = new Map();
             
             transactions.forEach(transaction => {
                 const desc = transaction.description.toUpperCase();
                 
-                // Common keywords to detect (you can expand this)
                 const patterns = [
                     { regex: /INDOMARET|ALFAMART|SUPERINDO/i, category: 'Minimarket', color: 'blue' },
                     { regex: /KIMIA FARMA|GUARDIAN|APOTEK/i, category: 'Pharmacy', color: 'green' },
@@ -357,12 +359,7 @@
                     if (pattern.regex.test(desc)) {
                         const match = desc.match(pattern.regex)[0];
                         if (!keywordMap.has(match)) {
-                            keywordMap.set(match, {
-                                keyword: match,
-                                category: pattern.category,
-                                color: pattern.color,
-                                count: 1
-                            });
+                            keywordMap.set(match, { keyword: match, category: pattern.category, color: pattern.color, count: 1 });
                         } else {
                             keywordMap.get(match).count++;
                         }
@@ -373,7 +370,6 @@
             return Array.from(keywordMap.values());
         }
 
-        // Display keywords
         function displayKeywords(keywords) {
             const keywordsList = document.getElementById('keywordsList');
             document.getElementById('preview_keywords_count').textContent = keywords.length;
@@ -390,37 +386,20 @@
 
             keywordsList.innerHTML = '';
             keywords.forEach(kw => {
-                const colorClasses = {
-                    blue: 'bg-blue-600/20 text-blue-400 border-blue-500/50',
-                    green: 'bg-green-600/20 text-green-400 border-green-500/50',
-                    purple: 'bg-purple-600/20 text-purple-400 border-purple-500/50',
-                    orange: 'bg-orange-600/20 text-orange-400 border-orange-500/50',
-                    pink: 'bg-pink-600/20 text-pink-400 border-pink-500/50',
-                    red: 'bg-red-600/20 text-red-400 border-red-500/50',
-                    indigo: 'bg-indigo-600/20 text-indigo-400 border-indigo-500/50',
-                };
-
-                const colorClass = colorClasses[kw.color] || colorClasses.blue;
-
                 keywordsList.innerHTML += `
                     <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-700 hover:border-${kw.color}-500 transition">
                         <div class="flex items-center justify-between mb-2">
-                            <span class="px-3 py-1 ${colorClass} rounded-lg text-xs font-semibold">
+                            <span class="px-3 py-1 bg-${kw.color}-600/20 text-${kw.color}-400 border border-${kw.color}-500/50 rounded-lg text-xs font-semibold">
                                 <i class="fas fa-tag mr-1"></i>${kw.keyword}
                             </span>
-                            <span class="px-2 py-1 bg-slate-800 text-gray-400 rounded text-xs">
-                                ${kw.count}x
-                            </span>
+                            <span class="px-2 py-1 bg-slate-800 text-gray-400 rounded text-xs">${kw.count}x</span>
                         </div>
-                        <p class="text-xs text-gray-500">
-                            <i class="fas fa-folder mr-1"></i>${kw.category}
-                        </p>
+                        <p class="text-xs text-gray-500"><i class="fas fa-folder mr-1"></i>${kw.category}</p>
                     </div>
                 `;
             });
         }
 
-        // Create transaction card (similar to transaction index view)
         function createTransactionCard(transaction) {
             const isDebit = transaction.debit_amount > 0;
             const amount = isDebit ? transaction.debit_amount : transaction.credit_amount;
@@ -430,9 +409,7 @@
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
                             <div class="flex items-center space-x-3 mb-2">
-                                <span class="px-2 py-1 bg-slate-800 rounded text-xs text-gray-400">
-                                    ${transaction.date}
-                                </span>
+                                <span class="px-2 py-1 bg-slate-800 rounded text-xs text-gray-400">${transaction.date}</span>
                                 ${isDebit ? 
                                     '<span class="px-2 py-1 bg-red-600/20 text-red-400 rounded text-xs font-semibold"><i class="fas fa-arrow-down mr-1"></i>Debit</span>' :
                                     '<span class="px-2 py-1 bg-green-600/20 text-green-400 rounded text-xs font-semibold"><i class="fas fa-arrow-up mr-1"></i>Credit</span>'
@@ -453,15 +430,12 @@
             `;
         }
 
-        // Show error function
         function showError(message, errorType = null) {
             document.getElementById('loadingSection').classList.add('hidden');
             document.getElementById('uploadSection').classList.remove('hidden');
-            
             showAlert(message, 'error');
         }
 
-        // Show alert function
         function showAlert(message, type = 'info') {
             const colors = {
                 error: 'bg-red-600/20 text-red-400 border-red-500',
@@ -489,11 +463,9 @@
             const uploadSection = document.getElementById('uploadSection');
             uploadSection.insertBefore(alertDiv, uploadSection.firstChild);
 
-            // Remove alert after 10 seconds
             setTimeout(() => alertDiv.remove(), 10000);
         }
 
-        // Confirm save button
         document.getElementById('confirmSave').addEventListener('click', async function() {
             if (!previewData) return;
 
@@ -501,50 +473,38 @@
             this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
 
             try {
-                console.log('Sending data:', {
-                    bank_id: previewData.bank.id,
-                    file_path: previewData.file_path,
-                    original_filename: previewData.original_filename,
-                    file_size: previewData.file_size,
-                });
-
                 const response = await fetch('{{ route('bank-statements.store') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'X-Requested-With': 'XMLHttpRequest'
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
                     },
                     body: JSON.stringify({
-                        bank_id: previewData.bank.id,
-                        file_path: previewData.file_path,
-                        original_filename: previewData.original_filename,
-                        file_size: previewData.file_size,
-                        ocr_data: JSON.stringify(previewData.ocr_data)
+                        _token: '{{ csrf_token() }}'
                     })
                 });
 
-                const result = await response.json();
-
-                console.log('Response:', result);
-
-                if (result.success) {
-                    window.location.href = result.data.redirect_url;
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success || result.redirect_url) {
+                        window.location.href = result.redirect_url || '{{ route('bank-statements.index') }}';
+                    } else {
+                        throw new Error(result.message || 'Save failed');
+                    }
                 } else {
-                    showAlert(result.message, 'error');
-                    this.disabled = false;
-                    this.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Save to Database';
+                    throw new Error('Server error');
                 }
 
             } catch (error) {
-                console.error('Error details:', error);
-                showAlert('An error occurred: ' + error.message, 'error');
+                console.error('Save error:', error);
+                showAlert('Failed to save: ' + error.message, 'error');
                 this.disabled = false;
                 this.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Save to Database';
             }
         });
 
-        // Cancel save button
         document.getElementById('cancelSave').addEventListener('click', async function() {
             if (!previewData) return;
 
@@ -557,15 +517,12 @@
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                             'X-Requested-With': 'XMLHttpRequest'
                         },
-                        body: JSON.stringify({
-                            temp_file_path: previewData.temp_file_path
-                        })
+                        body: JSON.stringify({ file_path: previewData.file_path })
                     });
                 } catch (error) {
-                    console.error('Error canceling upload:', error);
+                    console.error('Error canceling:', error);
                 }
 
-                // Reset form
                 document.getElementById('uploadForm').reset();
                 document.getElementById('fileInfo').classList.add('hidden');
                 document.getElementById('previewSection').classList.add('hidden');
@@ -574,12 +531,10 @@
             }
         });
 
-        // Close preview button
         document.getElementById('closePreview').addEventListener('click', function() {
             document.getElementById('cancelSave').click();
         });
 
-        // Helper functions
         function formatCurrency(amount) {
             return 'Rp ' + new Intl.NumberFormat('id-ID', {
                 minimumFractionDigits: 0,
