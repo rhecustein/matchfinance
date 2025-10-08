@@ -12,6 +12,8 @@ use App\Http\Controllers\BankStatementTransactionController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\KeywordSuggestionController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AccountKeywordController;
 use App\Http\Controllers\Admin\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
@@ -66,6 +68,35 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         // Delete
         Route::delete('/{transaction}', [TransactionController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('accounts')->name('accounts.')->group(function () {
+        Route::get('/', [AccountController::class, 'index'])->name('index');
+        Route::get('/create', [AccountController::class, 'create'])->name('create');
+        Route::post('/', [AccountController::class, 'store'])->name('store');
+        Route::get('/{account}', [AccountController::class, 'show'])->name('show');
+        Route::get('/{account}/edit', [AccountController::class, 'edit'])->name('edit');
+        Route::put('/{account}', [AccountController::class, 'update'])->name('update');
+        Route::delete('/{account}', [AccountController::class, 'destroy'])->name('destroy');
+        
+        // Account actions
+        Route::post('/{account}/toggle-status', [AccountController::class, 'toggleStatus'])->name('toggle-status');
+        Route::post('/{account}/rematch', [AccountController::class, 'rematch'])->name('rematch');
+        Route::get('/{account}/statistics', [AccountController::class, 'statistics'])->name('statistics');
+    });
+
+    // Account Keywords Routes
+    Route::prefix('account-keywords')->name('account-keywords.')->group(function () {
+        Route::get('/create', [AccountKeywordController::class, 'create'])->name('create');
+        Route::post('/', [AccountKeywordController::class, 'store'])->name('store');
+        Route::get('/{accountKeyword}/edit', [AccountKeywordController::class, 'edit'])->name('edit');
+        Route::put('/{accountKeyword}', [AccountKeywordController::class, 'update'])->name('update');
+        Route::delete('/{accountKeyword}', [AccountKeywordController::class, 'destroy'])->name('destroy');
+        
+        // Keyword actions
+        Route::post('/{accountKeyword}/toggle-status', [AccountKeywordController::class, 'toggleStatus'])->name('toggle-status');
+        Route::post('/test', [AccountKeywordController::class, 'test'])->name('test');
+        Route::post('/bulk-store', [AccountKeywordController::class, 'bulkStore'])->name('bulk-store');
     });
 });
 

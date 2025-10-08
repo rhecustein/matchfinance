@@ -28,6 +28,14 @@ return new class extends Migration
             $table->decimal('balance', 15, 2)->nullable()->comment('Account balance after transaction');
             $table->enum('transaction_type', ['debit', 'credit'])->comment('Type of transaction');
             $table->decimal('amount', 15, 2)->nullable()->comment('Transaction amount (absolute value)');
+
+            //acount
+            //account_id
+            $table->foreignId('account_id')->nullable()->constrained('accounts')->nullOnDelete();
+            $table->foreignId('matched_account_keyword_id')->nullable()->constrained('account_keywords')->nullOnDelete();
+            $table->integer('account_confidence_score')->nullable()->comment('Confidence score for account matching 0-100');
+            $table->boolean('is_manual_account')->default(false)->comment('Whether account was manually assigned');
+        
             
             // Matching Results (Denormalized for Performance)
             $table->foreignId('matched_keyword_id')->nullable()->constrained('keywords')->nullOnDelete()->comment('Keyword that matched this transaction');

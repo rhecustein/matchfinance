@@ -103,16 +103,16 @@
 
     <!-- Top Navigation Bar -->
     <nav class="navbar-blur fixed top-0 left-0 right-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-2 sm:px-3 lg:px-2">
             <div class="flex justify-between items-center h-16">
                 
                 <!-- Left: Logo & Nav Links -->
                 <div class="flex items-center space-x-8">
                     <a href="{{ route('dashboard') }}" class="flex items-center space-x-3 group">
-                        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110">
                             <i class="fas fa-chart-line text-white text-lg"></i>
                         </div>
-                        <span class="text-xl font-bold text-white hidden sm:block">MatchFinance</span>
+                        <span class="text-xl font-bold text-white hidden sm:block"></span>
                     </a>
 
                     <!-- Desktop Nav -->

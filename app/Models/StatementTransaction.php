@@ -37,6 +37,10 @@ class StatementTransaction extends Model
         'verified_by',
         'verified_at',
         'notes',
+        'account_id',
+        'matched_account_keyword_id',
+        'account_confidence_score',
+        'is_manual_account',
     ];
 
     protected $casts = [
@@ -49,13 +53,117 @@ class StatementTransaction extends Model
         'is_manual_category' => 'boolean',
         'is_verified' => 'boolean',
         'verified_at' => 'datetime',
+        'account_confidence_score' => 'integer',
+        'is_manual_account' => 'boolean',
     ];
 
     protected $appends = [
         'amount',
         'signed_amount',
     ];
+    
+    
+    /**
+     * Get the account yang di-assign ke transaction ini
+     */
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(Account::class);
+    }
 
+    /**
+     * Get the matched account keyword
+     */
+    public function matchedAccountKeyword(): BelongsTo
+    {
+        return $this->belongsTo(AccountKeyword::class, 'matched_account_keyword_id');
+    }
+
+    /**
+     * Get all account matching logs untuk transaction ini
+     */
+    public function accountMatchingLogs(): HasMany
+    {
+        return $this->hasMany(AccountMatchingLog::class);
+    }
+
+    /**
+     * Check apakah transaction ini punya account assigned
+     */
+    public function hasAccount(): bool
+    {
+        return !is_null($this->account_id);
+    }
+
+    /**
+     * Accessor untuk account confidence label
+     */
+    public function accountConfidenceLabel(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if (is_null($this->account_confidence_score)) {
+                    return 'N/A';
+                }
+
+                return match(true) {
+                    $this->account_confidence_score >= 90 => 'Very High',
+                    $this->account_confidence_score >= 75 => 'High',
+                    $this->account_confidence_score >= 60 => 'Medium',
+                    $this->account_confidence_score >= 40 => 'Low',
+                    default => 'Very Low',
+                };
+            }
+        );
+    }
+
+    /**
+     * Scope untuk filter by account
+     */
+    public function scopeByAccount($query, $accountId)
+    {
+        return $query->where('account_id', $accountId);
+    }
+
+    /**
+     * Scope untuk transactions yang belum punya account
+     */
+    public function scopeWithoutAccount($query)
+    {
+        return $query->whereNull('account_id');
+    }
+
+    /**
+     * Scope untuk transactions dengan account
+     */
+    public function scopeWithAccount($query)
+    {
+        return $query->whereNotNull('account_id');
+    }
+
+    /**
+     * Get full categorization info (Category + Account)
+     */
+    public function fullCategorization(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => [
+                'category' => [
+                    'type' => $this->type?->name,
+                    'category' => $this->category?->name,
+                    'sub_category' => $this->subCategory?->name,
+                    'confidence' => $this->confidence_score,
+                    'is_manual' => $this->is_manual_category,
+                ],
+                'account' => [
+                    'code' => $this->account?->code,
+                    'name' => $this->account?->name,
+                    'confidence' => $this->account_confidence_score,
+                    'is_manual' => $this->is_manual_account,
+                ],
+            ]
+        );
+    }
     /**
      * Get the bank statement that owns this transaction
      */
