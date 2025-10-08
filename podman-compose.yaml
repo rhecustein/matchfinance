@@ -1,12 +1,16 @@
 services:
-  app:
+  matchfinance-prod:
     build:
       context: .
-      dockerfile: Containerfile
+      containerfile: Containerfile
+    image: matchfinance-prod
+    container_name: matchfinance-prod
+    env_file:
+      - .env
+    volumes:
+      - .:/var/www/html:Z
     ports:
       - "40010:9000"
-    volumes:
-      - .:/var/www
     deploy:
       resources:
         limits:
