@@ -61,7 +61,7 @@ class DashboardController extends Controller
                 'bank_statement_id',
                 'transaction_date',
                 'description',
-                'amount',
+                'amount',  // IMPORTANT: Must select amount column
                 'transaction_type',
                 'sub_category_id',
                 'is_verified',
@@ -101,10 +101,11 @@ class DashboardController extends Controller
                 ->select(
                     'types.name',
                     DB::raw('COUNT(*) as count'),
-                    DB::raw('CAST(SUM(statement_transactions.amount) as DECIMAL(15,2)) as total_amount')
+                    DB::raw('COALESCE(SUM(statement_transactions.amount), 0) as total_amount')
                 )
                 ->join('types', 'statement_transactions.type_id', '=', 'types.id')
                 ->whereNull('statement_transactions.deleted_at')
+                ->whereNotNull('statement_transactions.amount')  // Skip null amounts
                 ->groupBy('types.id', 'types.name')
                 ->get();
         });
@@ -191,7 +192,7 @@ class DashboardController extends Controller
                 'bank_statement_id',
                 'transaction_date',
                 'description',
-                'amount',
+                'amount',  // IMPORTANT: Must select amount column
                 'transaction_type',
                 'sub_category_id',
                 'is_verified',

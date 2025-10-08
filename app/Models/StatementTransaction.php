@@ -308,7 +308,7 @@ class StatementTransaction extends Model
             'notes' => $notes ?? $this->notes,
         ]);
 
-        if ($result) {
+        if ($result && $this->bankStatement) {
             // Update statement statistics
             $this->bankStatement->updateMatchingStats();
         }
@@ -327,7 +327,7 @@ class StatementTransaction extends Model
             'verified_at' => null,
         ]);
 
-        if ($result) {
+        if ($result && $this->bankStatement) {
             // Update statement statistics
             $this->bankStatement->updateMatchingStats();
         }
@@ -354,7 +354,7 @@ class StatementTransaction extends Model
             'is_manual_category' => false,
         ]);
 
-        if ($result) {
+        if ($result && $this->bankStatement) {
             // Update statement statistics
             $this->bankStatement->updateMatchingStats();
         }
@@ -381,7 +381,7 @@ class StatementTransaction extends Model
             'notes' => $notes,
         ]);
 
-        if ($result) {
+        if ($result && $this->bankStatement) {
             // Update statement statistics
             $this->bankStatement->updateMatchingStats();
         }
@@ -403,7 +403,7 @@ class StatementTransaction extends Model
             'is_manual_category' => false,
         ]);
 
-        if ($result) {
+        if ($result && $this->bankStatement) {
             // Update statement statistics
             $this->bankStatement->updateMatchingStats();
         }
@@ -419,22 +419,28 @@ class StatementTransaction extends Model
 
     /**
      * Get amount (debit or credit)
+     * FIXED: Handle NULL values properly
      */
     public function getAmountAttribute(): float
     {
-        return $this->transaction_type === 'debit' 
-            ? $this->debit_amount 
-            : $this->credit_amount;
+        if ($this->transaction_type === 'debit') {
+            return (float) ($this->debit_amount ?? 0);
+        }
+        
+        return (float) ($this->credit_amount ?? 0);
     }
 
     /**
      * Get amount with sign
+     * FIXED: Handle NULL values properly
      */
     public function getSignedAmountAttribute(): float
     {
-        return $this->transaction_type === 'debit' 
-            ? -$this->debit_amount 
-            : $this->credit_amount;
+        if ($this->transaction_type === 'debit') {
+            return -(float) ($this->debit_amount ?? 0);
+        }
+        
+        return (float) ($this->credit_amount ?? 0);
     }
 
     /**
@@ -475,7 +481,7 @@ class StatementTransaction extends Model
      */
     public function getFormattedDateAttribute(): string
     {
-        return $this->transaction_date->format('d M Y');
+        return $this->transaction_date ? $this->transaction_date->format('d M Y') : '-';
     }
 
     /**
