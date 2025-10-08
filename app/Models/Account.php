@@ -6,49 +6,29 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Builder;
 
 class Account extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'code',
         'name',
+        'code',
         'description',
         'account_type',
         'color',
         'priority',
         'is_active',
-        'match_count',
-        'last_matched_at',
-        'metadata',
     ];
 
     protected $casts = [
         'priority' => 'integer',
         'is_active' => 'boolean',
-        'match_count' => 'integer',
-        'last_matched_at' => 'datetime',
-        'metadata' => 'array',
     ];
 
     /**
-     * Boot method untuk auto-generate code
-     */
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($account) {
-            if (empty($account->code)) {
-                $account->code = 'ACC-' . str_pad(Account::max('id') + 1, 4, '0', STR_PAD_LEFT);
-            }
-        });
-    }
-
-    /**
-     * Get all keywords untuk account ini
+     * Get all keywords for this account
      */
     public function keywords(): HasMany
     {
@@ -56,7 +36,7 @@ class Account extends Model
     }
 
     /**
-     * Get active keywords saja
+     * Get active keywords only
      */
     public function activeKeywords(): HasMany
     {
@@ -64,99 +44,68 @@ class Account extends Model
     }
 
     /**
-     * Get all transactions yang match dengan account ini
+     * Get all transactions for this account
+     * Note: Assuming you have a transactions table with account_id
      */
     public function transactions(): HasMany
     {
-        return $this->hasMany(StatementTransaction::class);
+        return $this->hasMany(StatementTransaction::class, 'account_id');
     }
 
     /**
-     * Get matching logs
+     * Scope: Only active accounts
      */
-    public function matchingLogs(): HasMany
-    {
-        return $this->hasMany(AccountMatchingLog::class);
-    }
-
-    /**
-     * Accessor untuk badge color
-     */
-    public function badgeColor(): Attribute
-    {
-        return Attribute::make(
-            get: fn () => $this->color ?? '#3B82F6'
-        );
-    }
-
-    /**
-     * Accessor untuk status label
-     */
-    public function statusLabel(): Attribute
-    {
-        return Attribute::make(
-            get: fn () => $this->is_active ? 'Active' : 'Inactive'
-        );
-    }
-
-    /**
-     * Accessor untuk status badge class
-     */
-    public function statusBadgeClass(): Attribute
-    {
-        return Attribute::make(
-            get: fn () => $this->is_active 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-gray-100 text-gray-800'
-        );
-    }
-
-    /**
-     * Scope untuk filter active accounts
-     */
-    public function scopeActive($query)
+    public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
     }
 
     /**
-     * Scope untuk order by priority
+     * Scope: Only inactive accounts
      */
-    public function scopeByPriority($query)
+    public function scopeInactive(Builder $query): Builder
     {
-        return $query->orderBy('priority', 'desc')->orderBy('name');
+        return $query->where('is_active', false);
     }
 
     /**
-     * Scope untuk filter by account type
+     * Scope: Order by priority (highest first)
      */
-    public function scopeByType($query, $type)
+    public function scopeByPriority(Builder $query): Builder
+    {
+        return $query->orderBy('priority', 'desc')
+                     ->orderBy('name', 'asc');
+    }
+
+    /**
+     * Scope: Filter by account type
+     */
+    public function scopeOfType(Builder $query, string $type): Builder
     {
         return $query->where('account_type', $type);
     }
 
     /**
-     * Increment match count
+     * Check if account has keywords
      */
-    public function incrementMatchCount(): void
+    public function hasKeywords(): bool
     {
-        $this->increment('match_count');
-        $this->update(['last_matched_at' => now()]);
+        return $this->keywords()->exists();
     }
 
     /**
-     * Get total transactions amount
+     * Check if account has active keywords
      */
-    public function getTotalAmount(): float
+    public function hasActiveKeywords(): bool
     {
-        return $this->transactions()->sum('amount') ?? 0;
+        return $this->activeKeywords()->exists();
     }
 
     /**
-     * Get transaction count
+     * Get total match count from all keywords
      */
-    public function getTransactionCount(): int
+    public function getTotalMatchCountAttribute(): int
     {
-        return $this->transactions()->count();
+        return $this->keywords()->sum('match_count') ?? 0;
     }
 }

@@ -17,18 +17,7 @@ class AccountKeywordController extends Controller
     }
 
     /**
-     * Show create form
-     */
-    public function create(Request $request)
-    {
-        $accountId = $request->get('account_id');
-        $account = $accountId ? Account::findOrFail($accountId) : null;
-
-        return view('account-keywords.create', compact('account'));
-    }
-
-    /**
-     * Store new keyword
+     * Store a new keyword for an account
      */
     public function store(Request $request)
     {
@@ -38,53 +27,35 @@ class AccountKeywordController extends Controller
             'match_type' => 'required|in:exact,contains,starts_with,ends_with,regex',
             'is_regex' => 'boolean',
             'case_sensitive' => 'boolean',
-            'pattern_description' => 'nullable|string',
             'priority' => 'required|integer|min:1|max:10',
             'is_active' => 'boolean',
         ]);
 
         try {
-            $keyword = AccountKeyword::create($validated);
+            $account = Account::findOrFail($validated['account_id']);
+
+            $keyword = $account->keywords()->create([
+                'keyword' => $validated['keyword'],
+                'match_type' => $validated['match_type'],
+                'is_regex' => $validated['is_regex'] ?? false,
+                'case_sensitive' => $validated['case_sensitive'] ?? false,
+                'priority' => $validated['priority'],
+                'is_active' => $validated['is_active'] ?? true,
+            ]);
 
             // Clear cache
             $this->matchingService->clearKeywordsCache();
 
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'keyword' => $keyword,
-                    'message' => 'Keyword created successfully!'
-                ]);
-            }
-
-            return redirect()
-                ->route('accounts.show', $validated['account_id'])
-                ->with('success', 'Keyword created successfully!');
+            return back()->with('success', 'Keyword added successfully!');
         } catch (\Exception $e) {
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to create keyword: ' . $e->getMessage()
-                ], 422);
-            }
-
             return back()
                 ->withInput()
-                ->with('error', 'Failed to create keyword: ' . $e->getMessage());
+                ->with('error', 'Failed to add keyword: ' . $e->getMessage());
         }
     }
 
     /**
-     * Show edit form
-     */
-    public function edit(AccountKeyword $accountKeyword)
-    {
-        $accountKeyword->load('account');
-        return view('account-keywords.edit', compact('accountKeyword'));
-    }
-
-    /**
-     * Update keyword
+     * Update a keyword
      */
     public function update(Request $request, AccountKeyword $accountKeyword)
     {
@@ -93,7 +64,6 @@ class AccountKeywordController extends Controller
             'match_type' => 'required|in:exact,contains,starts_with,ends_with,regex',
             'is_regex' => 'boolean',
             'case_sensitive' => 'boolean',
-            'pattern_description' => 'nullable|string',
             'priority' => 'required|integer|min:1|max:10',
             'is_active' => 'boolean',
         ]);
@@ -104,25 +74,8 @@ class AccountKeywordController extends Controller
             // Clear cache
             $this->matchingService->clearKeywordsCache();
 
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'keyword' => $accountKeyword->fresh(),
-                    'message' => 'Keyword updated successfully!'
-                ]);
-            }
-
-            return redirect()
-                ->route('accounts.show', $accountKeyword->account_id)
-                ->with('success', 'Keyword updated successfully!');
+            return back()->with('success', 'Keyword updated successfully!');
         } catch (\Exception $e) {
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to update keyword: ' . $e->getMessage()
-                ], 422);
-            }
-
             return back()
                 ->withInput()
                 ->with('error', 'Failed to update keyword: ' . $e->getMessage());
@@ -130,35 +83,18 @@ class AccountKeywordController extends Controller
     }
 
     /**
-     * Delete keyword
+     * Delete a keyword
      */
-    public function destroy(Request $request, AccountKeyword $accountKeyword)
+    public function destroy(AccountKeyword $accountKeyword)
     {
         try {
-            $accountId = $accountKeyword->account_id;
             $accountKeyword->delete();
 
             // Clear cache
             $this->matchingService->clearKeywordsCache();
 
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Keyword deleted successfully!'
-                ]);
-            }
-
-            return redirect()
-                ->route('accounts.show', $accountId)
-                ->with('success', 'Keyword deleted successfully!');
+            return back()->with('success', 'Keyword deleted successfully!');
         } catch (\Exception $e) {
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to delete keyword: ' . $e->getMessage()
-                ], 422);
-            }
-
             return back()->with('error', 'Failed to delete keyword: ' . $e->getMessage());
         }
     }
@@ -175,81 +111,26 @@ class AccountKeywordController extends Controller
             $this->matchingService->clearKeywordsCache();
 
             $status = $accountKeyword->is_active ? 'activated' : 'deactivated';
-            
-            return response()->json([
-                'success' => true,
-                'is_active' => $accountKeyword->is_active,
-                'message' => "Keyword {$status} successfully!"
-            ]);
+            return back()->with('success', "Keyword {$status} successfully!");
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to toggle status: ' . $e->getMessage()
-            ], 422);
+            return back()->with('error', 'Failed to toggle status: ' . $e->getMessage());
         }
     }
 
     /**
-     * Test keyword matching
+     * Get keyword details (for AJAX)
      */
-    public function test(Request $request)
+    public function show(AccountKeyword $accountKeyword)
     {
-        $validated = $request->validate([
-            'keyword_id' => 'required|exists:account_keywords,id',
-            'test_text' => 'required|string',
-        ]);
-
-        $keyword = AccountKeyword::findOrFail($validated['keyword_id']);
-        $matched = $keyword->matches($validated['test_text']);
-
         return response()->json([
-            'success' => true,
-            'matched' => $matched,
-            'keyword' => $keyword->keyword,
-            'match_type' => $keyword->match_type,
-            'test_text' => $validated['test_text'],
+            'id' => $accountKeyword->id,
+            'keyword' => $accountKeyword->keyword,
+            'match_type' => $accountKeyword->match_type,
+            'is_regex' => $accountKeyword->is_regex,
+            'case_sensitive' => $accountKeyword->case_sensitive,
+            'priority' => $accountKeyword->priority,
+            'is_active' => $accountKeyword->is_active,
+            'match_count' => $accountKeyword->match_count ?? 0,
         ]);
-    }
-
-    /**
-     * Bulk create keywords
-     */
-    public function bulkStore(Request $request)
-    {
-        $validated = $request->validate([
-            'account_id' => 'required|exists:accounts,id',
-            'keywords' => 'required|array|min:1',
-            'keywords.*.keyword' => 'required|string',
-            'keywords.*.match_type' => 'required|in:exact,contains,starts_with,ends_with,regex',
-            'keywords.*.priority' => 'required|integer|min:1|max:10',
-        ]);
-
-        try {
-            $created = 0;
-            foreach ($validated['keywords'] as $keywordData) {
-                AccountKeyword::create([
-                    'account_id' => $validated['account_id'],
-                    'keyword' => $keywordData['keyword'],
-                    'match_type' => $keywordData['match_type'],
-                    'priority' => $keywordData['priority'],
-                    'is_active' => true,
-                ]);
-                $created++;
-            }
-
-            // Clear cache
-            $this->matchingService->clearKeywordsCache();
-
-            return response()->json([
-                'success' => true,
-                'created' => $created,
-                'message' => "{$created} keywords created successfully!"
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create keywords: ' . $e->getMessage()
-            ], 422);
-        }
     }
 }
