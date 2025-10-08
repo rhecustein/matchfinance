@@ -1,0 +1,20 @@
+services:
+  matchfinance-dev:
+    build:
+      context: .
+      containerfile: Containerfile
+    image: matchfinance-dev
+    container_name: matchfinance-dev
+    env_file:
+      - .env
+    volumes:
+      - .:/var/www/html:Z
+    ports:
+      - "40010:9000"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.7"
+        reservations:
+          memory: 256M
