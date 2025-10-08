@@ -1,0 +1,9 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Containerfile.dev
+    ports:
+      - "40010:40010"
+    volumes:
+      - .:/var/www
