@@ -28,7 +28,7 @@ class MatchingLog extends Model
     ];
 
     /**
-     * Get the transaction that owns this log
+     * Get the transaction
      */
     public function statementTransaction(): BelongsTo
     {
@@ -36,10 +36,35 @@ class MatchingLog extends Model
     }
 
     /**
-     * Get the keyword that was matched
+     * Get the keyword
      */
     public function keyword(): BelongsTo
     {
         return $this->belongsTo(Keyword::class);
+    }
+
+    /**
+     * Scope: Recent logs
+     */
+    public function scopeRecent($query, $limit = 100)
+    {
+        return $query->orderBy('matched_at', 'desc')
+            ->limit($limit);
+    }
+
+    /**
+     * Scope: By keyword
+     */
+    public function scopeByKeyword($query, $keywordId)
+    {
+        return $query->where('keyword_id', $keywordId);
+    }
+
+    /**
+     * Scope: High confidence
+     */
+    public function scopeHighConfidence($query)
+    {
+        return $query->where('confidence_score', '>=', 90);
     }
 }

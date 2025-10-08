@@ -1,4 +1,5 @@
 <?php
+// database/migrations/2025_10_07_201413_create_keywords_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -12,15 +13,27 @@ return new class extends Migration
             $table->id();
             $table->foreignId('sub_category_id')->constrained()->onDelete('cascade');
             $table->string('keyword', 255);
-            $table->integer('priority')->default(5)->comment('1-10, higher is checked first');
             $table->boolean('is_regex')->default(false);
             $table->boolean('case_sensitive')->default(false);
+            
+            // Pattern matching enhancement
+            $table->enum('match_type', ['exact', 'contains', 'starts_with', 'ends_with', 'regex'])->default('contains');
+            $table->text('pattern_description')->nullable(); // Deskripsi pattern
+            
+            $table->integer('priority')->default(5)->comment('1-10, higher checked first');
             $table->boolean('is_active')->default(true);
+            
+            // Learning from matching
+            $table->integer('match_count')->default(0); // Berapa kali matched
+            $table->timestamp('last_matched_at')->nullable();
+            
             $table->timestamps();
             $table->softDeletes();
             
-            $table->index('sub_category_id');
-            $table->index(['priority', 'is_active']);
+            // Indexes
+            $table->index(['sub_category_id', 'is_active']);
+            $table->index('priority');
+            $table->index('match_count'); // Untuk analisis
         });
     }
 

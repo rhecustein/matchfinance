@@ -1,228 +1,7 @@
-<!-- ============================================================ -->
-<!-- INDEX VIEW: resources/views/transactions/index.blade.php -->
-<!-- ============================================================ -->
-
-<x-app-layout>
-    <x-slot name="header">Transactions</x-slot>
-
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {{-- Header --}}
-        <div class="flex justify-between items-center mb-8">
-            <div>
-                <h2 class="text-2xl font-bold text-white mb-2">All Transactions</h2>
-                <p class="text-gray-400">View and manage transaction categorization</p>
-            </div>
-        </div>
-
-        {{-- Filters --}}
-        <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-slate-700 shadow-xl mb-6">
-            <form method="GET" action="{{ route('transactions.index') }}" class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                    {{-- Status Filter --}}
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-300 mb-2">
-                            <i class="fas fa-filter mr-1"></i>Status
-                        </label>
-                        <select name="status" class="w-full px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-blue-500">
-                            <option value="">All Status</option>
-                            <option value="matched" {{ request('status') == 'matched' ? 'selected' : '' }}>Matched</option>
-                            <option value="unmatched" {{ request('status') == 'unmatched' ? 'selected' : '' }}>Unmatched</option>
-                            <option value="verified" {{ request('status') == 'verified' ? 'selected' : '' }}>Verified</option>
-                            <option value="unverified" {{ request('status') == 'unverified' ? 'selected' : '' }}>Unverified</option>
-                            <option value="low_confidence" {{ request('status') == 'low_confidence' ? 'selected' : '' }}>Low Confidence</option>
-                        </select>
-                    </div>
-
-                    {{-- Date From --}}
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-300 mb-2">
-                            <i class="fas fa-calendar mr-1"></i>Date From
-                        </label>
-                        <input type="date" name="date_from" value="{{ request('date_from') }}" 
-                               class="w-full px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-blue-500">
-                    </div>
-
-                    {{-- Date To --}}
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-300 mb-2">
-                            <i class="fas fa-calendar mr-1"></i>Date To
-                        </label>
-                        <input type="date" name="date_to" value="{{ request('date_to') }}" 
-                               class="w-full px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-blue-500">
-                    </div>
-
-                    {{-- Category Filter --}}
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-300 mb-2">
-                            <i class="fas fa-folder mr-1"></i>Category
-                        </label>
-                        <select name="category_id" class="w-full px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-blue-500">
-                            <option value="">All Categories</option>
-                            @foreach(\App\Models\Category::with('type')->orderBy('name')->get() as $cat)
-                                <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
-                                    {{ $cat->name }} ({{ $cat->type->name }})
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- Actions --}}
-                    <div class="flex items-end gap-2">
-                        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition text-sm">
-                            <i class="fas fa-search mr-1"></i>Filter
-                        </button>
-                        @if(request()->hasAny(['status', 'date_from', 'date_to', 'category_id', 'bank_statement_id']))
-                            <a href="{{ route('transactions.index') }}" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-semibold transition text-sm">
-                                <i class="fas fa-times"></i>
-                            </a>
-                        @endif
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        {{-- Transactions List --}}
-        <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 shadow-xl overflow-hidden">
-            <div class="p-6">
-                <div class="space-y-3">
-                    @forelse($transactions as $transaction)
-                        <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-700 hover:border-blue-500 transition">
-                            <div class="flex items-start justify-between">
-                                {{-- Main Info --}}
-                                <div class="flex-1">
-                                    <div class="flex items-center space-x-3 mb-2">
-                                        {{-- Date --}}
-                                        <span class="px-2 py-1 bg-slate-800 rounded text-xs text-gray-400">
-                                            {{ $transaction->transaction_date->format('d M Y') }}
-                                        </span>
-                                        
-                                        {{-- Type Badge --}}
-                                        @if($transaction->transaction_type == 'debit')
-                                            <span class="px-2 py-1 bg-red-600/20 text-red-400 rounded text-xs font-semibold">
-                                                <i class="fas fa-arrow-down mr-1"></i>Debit
-                                            </span>
-                                        @else
-                                            <span class="px-2 py-1 bg-green-600/20 text-green-400 rounded text-xs font-semibold">
-                                                <i class="fas fa-arrow-up mr-1"></i>Credit
-                                            </span>
-                                        @endif
-
-                                        {{-- Status Badges --}}
-                                        @if($transaction->is_verified)
-                                            <span class="px-2 py-1 bg-green-600/20 text-green-400 rounded text-xs">
-                                                <i class="fas fa-check-circle mr-1"></i>Verified
-                                            </span>
-                                        @endif
-
-                                        @if($transaction->matched_keyword_id)
-                                            <span class="px-2 py-1 bg-blue-600/20 text-blue-400 rounded text-xs">
-                                                <i class="fas fa-link mr-1"></i>Matched
-                                            </span>
-                                        @else
-                                            <span class="px-2 py-1 bg-yellow-600/20 text-yellow-400 rounded text-xs">
-                                                <i class="fas fa-unlink mr-1"></i>Unmatched
-                                            </span>
-                                        @endif
-
-                                        @if($transaction->confidence_score < 60)
-                                            <span class="px-2 py-1 bg-orange-600/20 text-orange-400 rounded text-xs">
-                                                <i class="fas fa-exclamation-triangle mr-1"></i>Low Conf: {{ $transaction->confidence_score }}%
-                                            </span>
-                                        @elseif($transaction->confidence_score)
-                                            <span class="px-2 py-1 bg-purple-600/20 text-purple-400 rounded text-xs">
-                                                Conf: {{ $transaction->confidence_score }}%
-                                            </span>
-                                        @endif
-                                    </div>
-
-                                    {{-- Description --}}
-                                    <p class="text-white font-semibold mb-2">{{ $transaction->description }}</p>
-
-                                    {{-- Category Info --}}
-                                    @if($transaction->subCategory)
-                                        <div class="flex items-center space-x-2 text-xs text-gray-400">
-                                            <i class="fas fa-folder"></i>
-                                            <span>{{ $transaction->subCategory->category->type->name }}</span>
-                                            <i class="fas fa-chevron-right text-xs"></i>
-                                            <span>{{ $transaction->subCategory->category->name }}</span>
-                                            <i class="fas fa-chevron-right text-xs"></i>
-                                            <span class="text-blue-400">{{ $transaction->subCategory->name }}</span>
-                                        </div>
-                                    @endif
-
-                                    {{-- Bank Info --}}
-                                    <div class="flex items-center space-x-3 mt-2 text-xs text-gray-500">
-                                        <span>
-                                            <i class="fas fa-university mr-1"></i>{{ $transaction->bankStatement->bank->name }}
-                                        </span>
-                                        <span>
-                                            <i class="fas fa-file-alt mr-1"></i>Statement #{{ $transaction->bankStatement->id }}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {{-- Amount & Actions --}}
-                                <div class="ml-4 text-right">
-                                    <div class="text-2xl font-bold mb-3 {{ $transaction->transaction_type == 'debit' ? 'text-red-400' : 'text-green-400' }}">
-                                        {{ $transaction->transaction_type == 'debit' ? '-' : '+' }}
-                                        Rp {{ number_format($transaction->amount, 0, ',', '.') }}
-                                    </div>
-
-                                    <div class="flex items-center justify-end space-x-2">
-                                        <a href="{{ route('transactions.show', $transaction) }}" 
-                                           class="p-2 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white rounded-lg transition text-sm">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-
-                                        @if(!$transaction->is_verified && $transaction->matched_keyword_id)
-                                            <form action="{{ route('transactions.verify', $transaction) }}" method="POST" class="inline">
-                                                @csrf
-                                                <button type="submit" class="p-2 bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white rounded-lg transition text-sm">
-                                                    <i class="fas fa-check"></i>
-                                                </button>
-                                            </form>
-                                        @endif
-
-                                        @if(!$transaction->matched_keyword_id || $transaction->confidence_score < 80)
-                                            <form action="{{ route('transactions.rematch', $transaction) }}" method="POST" class="inline">
-                                                @csrf
-                                                <button type="submit" class="p-2 bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white rounded-lg transition text-sm">
-                                                    <i class="fas fa-sync"></i>
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="text-center py-12">
-                            <i class="fas fa-receipt text-gray-600 text-5xl mb-4"></i>
-                            <p class="text-gray-400 text-lg">No transactions found</p>
-                        </div>
-                    @endforelse
-                </div>
-            </div>
-
-            @if($transactions->hasPages())
-                <div class="px-6 py-4 border-t border-slate-700">
-                    {{ $transactions->links() }}
-                </div>
-            @endif
-        </div>
-    </div>
-</x-app-layout>
-
-
-<!-- ============================================================ -->
-<!-- SHOW VIEW: resources/views/transactions/show.blade.php -->
-<!-- ============================================================ -->
-
 <x-app-layout>
     <x-slot name="header">Transaction Detail</x-slot>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         {{-- Breadcrumb --}}
         <div class="mb-8">
@@ -242,17 +21,21 @@
                 <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 border border-slate-700 shadow-xl">
                     <div class="flex items-start justify-between mb-6">
                         <div>
-                            <h2 class="text-2xl font-bold text-white mb-2">{{ $transaction->description }}</h2>
-                            <p class="text-gray-400">{{ $transaction->transaction_date->format('l, d F Y') }}</p>
+                            <h2 class="text-2xl font-bold text-white mb-2">{{ $transaction->description ?? '-' }}</h2>
+                            <p class="text-gray-400">
+                                {{ $transaction->transaction_date ? $transaction->transaction_date->format('l, d F Y') : '-' }}
+                            </p>
                         </div>
                         <div class="text-right">
                             <div class="text-3xl font-bold {{ $transaction->transaction_type == 'debit' ? 'text-red-400' : 'text-green-400' }}">
                                 {{ $transaction->transaction_type == 'debit' ? '-' : '+' }}
-                                Rp {{ number_format($transaction->amount, 0, ',', '.') }}
+                                Rp {{ number_format($transaction->amount ?? 0, 0, ',', '.') }}
                             </div>
-                            <p class="text-gray-400 text-sm mt-1">
-                                Balance: Rp {{ number_format($transaction->balance, 0, ',', '.') }}
-                            </p>
+                            @if($transaction->balance)
+                                <p class="text-gray-400 text-sm mt-1">
+                                    Balance: Rp {{ number_format($transaction->balance, 0, ',', '.') }}
+                                </p>
+                            @endif
                         </div>
                     </div>
 
@@ -282,6 +65,10 @@
                             <span class="px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full text-sm font-semibold">
                                 <i class="fas fa-link mr-1"></i>Auto Matched
                             </span>
+                        @elseif($transaction->is_manual_category)
+                            <span class="px-3 py-1 bg-purple-600/20 text-purple-400 rounded-full text-sm font-semibold">
+                                <i class="fas fa-hand-pointer mr-1"></i>Manual
+                            </span>
                         @else
                             <span class="px-3 py-1 bg-orange-600/20 text-orange-400 rounded-full text-sm font-semibold">
                                 <i class="fas fa-unlink mr-1"></i>Unmatched
@@ -290,9 +77,10 @@
 
                         @if($transaction->confidence_score)
                             @php
-                                $confColor = $transaction->confidence_score >= 80 ? 'green' : ($transaction->confidence_score >= 60 ? 'yellow' : 'red');
+                                $confColorBg = $transaction->confidence_score >= 80 ? 'bg-green-600/20' : ($transaction->confidence_score >= 60 ? 'bg-yellow-600/20' : 'bg-red-600/20');
+                                $confColorText = $transaction->confidence_score >= 80 ? 'text-green-400' : ($transaction->confidence_score >= 60 ? 'text-yellow-400' : 'text-red-400');
                             @endphp
-                            <span class="px-3 py-1 bg-{{ $confColor }}-600/20 text-{{ $confColor }}-400 rounded-full text-sm font-semibold">
+                            <span class="px-3 py-1 {{ $confColorBg }} {{ $confColorText }} rounded-full text-sm font-semibold">
                                 <i class="fas fa-tachometer-alt mr-1"></i>Confidence: {{ $transaction->confidence_score }}%
                             </span>
                         @endif
@@ -302,22 +90,31 @@
                     <div class="grid grid-cols-2 gap-4 pt-6 border-t border-slate-700">
                         <div>
                             <p class="text-gray-400 text-sm mb-1">Bank</p>
-                            <p class="text-white font-semibold">{{ $transaction->bankStatement->bank->name }}</p>
+                            <p class="text-white font-semibold">
+                                {{ $transaction->bankStatement->bank->name ?? 'Unknown Bank' }}
+                            </p>
                         </div>
                         <div>
                             <p class="text-gray-400 text-sm mb-1">Statement</p>
-                            <a href="{{ route('bank-statements.show', $transaction->bankStatement) }}" class="text-blue-400 hover:text-blue-300 font-semibold">
-                                #{{ $transaction->bankStatement->id }} - {{ $transaction->bankStatement->period_start->format('M Y') }}
-                            </a>
+                            @if($transaction->bankStatement)
+                                <a href="{{ route('bank-statements.show', $transaction->bankStatement) }}" class="text-blue-400 hover:text-blue-300 font-semibold">
+                                    #{{ $transaction->bankStatement->id }}
+                                    @if($transaction->bankStatement->period_start)
+                                        - {{ $transaction->bankStatement->period_start->format('M Y') }}
+                                    @endif
+                                </a>
+                            @else
+                                <p class="text-gray-500">-</p>
+                            @endif
                         </div>
-                        @if($transaction->matched_keyword_id)
+                        @if($transaction->matchedKeyword)
                             <div>
                                 <p class="text-gray-400 text-sm mb-1">Matched Keyword</p>
                                 <code class="text-purple-400">{{ $transaction->matchedKeyword->keyword }}</code>
                             </div>
                             <div>
                                 <p class="text-gray-400 text-sm mb-1">Keyword Priority</p>
-                                <p class="text-white font-semibold">{{ $transaction->matchedKeyword->priority }}</p>
+                                <p class="text-white font-semibold">{{ $transaction->matchedKeyword->priority ?? '-' }}</p>
                             </div>
                         @endif
                     </div>
@@ -342,22 +139,28 @@
                         <div class="space-y-3">
                             <div class="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
                                 <span class="text-gray-400">Type</span>
-                                <span class="text-white font-semibold">{{ $transaction->subCategory->category->type->name }}</span>
+                                <span class="text-white font-semibold">
+                                    {{ $transaction->subCategory->category->type->name ?? '-' }}
+                                </span>
                             </div>
                             <div class="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
                                 <span class="text-gray-400">Category</span>
-                                <span class="text-white font-semibold">{{ $transaction->subCategory->category->name }}</span>
+                                <span class="text-white font-semibold">
+                                    {{ $transaction->subCategory->category->name ?? '-' }}
+                                </span>
                             </div>
                             <div class="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
                                 <span class="text-gray-400">Sub Category</span>
-                                <span class="text-white font-semibold">{{ $transaction->subCategory->name }}</span>
+                                <span class="text-white font-semibold">
+                                    {{ $transaction->subCategory->name ?? '-' }}
+                                </span>
                             </div>
                         </div>
                     </div>
                 @endif
 
                 {{-- Matching History --}}
-                @if($transaction->matchingLogs->count() > 0)
+                @if($transaction->matchingLogs && $transaction->matchingLogs->count() > 0)
                     <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-slate-700 shadow-xl">
                         <h3 class="text-lg font-bold text-white mb-4">
                             <i class="fas fa-history mr-2"></i>Matching History
@@ -366,14 +169,19 @@
                             @foreach($transaction->matchingLogs as $log)
                                 <div class="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg text-sm">
                                     <div class="flex-1">
-                                        <code class="text-purple-400">{{ $log->keyword->keyword }}</code>
+                                        <code class="text-purple-400">{{ $log->keyword->keyword ?? '-' }}</code>
                                         <p class="text-gray-500 text-xs mt-1">
-                                            {{ $log->keyword->subCategory->name }} - {{ $log->matched_at->format('d M Y H:i') }}
+                                            {{ $log->keyword->subCategory->name ?? '-' }}
+                                            @if($log->matched_at)
+                                                - {{ $log->matched_at->format('d M Y H:i') }}
+                                            @endif
                                         </p>
                                     </div>
-                                    <span class="px-2 py-1 bg-blue-600/20 text-blue-400 rounded text-xs font-semibold">
-                                        {{ $log->confidence_score }}%
-                                    </span>
+                                    @if($log->confidence_score)
+                                        <span class="px-2 py-1 bg-blue-600/20 text-blue-400 rounded text-xs font-semibold">
+                                            {{ $log->confidence_score }}%
+                                        </span>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>
@@ -387,7 +195,7 @@
                 <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-slate-700 shadow-xl">
                     <h3 class="text-lg font-bold text-white mb-4">Quick Actions</h3>
                     <div class="space-y-2">
-                        @if(!$transaction->is_verified)
+                        @if(!$transaction->is_verified && ($transaction->matched_keyword_id || $transaction->is_manual_category))
                             <form action="{{ route('transactions.verify', $transaction) }}" method="POST">
                                 @csrf
                                 <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-xl font-semibold transition flex items-center justify-center space-x-2">
@@ -395,11 +203,19 @@
                                     <span>Verify Transaction</span>
                                 </button>
                             </form>
-                        @else
+                        @elseif($transaction->is_verified)
                             <div class="w-full bg-green-600/20 border border-green-600/30 text-green-400 px-4 py-3 rounded-xl font-semibold flex items-center justify-center space-x-2">
                                 <i class="fas fa-check-circle"></i>
                                 <span>Verified</span>
                             </div>
+                            
+                            <form action="{{ route('transactions.unverify', $transaction) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white px-4 py-3 rounded-xl font-semibold transition flex items-center justify-center space-x-2">
+                                    <i class="fas fa-times-circle"></i>
+                                    <span>Unverify</span>
+                                </button>
+                            </form>
                         @endif
 
                         <form action="{{ route('transactions.rematch', $transaction) }}" method="POST">
@@ -409,6 +225,16 @@
                                 <span>Re-match</span>
                             </button>
                         </form>
+
+                        @if($transaction->matched_keyword_id || $transaction->is_manual_category)
+                            <form action="{{ route('transactions.unmatch', $transaction) }}" method="POST" onsubmit="return confirm('Clear this transaction match?')">
+                                @csrf
+                                <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl font-semibold transition flex items-center justify-center space-x-2">
+                                    <i class="fas fa-unlink"></i>
+                                    <span>Clear Match</span>
+                                </button>
+                            </form>
+                        @endif
 
                         <a href="{{ route('transactions.index') }}" class="block w-full bg-slate-700 hover:bg-slate-600 text-white px-4 py-3 rounded-xl font-semibold transition text-center">
                             <i class="fas fa-arrow-left mr-2"></i>Back to List
@@ -428,11 +254,15 @@
                         <div>
                             <label class="block text-sm font-semibold text-gray-300 mb-2">Sub Category</label>
                             <select name="sub_category_id" class="w-full px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-blue-500">
-                                <option value="">-- Select --</option>
-                                @foreach(\App\Models\SubCategory::with('category.type')->orderBy('name')->get() as $sub)
-                                    <option value="{{ $sub->id }}" {{ $transaction->sub_category_id == $sub->id ? 'selected' : '' }}>
-                                        {{ $sub->category->type->name }} - {{ $sub->category->name }} - {{ $sub->name }}
-                                    </option>
+                                <option value="">-- Select Sub Category --</option>
+                                @foreach($subCategories as $typeName => $subs)
+                                    <optgroup label="{{ $typeName }}">
+                                        @foreach($subs as $sub)
+                                            <option value="{{ $sub->id }}" {{ $transaction->sub_category_id == $sub->id ? 'selected' : '' }}>
+                                                {{ $sub->category->name }} - {{ $sub->name }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
                                 @endforeach
                             </select>
                         </div>
@@ -449,7 +279,7 @@
                 </div>
 
                 {{-- Verification Info --}}
-                @if($transaction->is_verified)
+                @if($transaction->is_verified && $transaction->verifiedBy)
                     <div class="bg-gradient-to-br from-green-900/20 to-slate-900 rounded-2xl p-6 border border-green-500/30 shadow-xl">
                         <h3 class="text-lg font-bold text-green-400 mb-4">
                             <i class="fas fa-check-circle mr-2"></i>Verification Info
@@ -459,13 +289,30 @@
                                 <span class="text-gray-400">Verified By</span>
                                 <span class="text-white font-semibold">{{ $transaction->verifiedBy->name }}</span>
                             </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">Verified At</span>
-                                <span class="text-white font-semibold">{{ $transaction->verified_at->format('d M Y H:i') }}</span>
-                            </div>
+                            @if($transaction->verified_at)
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Verified At</span>
+                                    <span class="text-white font-semibold">{{ $transaction->verified_at->format('d M Y H:i') }}</span>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @endif
+
+                {{-- Danger Zone --}}
+                <div class="bg-gradient-to-br from-red-900/20 to-slate-900 rounded-2xl p-6 border border-red-500/30 shadow-xl">
+                    <h3 class="text-lg font-bold text-red-400 mb-4">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>Danger Zone
+                    </h3>
+                    <form action="{{ route('transactions.destroy', $transaction) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this transaction? This action cannot be undone.')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl font-semibold transition flex items-center justify-center space-x-2">
+                            <i class="fas fa-trash"></i>
+                            <span>Delete Transaction</span>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
