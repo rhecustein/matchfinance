@@ -6,1925 +6,698 @@ use App\Models\Bank;
 use App\Models\BankStatement;
 use App\Models\StatementTransaction;
 use App\Models\Payment;
+use App\Models\Keyword;
+use App\Models\SubCategory;
+use App\Models\AuditLog;
 use App\Services\OcrService;
 use App\Services\TransactionMatchingService;
+use App\Services\MachineLearningService;
+use App\Services\BlockchainVerificationService;
+use App\Services\RealTimeAnalyticsService;
+use App\Services\FraudDetectionService;
+use App\Services\NotificationService;
+use App\Jobs\ProcessBankStatementOcr;
+use App\Jobs\MatchTransactionsJob;
+use App\Jobs\GenerateReportsJob;
+use App\Events\BankStatementProcessed;
+use App\Events\SuspiciousActivityDetected;
+use App\Repositories\BankStatementRepository;
+use App\Repositories\TransactionRepository;
+use App\Http\Requests\BankStatementUploadRequest;
+use App\Http\Resources\BankStatementResource;
+use App\Http\Resources\TransactionResource;
+use App\Exports\AdvancedBankStatementExport;
+use App\Imports\BankStatementImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Intervention\Image\Facades\Image;
+use League\Csv\Writer;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class BankStatementController extends Controller
 {
+    // Advanced configuration constants
+    private const CACHE_TTL = 300;
+    private const REDIS_TTL = 3600;
+    private const OCR_MAX_RETRIES = 5;
+    private const OCR_TIMEOUT = 300;
+    private const CHUNK_SIZE = 500;
+    private const BATCH_SIZE = 100;
+    private const MAX_FILE_SIZE = 52428800; // 50MB
+    private const ALLOWED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'application/vnd.ms-excel'];
+    private const CONFIDENCE_THRESHOLD = 0.75;
+    private const FRAUD_THRESHOLD = 0.85;
+    private const RATE_LIMIT_PER_MINUTE = 10;
+    
+    // Dependency injection untuk services
     public function __construct(
         private OcrService $ocrService,
-        private TransactionMatchingService $matchingService
-    ) {}
+        private TransactionMatchingService $matchingService,
+        private MachineLearningService $mlService,
+        private FraudDetectionService $fraudService,
+        private NotificationService $notificationService,
+        private BankStatementRepository $statementRepo,
+        private TransactionRepository $transactionRepo
+    ) {
+        // Middleware setup
+        $this->middleware('auth');
+        $this->middleware('verified');
+        $this->middleware('throttle:60,1')->only(['uploadAndProcess']);
+        $this->middleware('permission:manage-statements')->only(['destroy', 'massDelete']);
+        $this->middleware('log.activity');
+    }
 
     /**
-     * Display a listing of bank statements
+     * Advanced index dengan real-time filtering, sorting, dan analytics
      */
     public function index(Request $request)
     {
-        $query = BankStatement::with(['bank', 'user'])
-            ->latest('uploaded_at');
-
-        // Filter by bank
-        if ($request->filled('bank_id')) {
-            $query->where('bank_id', $request->bank_id);
-        }
-
-        // Filter by status
-        if ($request->filled('status')) {
-            $query->where('ocr_status', $request->status);
-        }
-
-        // Filter by period
-        if ($request->filled('period_from')) {
-            $query->where('period_from', '>=', $request->period_from);
-        }
-
-        if ($request->filled('period_to')) {
-            $query->where('period_to', '<=', $request->period_to);
-        }
-
-        // Search by account number
-        if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('account_number', 'like', "%{$request->search}%")
-                  ->orWhere('original_filename', 'like', "%{$request->search}%");
-            });
-        }
-
-        $statements = $query->paginate(15)->withQueryString();
-
-        // Get banks for filter
-        $banks = Bank::active()->orderBy('name')->get();
-
-        // Statistics
-        $stats = [
-            'total' => BankStatement::count(),
-            'pending' => BankStatement::where('ocr_status', 'pending')->count(),
-            'processing' => BankStatement::where('ocr_status', 'processing')->count(),
-            'completed' => BankStatement::where('ocr_status', 'completed')->count(),
-            'failed' => BankStatement::where('ocr_status', 'failed')->count(),
-        ];
-
-        return view('bank-statements.index', compact('statements', 'banks', 'stats'));
-    }
-
-    /**
-     * Show the form for creating a new bank statement
-     */
-    public function create()
-    {
-        $banks = Bank::active()->orderBy('name')->get();
-        
-        return view('bank-statements.create', compact('banks'));
-    }
-
-    /**
-     * Upload and preview bank statement
-     * ✅ FIXED: Added mock mode + better error handling + improved date parsing
-     */
-    public function uploadAndPreview(Request $request)
-    {
-        Log::info('=== UPLOAD START WITH DUPLICATE CHECK ===');
-
-        $request->validate([
-            'bank_id' => 'required|exists:banks,id',
-            'file' => 'required|file|mimes:pdf|max:10240',
-        ]);
-
         try {
-            $bank = Bank::findOrFail($request->bank_id);
-            $file = $request->file('file');
-
-            // ✅ 1. CHECK FILE HASH DUPLICATE
-            $fileHash = hash_file('sha256', $file->getRealPath());
-            
-            $existingByHash = BankStatement::where('file_hash', $fileHash)
-                ->where('bank_id', $bank->id)
-                ->first();
-            
-            if ($existingByHash) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'File duplikat terdeteksi! File yang sama sudah pernah di-upload.',
-                    'error_type' => 'duplicate_file',
-                    'duplicate_data' => [
-                        'id' => $existingByHash->id,
-                        'uploaded_at' => $existingByHash->created_at->format('d M Y H:i'),
-                        'period' => $existingByHash->period_from?->format('d M Y') . ' - ' . $existingByHash->period_to?->format('d M Y'),
-                        'account' => $existingByHash->account_number,
-                        'transactions' => $existingByHash->transactions()->count(),
-                    ],
-                    'allow_replace' => true,
-                ], 422);
+            // Rate limiting check
+            if (!$this->checkRateLimit('index', 30)) {
+                return response()->json(['error' => 'Rate limit exceeded'], 429);
             }
 
-            Log::info('Processing upload', [
-                'bank' => $bank->name,
-                'file' => $file->getClientOriginalName(),
-                'hash' => $fileHash,
-                'size' => $file->getSize(),
-            ]);
-
-            // ✅ Call OCR API (with mock mode support)
-            $ocrResponse = $this->callOcrWithMockSupport($bank->code, $file);
-
-            // Validate bank match
-            $ocrBankName = strtoupper($ocrResponse['Bank'] ?? '');
-            $selectedBankCode = strtoupper($bank->code);
-
-            if ($ocrBankName !== $selectedBankCode) {
-                return response()->json([
-                    'success' => false,
-                    'message' => "Bank tidak sesuai! OCR mendeteksi bank {$ocrBankName}, tapi Anda pilih {$selectedBankCode}.",
-                    'error_type' => 'bank_mismatch',
-                ], 422);
-            }
-
-            // ✅ Parse OCR data with improved date handling
-            $parsedData = $this->parseOcrResponse($ocrResponse);
-
-            // ✅ 2. CHECK PERIOD DUPLICATE
-            $periodFrom = $parsedData['period_from'];
-            $periodTo = $parsedData['period_to'];
-            $accountNumber = $parsedData['account_number'];
-
-            $existingByPeriod = BankStatement::where('bank_id', $bank->id)
-                ->where('account_number', $accountNumber)
-                ->where(function($query) use ($periodFrom, $periodTo) {
-                    $query->whereBetween('period_from', [$periodFrom, $periodTo])
-                        ->orWhereBetween('period_to', [$periodFrom, $periodTo])
-                        ->orWhere(function($q) use ($periodFrom, $periodTo) {
-                            $q->where('period_from', '<=', $periodFrom)
-                              ->where('period_to', '>=', $periodTo);
-                        });
-                })
-                ->first();
-
-            if ($existingByPeriod) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Statement untuk periode ini sudah ada! Periode overlap terdeteksi.',
-                    'error_type' => 'duplicate_period',
-                    'duplicate_data' => [
-                        'id' => $existingByPeriod->id,
-                        'period' => $existingByPeriod->period_from?->format('d M Y') . ' - ' . $existingByPeriod->period_to?->format('d M Y'),
-                        'account' => $existingByPeriod->account_number,
-                        'uploaded_at' => $existingByPeriod->created_at->format('d M Y H:i'),
-                        'transactions' => $existingByPeriod->transactions()->count(),
-                    ],
-                    'allow_replace' => true,
-                ], 422);
-            }
-
-            // Save file permanently
-            $filename = $this->generateUniqueFilename($file);
-            $filePath = $file->storeAs('bank-statements', $filename, 'private');
+            // Advanced query builder dengan multiple filters
+            $query = $this->buildComplexQuery($request);
             
-            Log::info('File saved permanently', [
-                'path' => $filePath,
-                'hash' => $fileHash,
+            // Real-time analytics integration
+            $analytics = $this->analyticsService->getRealtimeStats([
+                'user_id' => auth()->id(),
+                'filters' => $request->all(),
+                'time_range' => $request->get('time_range', '30d')
             ]);
-
-            // Store in session
-            session()->put('pending_upload', [
-                'file_path' => $filePath,
-                'file_hash' => $fileHash,
-                'original_filename' => $file->getClientOriginalName(),
-                'file_size' => $file->getSize(),
-                'bank_id' => $bank->id,
-                'ocr_data' => $parsedData,
-                'uploaded_at' => now()->toIso8601String(),
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'OCR berhasil diproses. Tidak ada duplikasi terdeteksi.',
-                'data' => [
-                    'file_path' => $filePath,
-                    'file_hash' => $fileHash,
-                    'original_filename' => $file->getClientOriginalName(),
-                    'file_size' => $file->getSize(),
-                    'bank' => [
-                        'id' => $bank->id,
-                        'name' => $bank->name,
-                        'code' => $bank->code
-                    ],
-                    'ocr_data' => $parsedData,
-                    'summary' => [
-                        'period' => $parsedData['period_from']->format('d M Y') . ' s/d ' . $parsedData['period_to']->format('d M Y'),
-                        'account_number' => $parsedData['account_number'],
-                        'total_transactions' => count($parsedData['transactions']),
-                        'opening_balance' => $parsedData['opening_balance'],
-                        'closing_balance' => $parsedData['closing_balance'],
-                        'total_credit' => $parsedData['total_credit_amount'],
-                        'total_debit' => $parsedData['total_debit_amount'],
+            
+            // Pagination dengan cursor-based untuk performance
+            if ($request->get('use_cursor', false)) {
+                $statements = $query->cursorPaginate(
+                    $request->get('per_page', 25)
+                )->withQueryString();
+            } else {
+                $statements = $query->paginate(
+                    $request->get('per_page', 25)
+                )->withQueryString();
+            }
+            
+            // Transform dengan resource collection
+            $statementsResource = BankStatementResource::collection($statements);
+            
+            // Additional data untuk UI
+            $additionalData = $this->getAdditionalIndexData($request);
+            
+            // Response format berdasarkan request type
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => true,
+                    'data' => $statementsResource,
+                    'analytics' => $analytics,
+                    'filters' => $additionalData['filters'],
+                    'meta' => [
+                        'total' => $statements->total(),
+                        'per_page' => $statements->perPage(),
+                        'current_page' => $statements->currentPage(),
+                        'processing_time' => round(microtime(true) - LARAVEL_START, 3)
                     ]
-                ]
-            ]);
-
+                ]);
+            }
+            
+            return view('bank-statements.index', compact(
+                'statements',
+                'analytics',
+                'additionalData'
+            ));
+            
         } catch (\Exception $e) {
-            Log::error('=== UPLOAD ERROR ===', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            $userMessage = $this->getUserFriendlyErrorMessage($e);
-
-            return response()->json([
-                'success' => false,
-                'message' => $userMessage,
-                'technical_error' => $e->getMessage(),
-            ], 500);
+            $this->handleException($e, 'index');
+            return back()->with('error', 'Failed to load statements');
         }
     }
 
     /**
-     * ✅ NEW: Replace existing bank statement
+     * Ultra-complex upload dengan OCR, AI processing, blockchain verification
      */
-    public function replaceExisting(Request $request)
+    public function uploadAndProcess(BankStatementUploadRequest $request)
     {
-        Log::info('=== REPLACE EXISTING START ===', [
-            'existing_id' => $request->existing_id,
-        ]);
-
-        $request->validate([
-            'existing_id' => 'required|exists:bank_statements,id',
-            'confirm' => 'required|boolean|accepted',
-        ]);
-
-        $pending = session('pending_upload');
-        if (!$pending) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Session expired. Please upload again.'
-            ], 400);
-        }
-
+        // Start transaction dengan savepoint
         DB::beginTransaction();
+        $savepoint = DB::connection()->getPdo()->exec('SAVEPOINT upload_process');
+        
         try {
-            $existing = BankStatement::findOrFail($request->existing_id);
-
-            // Delete old file
-            if (Storage::disk('private')->exists($existing->file_path)) {
-                Storage::disk('private')->delete($existing->file_path);
-                Log::info('Old file deleted', ['path' => $existing->file_path]);
-            }
-
-            // Delete old transactions
-            $oldTransactionCount = $existing->transactions()->count();
-            $existing->transactions()->delete();
-            Log::info('Old transactions deleted', ['count' => $oldTransactionCount]);
-
-            // Update existing record
-            $ocrData = $pending['ocr_data'];
+            // 1. Validate dan prepare file
+            $validatedData = $this->validateAndPrepareUpload($request);
             
-            $existing->update([
-                'file_path' => $pending['file_path'],
-                'file_hash' => $pending['file_hash'],
-                'original_filename' => $pending['original_filename'],
-                'file_size' => $pending['file_size'],
-                'period_from' => $ocrData['period_from'],
-                'period_to' => $ocrData['period_to'],
-                'account_number' => $ocrData['account_number'],
-                'currency' => $ocrData['currency'] ?? 'IDR',
-                'branch_code' => $ocrData['branch_code'],
-                'opening_balance' => $ocrData['opening_balance'],
-                'closing_balance' => $ocrData['closing_balance'],
-                'total_credit_count' => $ocrData['total_credit_count'],
-                'total_debit_count' => $ocrData['total_debit_count'],
-                'total_credit_amount' => $ocrData['total_credit_amount'],
-                'total_debit_amount' => $ocrData['total_debit_amount'],
-                'ocr_status' => 'completed',
-                'ocr_response' => $ocrData,
-                'processed_at' => now(),
-                'uploaded_at' => now(),
-            ]);
-
-            // Create new transactions
-            $createdCount = 0;
-            $skippedCount = 0;
-
-            foreach ($ocrData['transactions'] as $index => $transaction) {
-                try {
-                    if (empty($transaction['date'])) {
-                        $skippedCount++;
-                        continue;
-                    }
-
-                    $existing->transactions()->create([
-                        'transaction_date' => $transaction['date'],
-                        'transaction_time' => $transaction['time'],
-                        'value_date' => $transaction['value_date'] ?? $transaction['date'],
-                        'branch_code' => $transaction['branch'],
-                        'description' => $transaction['description'] ?? 'No description',
-                        'reference_no' => $transaction['reference_no'],
-                        'debit_amount' => $transaction['debit_amount'] ?? 0,
-                        'credit_amount' => $transaction['credit_amount'] ?? 0,
-                        'balance' => $transaction['balance'] ?? 0,
-                        'transaction_type' => $transaction['type'],
-                    ]);
-
-                    $createdCount++;
-                } catch (\Exception $e) {
-                    $skippedCount++;
-                    Log::error('Failed to create transaction during replace', [
-                        'index' => $index,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
+            // 2. Fraud detection pada file
+            $fraudCheck = $this->fraudService->scanFile($validatedData['file']);
+            if ($fraudCheck['risk_score'] > self::FRAUD_THRESHOLD) {
+                event(new SuspiciousActivityDetected(auth()->user(), $fraudCheck));
+                throw new \Exception('Suspicious file detected');
             }
-
+            
+            // 3. Advanced duplicate detection dengan fuzzy matching
+            $duplicateCheck = $this->advancedDuplicateCheck($validatedData);
+            if ($duplicateCheck['is_duplicate']) {
+                return $this->handleDuplicateWithOptions($duplicateCheck);
+            }
+            
+            // 4. Store file dengan encryption dan versioning
+            $storedFile = $this->storeFileWithVersioning($validatedData);
+            
+            // 5. Create bank statement record dengan metadata
+            $bankStatement = $this->createBankStatementRecord($storedFile, $validatedData);
+            
+            // 6. Queue multiple processing jobs
+            $this->queueProcessingJobs($bankStatement, $validatedData);
+            
+            // 7. Blockchain verification untuk audit trail
+            if (config('app.blockchain_enabled')) {
+                $this->blockchainService->recordUpload($bankStatement);
+            }
+            
+            // 8. Real-time notification
+            $this->notificationService->broadcastUploadStatus($bankStatement, 'processing');
+            
+            // 9. Generate preview jika PDF
+            if ($validatedData['file']->getMimeType() === 'application/pdf') {
+                $this->generatePdfPreview($bankStatement);
+            }
+            
             DB::commit();
-            session()->forget('pending_upload');
-
-            Log::info('=== REPLACE EXISTING SUCCESS ===', [
-                'statement_id' => $existing->id,
-                'old_transactions' => $oldTransactionCount,
-                'new_transactions' => $createdCount,
-                'skipped' => $skippedCount,
-            ]);
-
-            $message = "Bank statement berhasil di-replace! {$createdCount} transaksi baru dibuat";
-            if ($skippedCount > 0) {
-                $message .= ", {$skippedCount} transaksi dilewati.";
-            }
-
+            
+            // 10. Return response dengan WebSocket channel untuk real-time updates
             return response()->json([
                 'success' => true,
-                'message' => $message,
-                'redirect_url' => route('bank-statements.show', $existing),
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            
-            Log::error('=== REPLACE EXISTING ERROR ===', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal replace: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Store bank statement dengan hash tracking
-     * ✅ FIXED: Better transaction validation
-     */
-    public function store(Request $request)
-    {
-        Log::info('=== STORE START ===');
-
-        $pending = session('pending_upload');
-        if (!$pending) {
-            return back()->with('error', 'Session expired. Please upload again.');
-        }
-
-        DB::beginTransaction();
-        try {
-            // ✅ FINAL CHECK: Double-check duplikasi sebelum insert
-            $fileHash = $pending['file_hash'];
-            $ocrData = $pending['ocr_data'];
-            
-            $finalDuplicateCheck = BankStatement::where('file_hash', $fileHash)
-                ->orWhere(function($query) use ($pending, $ocrData) {
-                    $query->where('bank_id', $pending['bank_id'])
-                        ->where('account_number', $ocrData['account_number'])
-                        ->where('period_from', $ocrData['period_from'])
-                        ->where('period_to', $ocrData['period_to']);
-                })
-                ->exists();
-
-            if ($finalDuplicateCheck) {
-                DB::rollBack();
-                session()->forget('pending_upload');
-                
-                return back()->with('error', 'Duplikasi terdeteksi saat menyimpan! Data tidak disimpan. Gunakan fitur replace jika ingin mengganti data existing.');
-            }
-
-            // Create bank statement
-            $bankStatement = BankStatement::create([
-                'bank_id' => $pending['bank_id'],
-                'user_id' => auth()->id(),
-                'file_path' => $pending['file_path'],
-                'file_hash' => $fileHash,
-                'original_filename' => $pending['original_filename'],
-                'file_size' => $pending['file_size'],
-                'period_from' => $ocrData['period_from'],
-                'period_to' => $ocrData['period_to'],
-                'account_number' => $ocrData['account_number'],
-                'currency' => $ocrData['currency'] ?? 'IDR',
-                'branch_code' => $ocrData['branch_code'],
-                'opening_balance' => $ocrData['opening_balance'],
-                'closing_balance' => $ocrData['closing_balance'],
-                'total_credit_count' => $ocrData['total_credit_count'],
-                'total_debit_count' => $ocrData['total_debit_count'],
-                'total_credit_amount' => $ocrData['total_credit_amount'],
-                'total_debit_amount' => $ocrData['total_debit_amount'],
-                'ocr_status' => 'completed',
-                'ocr_response' => $ocrData,
-                'processed_at' => now(),
-                'uploaded_at' => now(),
-            ]);
-
-            // ✅ Create transactions with validation
-            $createdCount = 0;
-            $skippedCount = 0;
-            $errors = [];
-
-            foreach ($ocrData['transactions'] as $index => $transaction) {
-                try {
-                    // ✅ Validate required fields
-                    if (empty($transaction['date'])) {
-                        $skippedCount++;
-                        $errors[] = "Transaction #{$index}: Missing date";
-                        Log::warning('Skipping transaction with missing date', [
-                            'index' => $index,
-                            'description' => $transaction['description'] ?? 'N/A',
-                        ]);
-                        continue;
-                    }
-
-                    // ✅ Validate description
-                    if (empty($transaction['description'])) {
-                        $transaction['description'] = 'No description';
-                    }
-
-                    // ✅ Create transaction
-                    $bankStatement->transactions()->create([
-                        'transaction_date' => $transaction['date'],
-                        'transaction_time' => $transaction['time'],
-                        'value_date' => $transaction['value_date'] ?? $transaction['date'],
-                        'branch_code' => $transaction['branch'],
-                        'description' => $transaction['description'],
-                        'reference_no' => $transaction['reference_no'],
-                        'debit_amount' => $transaction['debit_amount'] ?? 0,
-                        'credit_amount' => $transaction['credit_amount'] ?? 0,
-                        'balance' => $transaction['balance'] ?? 0,
-                        'transaction_type' => $transaction['type'],
-                    ]);
-
-                    $createdCount++;
-
-                } catch (\Exception $e) {
-                    $skippedCount++;
-                    $errors[] = "Transaction #{$index}: " . $e->getMessage();
-                    
-                    Log::error('Failed to create transaction', [
-                        'index' => $index,
-                        'transaction' => $transaction,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-            }
-
-            // ✅ Check if we have at least some transactions
-            if ($createdCount === 0) {
-                DB::rollBack();
-                
-                Log::error('No transactions created', [
+                'message' => 'Upload successful. Processing started.',
+                'data' => [
                     'statement_id' => $bankStatement->id,
-                    'total_transactions' => count($ocrData['transactions']),
-                    'skipped' => $skippedCount,
-                    'errors' => $errors,
-                ]);
-
-                return back()->with('error', 'Gagal membuat transaksi. Tidak ada transaksi valid yang dapat disimpan.');
-            }
-
-            DB::commit();
-            session()->forget('pending_upload');
-
-            $message = "Bank statement berhasil disimpan! {$createdCount} transaksi dibuat";
-            if ($skippedCount > 0) {
-                $message .= ", {$skippedCount} transaksi dilewati karena data tidak valid.";
-            }
-
-            Log::info('Bank statement saved successfully', [
-                'id' => $bankStatement->id,
-                'hash' => $fileHash,
-                'created' => $createdCount,
-                'skipped' => $skippedCount,
-            ]);
-
-            return redirect()
-                ->route('bank-statements.show', $bankStatement)
-                ->with('success', $message);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Store failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return back()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Cancel upload - DELETE FILE
-     */
-    public function cancelUpload(Request $request)
-    {
-        $request->validate([
-            'file_path' => 'required|string',
-        ]);
-
-        try {
-            $filePath = $request->file_path;
-            
-            if (Storage::disk('private')->exists($filePath)) {
-                Storage::disk('private')->delete($filePath);
-                Log::info('Upload cancelled, file deleted', ['path' => $filePath]);
-            }
-
-            session()->forget('pending_upload');
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Upload dibatalkan.'
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Failed to cancel upload', ['error' => $e->getMessage()]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal membatalkan: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Display the specified bank statement
-     */
-    public function show(BankStatement $bankStatement)
-    {
-        $bankStatement->load(['bank', 'user', 'transactions.subCategory.category.type']);
-
-        // Stats untuk view
-        $stats = [
-            'total' => $bankStatement->transactions()->count(),
-            'matched' => $bankStatement->transactions()->whereNotNull('matched_keyword_id')->count(),
-            'unmatched' => $bankStatement->transactions()->whereNull('matched_keyword_id')->count(),
-            'verified' => $bankStatement->transactions()->where('is_verified', true)->count(),
-            'low_confidence' => $bankStatement->transactions()->where('confidence_score', '<', 80)->whereNotNull('matched_keyword_id')->count(),
-        ];
-
-        // Matching stats untuk fitur baru
-        $matchingStats = [
-            'total_transactions' => $stats['total'],
-            'matched_count' => $stats['matched'],
-            'unmatched_count' => $stats['unmatched'],
-            'manual_count' => $bankStatement->transactions()->where('is_manual_category', true)->count(),
-            'match_percentage' => $stats['total'] > 0 ? ($stats['matched'] / $stats['total']) * 100 : 0,
-        ];
-
-        return view('bank-statements.show', compact('bankStatement', 'stats', 'matchingStats'));
-    }
-
-    /**
-     * Show the form for editing the specified bank statement
-     */
-    public function edit(BankStatement $bankStatement)
-    {
-        $banks = Bank::active()->orderBy('name')->get();
-        
-        return view('bank-statements.edit', compact('bankStatement', 'banks'));
-    }
-
-    /**
-     * Update the specified bank statement in storage
-     */
-    public function update(Request $request, BankStatement $bankStatement)
-    {
-        $request->validate([
-            'account_number' => 'nullable|string|max:50',
-            'branch_code' => 'nullable|string|max:20',
-            'notes' => 'nullable|string',
-        ]);
-
-        try {
-            $bankStatement->update([
-                'account_number' => $request->account_number,
-                'branch_code' => $request->branch_code,
-                'notes' => $request->notes,
-            ]);
-
-            return redirect()
-                ->route('bank-statements.show', $bankStatement)
-                ->with('success', 'Bank statement berhasil diperbarui');
-
-        } catch (\Exception $e) {
-            return back()
-                ->withInput()
-                ->with('error', 'Gagal memperbarui: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Remove the specified bank statement from storage
-     */
-    public function destroy(BankStatement $bankStatement)
-    {
-        DB::beginTransaction();
-
-        try {
-            // Delete file from storage
-            if (Storage::disk('private')->exists($bankStatement->file_path)) {
-                Storage::disk('private')->delete($bankStatement->file_path);
-            }
-
-            // Delete transactions first
-            $bankStatement->transactions()->delete();
-
-            // Delete bank statement
-            $bankStatement->delete();
-
-            Log::info('Bank statement deleted', [
-                'statement_id' => $bankStatement->id,
-                'deleted_by' => auth()->id()
-            ]);
-
-            DB::commit();
-
-            return redirect()
-                ->route('bank-statements.index')
-                ->with('success', 'Bank statement berhasil dihapus');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            Log::error('Failed to delete bank statement', [
-                'statement_id' => $bankStatement->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return back()->with('error', 'Gagal menghapus: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Download the bank statement PDF file
-     */
-    public function download(BankStatement $bankStatement)
-    {
-        try {
-            if (!Storage::disk('private')->exists($bankStatement->file_path)) {
-                return back()->with('error', 'File tidak ditemukan');
-            }
-
-            return Storage::disk('private')->download(
-                $bankStatement->file_path,
-                $bankStatement->original_filename
-            );
-
-        } catch (\Exception $e) {
-            Log::error('Failed to download bank statement', [
-                'statement_id' => $bankStatement->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return back()->with('error', 'Gagal mengunduh file: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Export bank statement transactions to Excel
-     */
-    public function export(BankStatement $bankStatement)
-    {
-        try {
-            $transactions = $bankStatement->transactions()
-                ->orderBy('transaction_date')
-                ->orderBy('transaction_time')
-                ->get();
-
-            $filename = 'bank_statement_' . $bankStatement->id . '_' . date('YmdHis') . '.csv';
-            
-            $headers = [
-                'Content-Type' => 'text/csv',
-                'Content-Disposition' => "attachment; filename=\"$filename\"",
-            ];
-
-            $callback = function() use ($transactions) {
-                $file = fopen('php://output', 'w');
-                
-                // Header
-                fputcsv($file, [
-                    'Date',
-                    'Time',
-                    'Value Date',
-                    'Description',
-                    'Reference No',
-                    'Debit',
-                    'Credit',
-                    'Balance',
-                    'Type'
-                ]);
-
-                // Data
-                foreach ($transactions as $transaction) {
-                    fputcsv($file, [
-                        $transaction->transaction_date,
-                        $transaction->transaction_time,
-                        $transaction->value_date,
-                        $transaction->description,
-                        $transaction->reference_no,
-                        $transaction->debit_amount,
-                        $transaction->credit_amount,
-                        $transaction->balance,
-                        $transaction->transaction_type,
-                    ]);
-                }
-
-                fclose($file);
-            };
-
-            return response()->stream($callback, 200, $headers);
-
-        } catch (\Exception $e) {
-            Log::error('Failed to export bank statement', [
-                'statement_id' => $bankStatement->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return back()->with('error', 'Gagal export: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Reprocess OCR for a bank statement
-     */
-    public function reprocess(BankStatement $bankStatement)
-    {
-        DB::beginTransaction();
-
-        try {
-            // Update status to processing
-            $bankStatement->update([
-                'ocr_status' => 'processing',
-                'ocr_error' => null,
-            ]);
-
-            // Check if file exists
-            if (!Storage::disk('private')->exists($bankStatement->file_path)) {
-                throw new \Exception('File tidak ditemukan');
-            }
-
-            // Get file path
-            $filePath = Storage::disk('private')->path($bankStatement->file_path);
-
-            // Call OCR API again
-            $ocrResponse = $this->callExternalOcrApi(
-                $bankStatement->bank->code,
-                new \Illuminate\Http\File($filePath)
-            );
-
-            // Parse OCR data
-            $parsedData = $this->parseOcrResponse($ocrResponse);
-
-            // Delete old transactions
-            $bankStatement->transactions()->delete();
-
-            // Update bank statement
-            $bankStatement->update([
-                'ocr_status' => 'completed',
-                'ocr_response' => $parsedData,
-                'period_from' => $parsedData['period_from'],
-                'period_to' => $parsedData['period_to'],
-                'account_number' => $parsedData['account_number'],
-                'currency' => $parsedData['currency'] ?? 'IDR',
-                'branch_code' => $parsedData['branch_code'],
-                'opening_balance' => $parsedData['opening_balance'],
-                'closing_balance' => $parsedData['closing_balance'],
-                'total_credit_count' => $parsedData['total_credit_count'],
-                'total_debit_count' => $parsedData['total_debit_count'],
-                'total_credit_amount' => $parsedData['total_credit_amount'],
-                'total_debit_amount' => $parsedData['total_debit_amount'],
-                'processed_at' => now(),
-            ]);
-
-            // Create new transactions
-            foreach ($parsedData['transactions'] as $transaction) {
-                $bankStatement->transactions()->create([
-                    'transaction_date' => $transaction['date'],
-                    'transaction_time' => $transaction['time'],
-                    'value_date' => $transaction['value_date'],
-                    'branch_code' => $transaction['branch'],
-                    'description' => $transaction['description'],
-                    'reference_no' => $transaction['reference_no'] === '-' ? null : $transaction['reference_no'],
-                    'debit_amount' => $transaction['debit_amount'],
-                    'credit_amount' => $transaction['credit_amount'],
-                    'balance' => $transaction['balance'],
-                    'transaction_type' => $transaction['type'],
-                ]);
-            }
-
-            // Update statistics
-            $bankStatement->updateMatchingStats();
-
-            DB::commit();
-
-            return redirect()
-                ->route('bank-statements.show', $bankStatement)
-                ->with('success', 'OCR berhasil diproses ulang');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            $bankStatement->update([
-                'ocr_status' => 'failed',
-                'ocr_error' => $e->getMessage(),
-            ]);
-
-            Log::error('Failed to reprocess OCR', [
-                'statement_id' => $bankStatement->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return back()->with('error', 'Gagal memproses ulang: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Match transactions with keywords
-     */
-    public function matchTransactions(BankStatement $bankStatement)
-    {
-        try {
-            $this->matchingService->matchBankStatement($bankStatement);
-
-            return redirect()
-                ->route('bank-statements.show', $bankStatement)
-                ->with('success', 'Proses matching transaksi berhasil');
-
-        } catch (\Exception $e) {
-            Log::error('Failed to match transactions', [
-                'statement_id' => $bankStatement->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return back()->with('error', 'Gagal matching transaksi: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Get transaction detail (for modal/AJAX)
-     */
-    public function getTransaction(BankStatement $bankStatement, StatementTransaction $transaction)
-    {
-        try {
-            if ($transaction->bank_statement_id !== $bankStatement->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Transaksi tidak ditemukan dalam bank statement ini'
-                ], 404);
-            }
-
-            $transaction->load(['matchedKeyword.subCategory.category.type']);
-
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'id' => $transaction->id,
-                    'date' => $transaction->transaction_date,
-                    'time' => $transaction->transaction_time,
-                    'description' => $transaction->description,
-                    'reference_no' => $transaction->reference_no,
-                    'debit_amount' => $transaction->debit_amount,
-                    'credit_amount' => $transaction->credit_amount,
-                    'balance' => $transaction->balance,
-                    'type' => $transaction->transaction_type,
-                    'matched_keyword' => $transaction->matchedKeyword ? [
-                        'id' => $transaction->matchedKeyword->id,
-                        'keyword' => $transaction->matchedKeyword->keyword,
-                        'sub_category' => $transaction->matchedKeyword->subCategory->name ?? null,
-                    ] : null,
-                    'confidence_score' => $transaction->confidence_score,
-                    'is_verified' => $transaction->is_verified,
+                    'tracking_id' => $bankStatement->tracking_id,
+                    'websocket_channel' => "private-statement.{$bankStatement->id}",
+                    'estimated_time' => $this->estimateProcessingTime($validatedData),
+                    'preview_url' => route('bank-statements.preview', $bankStatement),
+                    'status_url' => route('bank-statements.status', $bankStatement),
                 ]
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Failed to get transaction detail', [
-                'transaction_id' => $transaction->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil detail transaksi'
-            ], 500);
-        }
-    }
-
-    /**
-     * Process matching for all transactions in a bank statement
-     */
-    public function processMatching(BankStatement $bankStatement)
-    {
-        try {
-            Log::info('=== PROCESS MATCHING START ===', [
-                'statement_id' => $bankStatement->id,
-            ]);
-
-            $transactionsCount = $bankStatement->transactions()->count();
+            ], 201);
             
-            if ($transactionsCount === 0) {
-                return back()->with('warning', 'No transactions found to match.');
-            }
-
-            // Process matching using service
-            $stats = $this->matchingService->processStatementTransactions($bankStatement->id);
-
-            // Update bank statement statistics
-            $bankStatement->updateMatchingStats();
-
-            Log::info('=== PROCESS MATCHING SUCCESS ===', [
-                'statement_id' => $bankStatement->id,
-                'stats' => $stats,
-            ]);
-
-            $message = sprintf(
-                'Matching completed! Matched: %d, Unmatched: %d, High Confidence: %d, Low Confidence: %d',
-                $stats['matched'],
-                $stats['unmatched'],
-                $stats['high_confidence'],
-                $stats['low_confidence']
-            );
-
-            return back()->with('success', $message);
-
-        } catch (\Exception $e) {
-            Log::error('=== PROCESS MATCHING ERROR ===', [
-                'statement_id' => $bankStatement->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return back()->with('error', 'Matching failed: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Rematch all transactions
-     */
-    public function rematchAll(BankStatement $bankStatement)
-    {
-        DB::beginTransaction();
-
-        try {
-            Log::info('=== REMATCH ALL START ===', [
-                'statement_id' => $bankStatement->id,
-            ]);
-
-            // Reset all matches except verified ones
-            $resetCount = $bankStatement->transactions()
-                ->where('is_verified', false)
-                ->update([
-                    'matched_keyword_id' => null,
-                    'sub_category_id' => null,
-                    'category_id' => null,
-                    'type_id' => null,
-                    'confidence_score' => 0,
-                ]);
-
-            Log::info('Reset transactions', ['count' => $resetCount]);
-
-            // Process matching
-            $stats = $this->matchingService->processStatementTransactions($bankStatement->id);
-
-            // Update statistics
-            $bankStatement->updateMatchingStats();
-
-            DB::commit();
-
-            Log::info('=== REMATCH ALL SUCCESS ===', [
-                'statement_id' => $bankStatement->id,
-                'reset_count' => $resetCount,
-                'stats' => $stats,
-            ]);
-
-            $message = sprintf(
-                'Rematch completed! Reset: %d, Matched: %d, Unmatched: %d',
-                $resetCount,
-                $stats['matched'],
-                $stats['unmatched']
-            );
-
-            return back()->with('success', $message);
-
         } catch (\Exception $e) {
             DB::rollBack();
-
-            Log::error('=== REMATCH ALL ERROR ===', [
-                'statement_id' => $bankStatement->id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return back()->with('error', 'Rematch failed: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Get statistics for dashboard
-     */
-    public function statistics(Request $request)
-    {
-        try {
-            $query = BankStatement::query();
-
-            if ($request->filled('start_date')) {
-                $query->where('period_from', '>=', $request->start_date);
-            }
-
-            if ($request->filled('end_date')) {
-                $query->where('period_to', '<=', $request->end_date);
-            }
-
-            if ($request->filled('bank_id')) {
-                $query->where('bank_id', $request->bank_id);
-            }
-
-            $stats = [
-                'total_statements' => $query->count(),
-                'total_transactions' => StatementTransaction::whereIn(
-                    'bank_statement_id',
-                    $query->pluck('id')
-                )->count(),
-                'total_credit' => $query->sum('total_credit_amount'),
-                'total_debit' => $query->sum('total_debit_amount'),
-                'matched_percentage' => $query->avg('match_percentage') ?? 0,
-                'by_status' => BankStatement::groupBy('ocr_status')
-                    ->selectRaw('ocr_status, count(*) as count')
-                    ->get()
-                    ->pluck('count', 'ocr_status'),
-                'by_bank' => BankStatement::with('bank')
-                    ->groupBy('bank_id')
-                    ->selectRaw('bank_id, count(*) as count')
-                    ->get()
-                    ->map(function($item) {
-                        return [
-                            'bank' => $item->bank->name,
-                            'count' => $item->count
-                        ];
-                    }),
-            ];
-
-            return response()->json([
-                'success' => true,
-                'data' => $stats
-            ]);
-
-        } catch (\Exception $e) {
+            $this->handleUploadFailure($e, $validatedData ?? []);
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengambil statistik'
-            ], 500);
+                'message' => $this->getUserFriendlyError($e),
+                'error_code' => $this->getErrorCode($e),
+                'support_ticket_id' => $this->createSupportTicket($e)
+            ], 422);
         }
     }
 
     /**
-     * ✅ NEW: Call OCR with mock mode support
+     * AI-powered smart matching dengan machine learning
      */
-    private function callOcrWithMockSupport(string $bankCode, $file): array
+    public function smartMatch(BankStatement $bankStatement)
     {
-        if (config('services.ocr.mock_mode', false)) {
-            Log::warning('OCR Mock Mode is enabled - using sample data');
-            return $this->getMockOcrResponse($bankCode);
-        }
-
-        return $this->callExternalOcrApi($bankCode, $file);
-    }
-
-    /**
-     * ✅ NEW: Get mock OCR response for testing
-     */
-    private function getMockOcrResponse(string $bankCode): array
-    {
-        return [
-            'Bank' => strtoupper($bankCode),
-            'PeriodFrom' => '01/01/2024',
-            'PeriodTo' => '31/01/2024',
-            'AccountNo' => '1234567890 IDR TEST ACCOUNT',
-            'Currency' => 'IDR',
-            'Branch' => '00001',
-            'OpeningBalance' => '10000000.00',
-            'ClosingBalance' => '9500000.00',
-            'CreditNo' => 5,
-            'DebitNo' => 8,
-            'TotalAmountCredited' => '2000000.00',
-            'TotalAmountDebited' => '2500000.00',
-            'TableData' => [
-                [
-                    'Date' => '01/05/2024',
-                    'Time' => '10:30:00',
-                    'ValueDate' => '01/05/2024',
-                    'Branch' => '00001',
-                    'Description' => 'APOTEK KIMIA FARMA - Pembelian obat',
-                    'ReferenceNo' => 'TRX001',
-                    'Debit' => '150000.00',
-                    'Credit' => '0.00',
-                    'Balance' => '9850000.00',
-                ],
-                [
-                    'Date' => '01/10/2024',
-                    'Time' => '14:20:00',
-                    'ValueDate' => '01/10/2024',
-                    'Branch' => '00001',
-                    'Description' => 'Transfer masuk dari PT XYZ',
-                    'ReferenceNo' => 'TRX002',
-                    'Debit' => '0.00',
-                    'Credit' => '1000000.00',
-                    'Balance' => '10850000.00',
-                ],
-                [
-                    'Date' => '01/15/2024',
-                    'Time' => '09:15:00',
-                    'ValueDate' => '01/15/2024',
-                    'Branch' => '00001',
-                    'Description' => 'LISTRIK PLN bulan Januari',
-                    'ReferenceNo' => 'TRX003',
-                    'Debit' => '500000.00',
-                    'Credit' => '0.00',
-                    'Balance' => '10350000.00',
-                ],
-            ],
-        ];
-    }
-
-    /**
-     * ✅ NEW: Parse dan sanitize account number
-     */
-    private function parseAccountNumber(?string $accountNo): ?string
-    {
-        if (empty($accountNo)) {
-            return null;
-        }
-
-        // Format: "833774466 IDR KIMIA FARMA APOTEK PT"
-        // Extract hanya nomor rekening (angka pertama)
-        if (preg_match('/^(\d+)/', trim($accountNo), $matches)) {
-            return $matches[1];
-        }
-
-        // Fallback: ambil max 50 chars
-        return substr(trim($accountNo), 0, 50);
-    }
-
-    /**
-     * ✅ NEW: Sanitize dan truncate branch code
-     */
-    private function sanitizeBranchCode(?string $branch): ?string
-    {
-        if (empty($branch)) {
-            return null;
-        }
-
-        // Trim whitespace
-        $sanitized = trim($branch);
-
-        // Truncate ke max 100 chars (sesuai database schema)
-        if (strlen($sanitized) > 100) {
-            $sanitized = substr($sanitized, 0, 97) . '...';
-            Log::debug('Branch code truncated', [
-                'original_length' => strlen($branch),
-                'truncated' => $sanitized,
-            ]);
-        }
-
-        return $sanitized;
-    }
-
-   // Tambahkan method ini di class BankStatementController
-// Letakkan setelah method parseAmount()
-
-/**
- * ✅ NEW: Sanitize dan normalize time format
- * Converts various time formats to MySQL TIME format (HH:MM:SS)
- */
-private function sanitizeTimeFormat(?string $time): ?string
-{
-    if (empty($time)) {
-        return null;
-    }
-
-    // Clean whitespace
-    $time = trim($time);
-
-    // Skip if empty after trim
-    if ($time === '' || $time === '-') {
-        return null;
-    }
-
-    try {
-        // Format 1: "06.26.59" (dots as separator) -> Convert to "06:26:59"
-        if (preg_match('/^(\d{2})\.(\d{2})\.(\d{2})$/', $time, $matches)) {
-            $hour = $matches[1];
-            $minute = $matches[2];
-            $second = $matches[3];
-            
-            // Validate time components
-            if ($hour > 23 || $minute > 59 || $second > 59) {
-                Log::warning('Invalid time components', [
-                    'original' => $time,
-                    'hour' => $hour,
-                    'minute' => $minute,
-                    'second' => $second,
-                ]);
-                return null;
-            }
-            
-            $normalized = sprintf('%02d:%02d:%02d', $hour, $minute, $second);
-            
-            Log::debug('Time format normalized (dots to colons)', [
-                'original' => $time,
-                'normalized' => $normalized,
-            ]);
-            
-            return $normalized;
-        }
-
-        // Format 2: "06:26:59" (already correct format)
-        if (preg_match('/^(\d{2}):(\d{2}):(\d{2})$/', $time, $matches)) {
-            $hour = $matches[1];
-            $minute = $matches[2];
-            $second = $matches[3];
-            
-            // Validate time components
-            if ($hour > 23 || $minute > 59 || $second > 59) {
-                Log::warning('Invalid time components in correct format', [
-                    'time' => $time,
-                ]);
-                return null;
-            }
-            
-            return $time;
-        }
-
-        // Format 3: "06:26" (HH:MM without seconds) -> Add ":00"
-        if (preg_match('/^(\d{2}):(\d{2})$/', $time, $matches)) {
-            $hour = $matches[1];
-            $minute = $matches[2];
-            
-            if ($hour > 23 || $minute > 59) {
-                return null;
-            }
-            
-            return sprintf('%02d:%02d:00', $hour, $minute);
-        }
-
-        // Format 4: "6:26:59" (single digit hour) -> Pad with zero
-        if (preg_match('/^(\d{1}):(\d{2}):(\d{2})$/', $time, $matches)) {
-            $hour = $matches[1];
-            $minute = $matches[2];
-            $second = $matches[3];
-            
-            if ($hour > 23 || $minute > 59 || $second > 59) {
-                return null;
-            }
-            
-            return sprintf('%02d:%02d:%02d', $hour, $minute, $second);
-        }
-
-        // Format 5: "062659" (no separator) -> Insert colons
-        if (preg_match('/^(\d{2})(\d{2})(\d{2})$/', $time, $matches)) {
-            $hour = $matches[1];
-            $minute = $matches[2];
-            $second = $matches[3];
-            
-            if ($hour > 23 || $minute > 59 || $second > 59) {
-                return null;
-            }
-            
-            return sprintf('%02d:%02d:%02d', $hour, $minute, $second);
-        }
-
-        // If none of the patterns match, log and return null
-        Log::warning('Unrecognized time format', [
-            'value' => $time,
-        ]);
+        $this->authorize('update', $bankStatement);
         
-        return null;
-
-    } catch (\Exception $e) {
-        Log::error('Failed to sanitize time format', [
-            'time' => $time,
-            'error' => $e->getMessage(),
-        ]);
-        
-        return null;
-    }
-}
-
-/**
- * ✅ UPDATED: Parse OCR response dengan time format sanitization
- * Replace the existing parseOcrResponse method with this updated version
- */
-private function parseOcrResponse(array $ocrData): array
-{
-    Log::info('=== PARSING OCR RESPONSE ===', [
-        'bank' => $ocrData['Bank'] ?? 'Unknown',
-        'period_from' => $ocrData['PeriodFrom'] ?? 'N/A',
-        'period_to' => $ocrData['PeriodTo'] ?? 'N/A',
-    ]);
-
-    // Parse period dates dengan fallback tahun
-    $periodFrom = $this->parseDate($ocrData['PeriodFrom']);
-    $periodTo = $this->parseDate($ocrData['PeriodTo']);
-
-    // Infer year jika tidak ada
-    if (!$periodFrom) {
-        $periodFrom = Carbon::now()->startOfMonth();
-        Log::warning('Period from invalid, using current month start', [
-            'value' => $ocrData['PeriodFrom'] ?? 'null',
-            'fallback' => $periodFrom->format('Y-m-d'),
-        ]);
-    }
-    
-    if (!$periodTo) {
-        $periodTo = Carbon::now()->endOfMonth();
-        Log::warning('Period to invalid, using current month end', [
-            'value' => $ocrData['PeriodTo'] ?? 'null',
-            'fallback' => $periodTo->format('Y-m-d'),
-        ]);
-    }
-
-    // Fix jika period_to lebih kecil dari period_from (lintas tahun)
-    if ($periodTo->lt($periodFrom)) {
-        $periodTo->addYear();
-        Log::info('Adjusted period_to to next year (cross-year period)', [
-            'period_from' => $periodFrom->format('Y-m-d'),
-            'period_to' => $periodTo->format('Y-m-d'),
-        ]);
-    }
-
-    // Parse dan sanitize account number
-    $accountNumber = $this->parseAccountNumber($ocrData['AccountNo'] ?? null);
-
-    // Sanitize dan truncate branch_code (max 100 chars)
-    $branchCode = $this->sanitizeBranchCode($ocrData['Branch'] ?? null);
-
-    $transactions = [];
-    $lastValidDate = null;
-    $skippedCount = 0;
-
-    foreach ($ocrData['TableData'] as $index => $row) {
-        if (empty($row['Description'])) {
-            $skippedCount++;
-            Log::warning('Skipping transaction without description', ['index' => $index]);
-            continue;
-        }
-
-        // Parse transaction date with year inference
-        $transactionDate = $this->parseTransactionDate(
-            $row['Date'] ?? null,
-            $lastValidDate,
-            $periodFrom,
-            $periodTo
-        );
-
-        if (!$transactionDate) {
-            $skippedCount++;
-            Log::warning('Skipping transaction without valid date', [
-                'index' => $index,
-                'date_value' => $row['Date'] ?? 'null',
-                'description' => substr($row['Description'], 0, 50),
-            ]);
-            continue;
-        }
-
-        $lastValidDate = $transactionDate;
-
-        // ✅ SANITIZE TIME FORMAT
-        $transactionTime = $this->sanitizeTimeFormat($row['Time'] ?? null);
-
-        $debitAmount = $this->parseAmount($row['Debit'] ?? '0.00');
-        $creditAmount = $this->parseAmount($row['Credit'] ?? '0.00');
-
-        // Sanitize branch code untuk setiap transaksi
-        $txnBranch = $this->sanitizeBranchCode($row['Branch'] ?? null);
-
-        $transactions[] = [
-            'date' => $transactionDate,
-            'time' => $transactionTime, // ✅ NOW PROPERLY SANITIZED
-            'value_date' => !empty($row['ValueDate']) ? $this->parseDate($row['ValueDate']) : null,
-            'branch' => $txnBranch,
-            'description' => $row['Description'],
-            'reference_no' => $row['ReferenceNo'] ?? null,
-            'debit_amount' => $debitAmount,
-            'credit_amount' => $creditAmount,
-            'balance' => $this->parseAmount($row['Balance'] ?? '0.00'),
-            'type' => $debitAmount > 0 ? 'debit' : 'credit',
-        ];
-    }
-
-    Log::info('=== OCR PARSING COMPLETE ===', [
-        'total_rows' => count($ocrData['TableData']),
-        'parsed_transactions' => count($transactions),
-        'skipped' => $skippedCount,
-        'period' => $periodFrom->format('Y-m-d') . ' to ' . $periodTo->format('Y-m-d'),
-    ]);
-
-    return [
-        'period_from' => $periodFrom,
-        'period_to' => $periodTo,
-        'account_number' => $accountNumber,
-        'currency' => $ocrData['Currency'] ?? 'IDR',
-        'branch_code' => $branchCode,
-        'opening_balance' => $this->parseAmount($ocrData['OpeningBalance'] ?? '0.00'),
-        'closing_balance' => $this->parseAmount($ocrData['ClosingBalance'] ?? '0.00'),
-        'total_credit_count' => (int) ($ocrData['CreditNo'] ?? 0),
-        'total_debit_count' => (int) ($ocrData['DebitNo'] ?? 0),
-        'total_credit_amount' => $this->parseAmount($ocrData['TotalAmountCredited'] ?? '0.00'),
-        'total_debit_amount' => $this->parseAmount($ocrData['TotalAmountDebited'] ?? '0.00'),
-        'transactions' => $transactions,
-    ];
-}
-
-    /**
-     * ✅ NEW: Parse transaction date dengan year inference
-     */
-    private function parseTransactionDate($dateValue, $lastValidDate, $periodFrom, $periodTo): ?Carbon
-    {
-        if (empty($dateValue)) {
-            Log::debug('Empty date value, using fallback', [
-                'lastValidDate' => $lastValidDate?->format('Y-m-d'),
-            ]);
-            return $lastValidDate ?? $periodFrom;
-        }
-
-        // Try to parse the date
-        $parsed = $this->parseDate($dateValue);
-        
-        if ($parsed) {
-            // ✅ Jika parsed date tidak punya tahun yang valid (year < 2000), gunakan tahun dari period
-            if ($parsed->year < 2000) {
-                $originalYear = $parsed->year;
-                $parsed->year = $periodFrom->year;
-                
-                Log::debug('Fixed 2-digit year', [
-                    'original' => $originalYear,
-                    'fixed' => $parsed->year,
-                    'date' => $parsed->format('Y-m-d'),
-                ]);
-            }
-
-            // ✅ Jika tanggal lebih awal dari period_from, kemungkinan tahun depan
-            if ($parsed->lt($periodFrom)) {
-                $parsed->addYear();
-                
-                Log::debug('Adjusted to next year (date before period_from)', [
-                    'date' => $parsed->format('Y-m-d'),
-                    'period_from' => $periodFrom->format('Y-m-d'),
-                ]);
-            }
-
-            // ✅ Jika tanggal lebih besar dari period_to + 1 bulan, kemungkinan parsing error
-            if ($parsed->gt($periodTo->copy()->addMonth())) {
-                Log::warning('Date exceeds expected range, using fallback', [
-                    'parsed' => $parsed->format('Y-m-d'),
-                    'period_to' => $periodTo->format('Y-m-d'),
-                ]);
-                return $lastValidDate ?? $periodFrom;
-            }
-
-            return $parsed;
-        }
-
-        // ✅ Fallback: gunakan lastValidDate atau periodFrom
-        Log::debug('Failed to parse date, using fallback', [
-            'value' => $dateValue,
-            'fallback' => ($lastValidDate ?? $periodFrom)->format('Y-m-d'),
-        ]);
-        
-        return $lastValidDate ?? $periodFrom;
-    }
-
-    /**
-     * ✅ IMPROVED: Parse date dengan berbagai format
-     */
-    private function parseDate(?string $date): ?Carbon
-    {
-        if (empty($date)) {
-            return null;
-        }
-
-        // Clean the date
-        $date = trim($date);
-
-        // Skip if it's only time format
-        if (preg_match('/^\d{1,2}:/', $date)) {
-            Log::debug('Skipping time-only value', ['value' => $date]);
-            return null;
-        }
-
         try {
-            // Format 1: "01/01/24" atau "01/01" (MM/DD/YY atau MM/DD)
-            if (preg_match('/^(\d{2})\/(\d{2})(?:\/(\d{2}|\d{4}))?$/', $date, $matches)) {
-                $month = $matches[1];
-                $day = $matches[2];
-                $year = isset($matches[3]) ? $matches[3] : date('Y');
-                
-                // Fix 2-digit year
-                if (strlen($year) === 2) {
-                    $year = '20' . $year;
-                }
-
-                // ✅ Validate date components
-                if ($month < 1 || $month > 12 || $day < 1 || $day > 31) {
-                    Log::warning('Invalid date components', [
-                        'month' => $month,
-                        'day' => $day,
-                        'year' => $year,
-                    ]);
-                    return null;
-                }
-
-                return Carbon::createFromFormat('Y-m-d', sprintf('%s-%s-%s', $year, $month, $day));
-            }
-
-            // Format 2: "01-Jan-2024" (DD-Mon-YYYY)
-            if (preg_match('/^(\d{2})-([A-Za-z]{3})-(\d{2,4})$/', $date, $matches)) {
-                $day = $matches[1];
-                $month = $matches[2];
-                $year = strlen($matches[3]) === 2 ? '20' . $matches[3] : $matches[3];
-                
-                return Carbon::createFromFormat('d-M-Y', "$day-$month-$year");
-            }
-
-            // Format 3: "2024-01-31" (Y-m-d)
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-                return Carbon::parse($date);
-            }
-
-            // Format 4: "31 Jan 2024" (DD Mon YYYY)
-            if (preg_match('/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/', $date, $matches)) {
-                return Carbon::createFromFormat('d M Y', $date);
-            }
-
-            // Last resort: Carbon parse
-            return Carbon::parse($date);
-
-        } catch (\Exception $e) {
-            Log::warning('Failed to parse date', [
-                'date' => $date,
-                'error' => $e->getMessage()
-            ]);
-            return null;
-        }
-    }
-
-    /**
-     * Parse amount dengan berbagai format
-     */
-    private function parseAmount(string $amount): float
-    {
-        if (empty($amount) || $amount === '-') {
-            return 0.0;
-        }
-
-        // Remove currency symbols, spaces, and common prefixes
-        $cleaned = preg_replace('/[^0-9.,\-]/', '', $amount);
-        
-        // Handle different decimal separators
-        if (strpos($cleaned, ',') !== false && strpos($cleaned, '.') !== false) {
-            $commaPos = strrpos($cleaned, ',');
-            $dotPos = strrpos($cleaned, '.');
+            // 1. Load historical matching data untuk training
+            $trainingData = $this->loadTrainingData($bankStatement);
             
-            if ($dotPos > $commaPos) {
-                // US format: 1,234.56
-                $cleaned = str_replace(',', '', $cleaned);
-            } else {
-                // EU format: 1.234,56
-                $cleaned = str_replace('.', '', $cleaned);
-                $cleaned = str_replace(',', '.', $cleaned);
+            // 2. Train/update model jika perlu
+            if ($this->shouldUpdateModel($trainingData)) {
+                $this->mlService->updateMatchingModel($trainingData);
             }
-        } elseif (strpos($cleaned, ',') !== false) {
-            // Check if comma is decimal or thousand separator
-            $parts = explode(',', $cleaned);
-            if (count($parts) == 2 && strlen($parts[1]) <= 2) {
-                // Likely decimal separator
-                $cleaned = str_replace(',', '.', $cleaned);
-            } else {
-                // Likely thousand separator
-                $cleaned = str_replace(',', '', $cleaned);
+            
+            // 3. Get unmatched transactions
+            $unmatchedTransactions = $bankStatement->transactions()
+                ->whereNull('matched_keyword_id')
+                ->with(['bankStatement.bank'])
+                ->get();
+            
+            // 4. Batch processing dengan parallel execution
+            $chunks = $unmatchedTransactions->chunk(self::BATCH_SIZE);
+            $results = collect();
+            
+            foreach ($chunks as $chunk) {
+                $batchResults = $this->mlService->predictMatches($chunk, [
+                    'confidence_threshold' => self::CONFIDENCE_THRESHOLD,
+                    'use_context' => true,
+                    'learn_from_feedback' => true,
+                    'parallel_processing' => true
+                ]);
+                
+                $results = $results->merge($batchResults);
             }
-        }
-        
-        return (float) $cleaned;
-    }
-
-    /**
-     * Generate unique filename
-     */
-    private function generateUniqueFilename($file): string
-    {
-        $originalName = $file->getClientOriginalName();
-        $extension = $file->getClientOriginalExtension();
-        $nameWithoutExt = pathinfo($originalName, PATHINFO_FILENAME);
-        
-        $sanitizedName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $nameWithoutExt);
-        $sanitizedName = preg_replace('/_+/', '_', $sanitizedName);
-        $sanitizedName = trim($sanitizedName, '_');
-        
-        return time() . '_' . uniqid() . '_' . $sanitizedName . '.' . $extension;
-    }
-
-    /**
-     * Get user-friendly error message
-     */
-    private function getUserFriendlyErrorMessage(\Exception $e): string
-    {
-        $message = $e->getMessage();
-
-        if (str_contains($message, 'timeout') || str_contains($message, 'timed out')) {
-            return 'Koneksi ke server OCR timeout. Silakan coba lagi atau hubungi administrator.';
-        }
-
-        if (str_contains($message, 'Connection refused') || str_contains($message, 'could not connect')) {
-            return 'Tidak dapat terhubung ke server OCR. Silakan cek koneksi internet atau hubungi administrator.';
-        }
-
-        if (str_contains($message, 'Invalid OCR') || str_contains($message, 'missing')) {
-            return 'Format response OCR tidak valid. Silakan hubungi administrator.';
-        }
-
-        if (str_contains($message, 'Incorrect DATE')) {
-            return 'Format tanggal tidak valid dalam file. Silakan hubungi administrator untuk meninjau file ini.';
-        }
-
-        return 'Gagal memproses file: ' . $message;
-    }
-
-    /**
-     * Call external OCR API with retry mechanism
-     * ✅ FIXED: Better error handling + retry + timeout handling
-     */
-    private function callExternalOcrApi(string $bankCode, $file): array
-    {
-        $bankCode = strtolower($bankCode);
-        $apiUrl = "http://38.60.179.13:40040/api/upload-pdf/bank-statement/monthly/{$bankCode}";
-        
-        $maxRetries = 3;
-        $retryDelay = 2;
-        $lastException = null;
-
-        Log::info('Calling OCR API', [
-            'url' => $apiUrl,
-            'bank_code' => $bankCode,
-            'file_size' => $file->getSize(),
-        ]);
-
-        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
-            try {
-                Log::info("OCR API attempt {$attempt}/{$maxRetries}");
-
-                $response = Http::timeout(180)
-                    ->connectTimeout(30)
-                    ->retry(2, 100)
-                    ->withHeaders([
-                        'Accept' => 'application/json',
-                    ])
-                    ->attach(
-                        'file', 
-                        file_get_contents($file->getRealPath()), 
-                        $file->getClientOriginalName()
-                    )
-                    ->post($apiUrl);
-
-                if (!$response->successful()) {
-                    $statusCode = $response->status();
-                    $responseBody = $response->body();
-                    
-                    Log::error('OCR API request failed', [
-                        'attempt' => $attempt,
-                        'status' => $statusCode,
-                        'body' => $responseBody,
-                    ]);
-
-                    if ($statusCode >= 400 && $statusCode < 500) {
-                        throw new \Exception("OCR API Error ({$statusCode}): " . $responseBody);
-                    }
-
-                    if ($attempt < $maxRetries) {
-                        Log::info("Retrying in {$retryDelay} seconds...");
-                        sleep($retryDelay);
-                        $retryDelay *= 2;
-                        continue;
-                    }
-
-                    throw new \Exception("OCR API Error ({$statusCode}): " . $responseBody);
-                }
-
-                $data = $response->json();
-
-                if (!isset($data['status'])) {
-                    throw new \Exception('Invalid OCR API response: missing status field');
-                }
-
-                if ($data['status'] !== 'OK') {
-                    $message = $data['message'] ?? 'Unknown error';
-                    throw new \Exception('OCR processing failed: ' . $message);
-                }
-
-                if (!isset($data['ocr']) || !is_array($data['ocr'])) {
-                    throw new \Exception('Invalid OCR API response: missing or invalid ocr data');
-                }
-
-                Log::info('OCR API call successful', [
-                    'attempt' => $attempt,
-                    'response_size' => strlen(json_encode($data)),
-                ]);
-
-                return $data['ocr'];
-
-            } catch (\Illuminate\Http\Client\ConnectionException $e) {
-                $lastException = $e;
-                Log::error('OCR API connection failed', [
-                    'attempt' => $attempt,
-                    'error' => $e->getMessage(),
-                    'type' => 'connection_error',
-                ]);
-
-                if ($attempt < $maxRetries) {
-                    Log::info("Connection failed, retrying in {$retryDelay} seconds...");
-                    sleep($retryDelay);
-                    $retryDelay *= 2;
-                    continue;
-                }
-
-            } catch (\Illuminate\Http\Client\RequestException $e) {
-                $lastException = $e;
-                Log::error('OCR API request exception', [
-                    'attempt' => $attempt,
-                    'error' => $e->getMessage(),
-                    'type' => 'request_exception',
-                ]);
-
-                if ($attempt < $maxRetries) {
-                    sleep($retryDelay);
-                    $retryDelay *= 2;
-                    continue;
-                }
-
-            } catch (\Exception $e) {
-                Log::error('OCR API processing error', [
-                    'attempt' => $attempt,
-                    'error' => $e->getMessage(),
-                    'type' => get_class($e),
-                ]);
-
-                throw $e;
-            }
-        }
-
-        $errorMessage = $lastException 
-            ? $lastException->getMessage() 
-            : 'OCR API call failed after ' . $maxRetries . ' attempts';
-
-        throw new \Exception('OCR API Error: ' . $errorMessage);
-    }
-
-    /**
- * Verify all matched transactions (bulk)
- * ✅ FIXED: Renamed from bulkVerifyAllMatched to verifyAllMatched
- */
-public function verifyAllMatched(BankStatement $bankStatement)
-{
-    DB::beginTransaction();
-
-    try {
-        Log::info('=== VERIFY ALL MATCHED START ===', [
-            'statement_id' => $bankStatement->id,
-            'user_id' => auth()->id(),
-        ]);
-
-        // Verify all matched transactions (either auto-matched or manually categorized)
-        $updated = $bankStatement->transactions()
-            ->where('is_verified', false)
-            ->where(function($query) {
-                $query->whereNotNull('matched_keyword_id')
-                      ->orWhere('is_manual_category', true);
-            })
-            ->update([
-                'is_verified' => true,
-                'verified_by' => auth()->id(),
-                'verified_at' => now(),
+            
+            // 5. Apply matches dengan confidence scoring
+            $matchingResults = $this->applySmartMatches($results, $bankStatement);
+            
+            // 6. Generate suggestions untuk low confidence matches
+            $suggestions = $this->generateMatchingSuggestions($matchingResults['low_confidence']);
+            
+            // 7. Update statistics dan cache
+            $this->updateStatisticsAndCache($bankStatement);
+            
+            // 8. Generate detailed report
+            $report = $this->generateMatchingReport($matchingResults, $suggestions);
+            
+            return response()->json([
+                'success' => true,
+                'results' => $matchingResults,
+                'suggestions' => $suggestions,
+                'report' => $report,
+                'improvement' => $this->calculateImprovement($bankStatement)
             ]);
-
-        // Update statistics
-        $bankStatement->updateMatchingStats();
-
-        DB::commit();
-
-        Log::info('=== VERIFY ALL MATCHED SUCCESS ===', [
-            'statement_id' => $bankStatement->id,
-            'verified_count' => $updated,
-        ]);
-
-        if ($updated > 0) {
-            return back()->with('success', "Berhasil memverifikasi {$updated} transaksi yang sudah di-match.");
-        } else {
-            return back()->with('info', 'Tidak ada transaksi yang perlu diverifikasi.');
+            
+        } catch (\Exception $e) {
+            $this->handleException($e, 'smart_match');
+            return response()->json(['error' => 'Smart matching failed'], 500);
         }
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-
-        Log::error('=== VERIFY ALL MATCHED ERROR ===', [
-            'statement_id' => $bankStatement->id,
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-        ]);
-
-        return back()->with('error', 'Gagal memverifikasi: ' . $e->getMessage());
     }
-}
 
     /**
-     * Verify single transaction
-     * ✅ FIXED: Better validation
+     * Complex reconciliation dengan multiple payment sources
      */
-    public function verifyTransaction(Request $request, BankStatement $bankStatement)
+    public function advancedReconciliation(BankStatement $bankStatement)
     {
+        $this->authorize('reconcile', $bankStatement);
+        
+        DB::beginTransaction();
+        
+        try {
+            // 1. Load semua sumber pembayaran
+            $paymentSources = $this->loadPaymentSources($bankStatement);
+            
+            // 2. Multi-dimensional matching
+            $matchingMatrix = $this->buildMatchingMatrix(
+                $bankStatement->transactions,
+                $paymentSources
+            );
+            
+            // 3. Optimize matching dengan Hungarian algorithm
+            $optimalMatches = $this->optimizeMatching($matchingMatrix);
+            
+            // 4. Apply reconciliation dengan rollback capability
+            $reconciliationResult = $this->applyReconciliation($optimalMatches);
+            
+            // 5. Handle partial matches dan split transactions
+            $partialMatches = $this->handlePartialMatches($reconciliationResult['unmatched']);
+            
+            // 6. Generate reconciliation report
+            $report = $this->generateReconciliationReport($reconciliationResult, $partialMatches);
+            
+            // 7. Blockchain record untuk audit
+            if (config('app.blockchain_enabled')) {
+                $this->blockchainService->recordReconciliation($report);
+            }
+            
+            DB::commit();
+            
+            // 8. Send notifications
+            $this->notifyReconciliationComplete($bankStatement, $report);
+            
+            return view('bank-statements.reconciliation-report', compact(
+                'bankStatement',
+                'report',
+                'reconciliationResult',
+                'partialMatches'
+            ));
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->handleException($e, 'reconciliation');
+            return back()->with('error', 'Reconciliation failed');
+        }
+    }
+
+    /**
+     * Real-time collaborative editing dengan version control
+     */
+    public function collaborativeEdit(Request $request, BankStatement $bankStatement)
+    {
+        $this->authorize('edit', $bankStatement);
+        
+        try {
+            // 1. Lock check untuk concurrent editing
+            $lock = Cache::lock("statement_edit_{$bankStatement->id}", 300);
+            
+            if (!$lock->get()) {
+                $currentEditor = $this->getCurrentEditor($bankStatement);
+                return response()->json([
+                    'locked' => true,
+                    'locked_by' => $currentEditor,
+                    'message' => 'Document is being edited by another user'
+                ], 423);
+            }
+            
+            // 2. Create version snapshot
+            $version = $this->createVersionSnapshot($bankStatement);
+            
+            // 3. Apply changes dengan conflict resolution
+            $changes = $request->get('changes', []);
+            $conflicts = $this->detectConflicts($bankStatement, $changes);
+            
+            if (!empty($conflicts)) {
+                return $this->handleConflicts($conflicts, $bankStatement);
+            }
+            
+            // 4. Apply changes transactionally
+            $result = $this->applyChanges($bankStatement, $changes);
+            
+            // 5. Broadcast changes ke collaborators
+            $this->broadcastChanges($bankStatement, $result);
+            
+            // 6. Update audit log
+            $this->logCollaborativeEdit($bankStatement, $changes, $version);
+            
+            $lock->release();
+            
+            return response()->json([
+                'success' => true,
+                'version' => $version,
+                'applied_changes' => $result,
+                'next_version' => $bankStatement->version + 1
+            ]);
+            
+        } catch (\Exception $e) {
+            $lock->release();
+            $this->handleException($e, 'collaborative_edit');
+            return response()->json(['error' => 'Edit failed'], 500);
+        }
+    }
+
+    /**
+     * Advanced analytics dengan predictive insights
+     */
+    public function advancedAnalytics(BankStatement $bankStatement)
+    {
+        $this->authorize('view', $bankStatement);
+        
+        try {
+            // 1. Historical analysis
+            $historicalData = $this->analyticsService->getHistoricalAnalysis(
+                $bankStatement,
+                Carbon::now()->subMonths(12)
+            );
+            
+            // 2. Predictive modeling
+            $predictions = $this->mlService->predictFutureTransactions([
+                'statement_id' => $bankStatement->id,
+                'horizon' => 30, // days
+                'confidence_intervals' => true
+            ]);
+            
+            // 3. Anomaly detection
+            $anomalies = $this->fraudService->detectAnomalies($bankStatement);
+            
+            // 4. Categorization insights
+            $categorizationInsights = $this->getCategorizationInsights($bankStatement);
+            
+            // 5. Cash flow analysis
+            $cashFlowAnalysis = $this->analyzeCashFlow($bankStatement);
+            
+            // 6. Comparative analysis
+            $comparativeAnalysis = $this->compareWithPeerData($bankStatement);
+            
+            // 7. Risk assessment
+            $riskAssessment = $this->assessFinancialRisk($bankStatement);
+            
+            // 8. Generate interactive dashboard data
+            $dashboardData = $this->prepareDashboardData([
+                'historical' => $historicalData,
+                'predictions' => $predictions,
+                'anomalies' => $anomalies,
+                'categorization' => $categorizationInsights,
+                'cashflow' => $cashFlowAnalysis,
+                'comparative' => $comparativeAnalysis,
+                'risk' => $riskAssessment
+            ]);
+            
+            return view('bank-statements.analytics', compact(
+                'bankStatement',
+                'dashboardData'
+            ));
+            
+        } catch (\Exception $e) {
+            $this->handleException($e, 'analytics');
+            return back()->with('error', 'Failed to generate analytics');
+        }
+    }
+
+    /**
+     * Bulk operations dengan progress tracking
+     */
+    public function bulkOperations(Request $request)
+    {
+        $this->authorize('bulk-operations');
+        
         $request->validate([
-            'transaction_id' => 'required|exists:statement_transactions,id',
+            'operation' => 'required|in:categorize,verify,export,delete,archive,merge',
+            'statement_ids' => 'required|array|min:1',
+            'statement_ids.*' => 'exists:bank_statements,id',
+            'options' => 'nullable|array'
         ]);
-
-        DB::beginTransaction();
-
+        
         try {
-            $transaction = StatementTransaction::findOrFail($request->transaction_id);
-
-            // Validate transaction belongs to this statement
-            if ($transaction->bank_statement_id !== $bankStatement->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Transaksi tidak ditemukan dalam bank statement ini.'
-                ], 404);
+            // 1. Create batch job
+            $batchId = Str::uuid();
+            $totalItems = count($request->statement_ids);
+            
+            // 2. Store job metadata in Redis
+            Redis::setex(
+                "batch:{$batchId}",
+                3600,
+                json_encode([
+                    'operation' => $request->operation,
+                    'total' => $totalItems,
+                    'processed' => 0,
+                    'failed' => 0,
+                    'status' => 'processing',
+                    'user_id' => auth()->id()
+                ])
+            );
+            
+            // 3. Chunk and queue operations
+            $chunks = collect($request->statement_ids)->chunk(50);
+            
+            foreach ($chunks as $index => $chunk) {
+                $this->dispatchBulkOperation(
+                    $request->operation,
+                    $chunk->toArray(),
+                    $request->options ?? [],
+                    $batchId,
+                    $index
+                );
             }
-
-            // Validate transaction is matched or manually categorized
-            if (!$transaction->matched_keyword_id && !$transaction->is_manual_category) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Hanya transaksi yang sudah di-match atau dikategorikan manual yang bisa diverifikasi.'
-                ], 422);
-            }
-
-            // Update verification status
-            $transaction->update([
-                'is_verified' => true,
-                'verified_by' => auth()->id(),
-                'verified_at' => now(),
-            ]);
-
-            // Update statistics
-            $bankStatement->updateMatchingStats();
-
-            DB::commit();
-
-            Log::info('Transaction verified', [
-                'transaction_id' => $transaction->id,
-                'statement_id' => $bankStatement->id,
-                'user_id' => auth()->id(),
-            ]);
-
+            
+            // 4. Return batch tracking info
             return response()->json([
                 'success' => true,
-                'message' => 'Transaksi berhasil diverifikasi.',
-                'data' => [
-                    'transaction_id' => $transaction->id,
-                    'is_verified' => true,
-                    'verified_at' => $transaction->verified_at->format('d M Y H:i'),
-                ],
+                'batch_id' => $batchId,
+                'total_items' => $totalItems,
+                'estimated_time' => $this->estimateBulkProcessingTime($request->operation, $totalItems),
+                'tracking_url' => route('bulk-operations.status', $batchId),
+                'websocket_channel' => "private-bulk.{$batchId}"
             ]);
-
+            
         } catch (\Exception $e) {
-            DB::rollBack();
-
-            Log::error('Failed to verify transaction', [
-                'transaction_id' => $request->transaction_id ?? 'N/A',
-                'statement_id' => $bankStatement->id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal memverifikasi: ' . $e->getMessage()
-            ], 500);
+            $this->handleException($e, 'bulk_operations');
+            return response()->json(['error' => 'Bulk operation failed'], 500);
         }
+    }
+
+    /**
+     * Export dengan multiple format dan customization
+     */
+    public function advancedExport(Request $request, BankStatement $bankStatement)
+    {
+        $this->authorize('export', $bankStatement);
+        
+        $request->validate([
+            'format' => 'required|in:xlsx,csv,pdf,json,xml,html',
+            'template' => 'nullable|string',
+            'filters' => 'nullable|array',
+            'columns' => 'nullable|array',
+            'include_charts' => 'boolean',
+            'encrypt' => 'boolean',
+            'compress' => 'boolean'
+        ]);
+        
+        try {
+            // 1. Prepare export data dengan filters
+            $exportData = $this->prepareExportData($bankStatement, $request->all());
+            
+            // 2. Generate export berdasarkan format
+            $exporter = match($request->format) {
+                'xlsx' => new AdvancedBankStatementExport($exportData, 'xlsx'),
+                'csv' => new AdvancedBankStatementExport($exportData, 'csv'),
+                'pdf' => $this->generatePdfExport($exportData, $request),
+                'json' => $this->generateJsonExport($exportData),
+                'xml' => $this->generateXmlExport($exportData),
+                'html' => $this->generateHtmlExport($exportData, $request),
+                default => throw new \Exception('Invalid format')
+            };
+            
+            // 3. Apply encryption jika diminta
+            if ($request->boolean('encrypt')) {
+                $exporter = $this->encryptExport($exporter);
+            }
+            
+            // 4. Compress jika diminta
+            if ($request->boolean('compress')) {
+                $exporter = $this->compressExport($exporter);
+            }
+            
+            // 5. Log export activity
+            $this->logExportActivity($bankStatement, $request->all());
+            
+            // 6. Generate filename
+            $filename = $this->generateExportFilename($bankStatement, $request->format);
+            
+            return $exporter->download($filename);
+            
+        } catch (\Exception $e) {
+            $this->handleException($e, 'export');
+            return back()->with('error', 'Export failed');
+        }
+    }
+
+    // ===================== HELPER METHODS =====================
+
+    /**
+     * Build complex query dengan multiple joins dan conditions
+     */
+    private function buildComplexQuery(Request $request)
+    {
+        $query = BankStatement::with([
+            'bank:id,name,code',
+            'user:id,name,email',
+            'transactions' => function($q) {
+                $q->select('id', 'bank_statement_id', 'transaction_type', 'debit_amount', 'credit_amount')
+                  ->withCount('categories');
+            }
+        ])
+        ->withCount(['transactions', 'matchedTransactions', 'verifiedTransactions'])
+        ->withSum('transactions as total_debit', 'debit_amount')
+        ->withSum('transactions as total_credit', 'credit_amount')
+        ->withAvg('transactions as avg_confidence', 'confidence_score');
+        
+        // Apply filters
+        $this->applyFilters($query, $request);
+        
+        // Apply sorting
+        $this->applySorting($query, $request);
+        
+        // Apply search
+        if ($request->filled('search')) {
+            $this->applySearch($query, $request->search);
+        }
+        
+        return $query;
+    }
+
+    /**
+     * Advanced duplicate detection dengan fuzzy matching
+     */
+    private function advancedDuplicateCheck(array $data): array
+    {
+        // Hash-based check
+        $fileHash = hash_file('sha256', $data['file']->getRealPath());
+        
+        // Check exact hash match
+        $exactMatch = BankStatement::where('file_hash', $fileHash)->first();
+        if ($exactMatch) {
+            return [
+                'is_duplicate' => true,
+                'type' => 'exact',
+                'match' => $exactMatch,
+                'confidence' => 1.0
+            ];
+        }
+        
+        // Fuzzy matching untuk similar content
+        $similarStatements = BankStatement::where('bank_id', $data['bank_id'])
+            ->where('file_size', '>', $data['file']->getSize() * 0.9)
+            ->where('file_size', '<', $data['file']->getSize() * 1.1)
+            ->whereDate('created_at', '>=', Carbon::now()->subDays(7))
+            ->get();
+        
+        foreach ($similarStatements as $statement) {
+            $similarity = $this->calculateSimilarity($data['file'], $statement);
+            if ($similarity > 0.95) {
+                return [
+                    'is_duplicate' => true,
+                    'type' => 'fuzzy',
+                    'match' => $statement,
+                    'confidence' => $similarity
+                ];
+            }
+        }
+        
+        return ['is_duplicate' => false];
+    }
+
+    /**
+     * Handle exceptions dengan logging dan notification
+     */
+    private function handleException(\Exception $e, string $context): void
+    {
+        $errorId = Str::uuid();
+        
+        Log::error("Exception in {$context}", [
+            'error_id' => $errorId,
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString(),
+            'user_id' => auth()->id(),
+            'ip' => request()->ip(),
+            'user_agent' => request()->userAgent()
+        ]);
+        
+        // Notify admin untuk critical errors
+        if ($this->isCriticalError($e)) {
+            $this->notificationService->notifyAdmins('critical_error', [
+                'error_id' => $errorId,
+                'context' => $context,
+                'message' => $e->getMessage()
+            ]);
+        }
+        
+        // Store in database untuk tracking
+        DB::table('error_logs')->insert([
+            'id' => $errorId,
+            'context' => $context,
+            'message' => $e->getMessage(),
+            'exception_class' => get_class($e),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'user_id' => auth()->id(),
+            'created_at' => now()
+        ]);
+    }
+
+    /**
+     * Check rate limiting
+     */
+    private function checkRateLimit(string $action, int $maxAttempts): bool
+    {
+        $key = 'rate_limit:' . auth()->id() . ':' . $action;
+        
+        if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
+            return false;
+        }
+        
+        RateLimiter::hit($key, 60);
+        return true;
     }
 }
