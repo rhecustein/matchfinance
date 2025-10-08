@@ -64,11 +64,8 @@ class BankStatementController extends Controller
     public function __construct(
         private OcrService $ocrService,
         private TransactionMatchingService $matchingService,
-        private MachineLearningService $mlService,
-        private FraudDetectionService $fraudService,
         private NotificationService $notificationService,
         private BankStatementRepository $statementRepo,
-        private TransactionRepository $transactionRepo
     ) {
         // Middleware setup
         $this->middleware('auth');
