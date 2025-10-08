@@ -224,9 +224,86 @@
 
     </div>
 
+    {{-- ✅ REPLACE MODAL --}}
+    <div id="replaceModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {{-- Modal Header --}}
+            <div class="bg-gradient-to-r from-yellow-600 to-orange-600 p-6 border-b border-slate-700">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-exclamation-triangle text-3xl text-white"></i>
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Duplicate Detected</h3>
+                            <p class="text-sm text-yellow-100">A similar bank statement already exists</p>
+                        </div>
+                    </div>
+                    <button id="closeReplaceModal" class="text-white hover:text-yellow-200 transition">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Modal Body --}}
+            <div class="p-6 space-y-6">
+                {{-- Error Message --}}
+                <div id="duplicateMessage" class="bg-yellow-600/20 border border-yellow-500/50 rounded-lg p-4">
+                    <p class="text-yellow-300 text-sm font-medium"></p>
+                </div>
+
+                {{-- Existing Data Info --}}
+                <div class="bg-slate-900/50 rounded-xl border border-slate-700 overflow-hidden">
+                    <div class="bg-slate-800/50 px-4 py-3 border-b border-slate-700">
+                        <h4 class="text-white font-semibold">
+                            <i class="fas fa-database mr-2"></i>Existing Data Information
+                        </h4>
+                    </div>
+                    <div class="p-4 space-y-3" id="existingDataInfo">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                {{-- Options Info --}}
+                <div class="bg-blue-600/20 border border-blue-500/50 rounded-lg p-4">
+                    <h4 class="text-blue-300 font-semibold mb-3">
+                        <i class="fas fa-info-circle mr-2"></i>Your Options
+                    </h4>
+                    <div class="space-y-2 text-sm text-blue-200">
+                        <div class="flex items-start space-x-2">
+                            <i class="fas fa-times text-red-400 mt-1"></i>
+                            <div>
+                                <span class="font-semibold">Cancel:</span> Keep existing data, discard new upload
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-2">
+                            <i class="fas fa-sync-alt text-green-400 mt-1"></i>
+                            <div>
+                                <span class="font-semibold">Replace:</span> Delete existing data and save new upload
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Modal Footer --}}
+            <div class="p-6 border-t border-slate-700 bg-slate-800/30">
+                <div class="flex gap-3">
+                    <button id="cancelReplace" type="button"
+                        class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-6 rounded-lg transition flex items-center justify-center">
+                        <i class="fas fa-times mr-2"></i>Cancel
+                    </button>
+                    <button id="confirmReplace" type="button"
+                        class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition flex items-center justify-center">
+                        <i class="fas fa-sync-alt mr-2"></i>Replace Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
     <script>
         let previewData = null;
+        let duplicateData = null;
 
         document.getElementById('file').addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -271,7 +348,7 @@
             formData.append('_token', '{{ csrf_token() }}');
 
             try {
-                const response = await fetch('{{ route('bank-statements.upload-preview') }}', {
+                const response = await fetch('{{ route('bank-statements.upload.preview') }}', {
                     method: 'POST',
                     body: formData,
                     headers: {
@@ -296,7 +373,17 @@
                     previewData = result.data;
                     setTimeout(() => showPreview(result.data), 500);
                 } else {
-                    showError(result.message || 'Upload failed', result.error_type);
+                    // ✅ Handle duplicate errors
+                    if (result.error_type === 'duplicate_file' || result.error_type === 'duplicate_period') {
+                        if (result.allow_replace) {
+                            duplicateData = result.duplicate_data;
+                            showReplaceModal(result);
+                        } else {
+                            showError(result.message, result.error_type);
+                        }
+                    } else {
+                        showError(result.message || 'Upload failed', result.error_type);
+                    }
                 }
 
             } catch (error) {
@@ -312,6 +399,102 @@
                 
                 showError(errorMessage);
             }
+        });
+
+        // ✅ Show Replace Modal
+        function showReplaceModal(errorData) {
+            const modal = document.getElementById('replaceModal');
+            const messageEl = modal.querySelector('#duplicateMessage p');
+            const infoEl = modal.querySelector('#existingDataInfo');
+
+            // Set message
+            messageEl.textContent = errorData.message;
+
+            // Set existing data info
+            const data = errorData.duplicate_data;
+            infoEl.innerHTML = `
+                <div class="flex justify-between items-center py-2 border-b border-slate-700">
+                    <span class="text-gray-400 text-sm">Period:</span>
+                    <span class="text-white font-semibold">${data.period || 'N/A'}</span>
+                </div>
+                <div class="flex justify-between items-center py-2 border-b border-slate-700">
+                    <span class="text-gray-400 text-sm">Account:</span>
+                    <span class="text-white font-semibold">${data.account || 'N/A'}</span>
+                </div>
+                <div class="flex justify-between items-center py-2 border-b border-slate-700">
+                    <span class="text-gray-400 text-sm">Uploaded:</span>
+                    <span class="text-white font-semibold">${data.uploaded_at || 'N/A'}</span>
+                </div>
+                <div class="flex justify-between items-center py-2">
+                    <span class="text-gray-400 text-sm">Transactions:</span>
+                    <span class="text-white font-semibold">${data.transactions || 0} transactions</span>
+                </div>
+            `;
+
+            // Show modal
+            modal.classList.remove('hidden');
+        }
+
+        // ✅ Handle Replace Confirm
+        document.getElementById('confirmReplace')?.addEventListener('click', async function() {
+            if (!duplicateData || !duplicateData.id) {
+                showAlert('Invalid duplicate data', 'error');
+                return;
+            }
+
+            this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Replacing...';
+            this.disabled = true;
+
+            try {
+                const response = await fetch('{{ route('bank-statements.replace') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({
+                        existing_id: duplicateData.id,
+                        confirm: true
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    showAlert(result.message, 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = result.redirect_url;
+                    }, 1000);
+                } else {
+                    throw new Error(result.message || 'Replace failed');
+                }
+            } catch (error) {
+                console.error('Replace error:', error);
+                showAlert('Failed to replace: ' + error.message, 'error');
+                
+                document.getElementById('replaceModal').classList.add('hidden');
+                document.getElementById('uploadSection').classList.remove('hidden');
+                document.getElementById('loadingSection').classList.add('hidden');
+            } finally {
+                this.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Replace Data';
+                this.disabled = false;
+            }
+        });
+
+        // ✅ Handle Replace Cancel
+        document.getElementById('cancelReplace')?.addEventListener('click', function() {
+            document.getElementById('replaceModal').classList.add('hidden');
+            document.getElementById('uploadSection').classList.remove('hidden');
+            document.getElementById('loadingSection').classList.add('hidden');
+            document.getElementById('uploadForm').reset();
+            document.getElementById('fileInfo').classList.add('hidden');
+            duplicateData = null;
+        });
+
+        document.getElementById('closeReplaceModal')?.addEventListener('click', function() {
+            document.getElementById('cancelReplace').click();
         });
 
         function showPreview(data) {
@@ -510,7 +693,7 @@
 
             if (confirm('Are you sure you want to cancel? All processed data will be lost.')) {
                 try {
-                    await fetch('{{ route('bank-statements.cancel-upload') }}', {
+                    await fetch('{{ route('bank-statements.cancel') }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

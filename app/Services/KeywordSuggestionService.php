@@ -12,16 +12,23 @@ class KeywordSuggestionService
     /**
      * Analyze unmatched transactions and suggest keywords
      */
-    public function analyzeBankStatement(int $bankStatementId): array
+    public function analyzeBankStatement(int $bankStatementId, array $filters = []): array
     {
         Log::info('=== ANALYZING TRANSACTIONS FOR KEYWORDS ===', [
-            'bank_statement_id' => $bankStatementId
+            'bank_statement_id' => $bankStatementId,
+            'filters' => $filters
         ]);
 
         // Get all unmatched transactions
-        $transactions = StatementTransaction::where('bank_statement_id', $bankStatementId)
-            ->whereNull('matched_keyword_id')
-            ->get();
+        $query = StatementTransaction::where('bank_statement_id', $bankStatementId)
+            ->whereNull('matched_keyword_id');
+
+        // Apply filters
+        if (!empty($filters['transaction_type'])) {
+            $query->where('transaction_type', $filters['transaction_type']);
+        }
+
+        $transactions = $query->get();
 
         if ($transactions->isEmpty()) {
             return [];
@@ -53,26 +60,48 @@ class KeywordSuggestionService
                 $transaction->id
             );
 
+            $minFrequency = $filters['min_frequency'] ?? 2;
+
             // Only suggest if there are multiple similar transactions
-            if (count($similarTransactions) >= 2) {
+            if (count($similarTransactions) >= ($minFrequency - 1)) {
+                $allTransactionIds = array_merge([$transaction->id], $similarTransactions);
+                
+                // Calculate amounts
+                $amounts = $this->calculateAmounts($allTransactionIds);
+                
+                // Apply min_amount filter
+                if (!empty($filters['min_amount']) && $amounts['avg_amount'] < $filters['min_amount']) {
+                    continue;
+                }
+
                 $suggestions[] = [
                     'suggested_keyword' => $this->getBestKeyword($keywords),
                     'alternative_keywords' => $keywords,
                     'description_sample' => $transaction->description,
-                    'transaction_count' => count($similarTransactions) + 1, // +1 for current
-                    'transaction_ids' => array_merge([$transaction->id], $similarTransactions),
+                    'transaction_count' => count($allTransactionIds),
+                    'transaction_ids' => $allTransactionIds,
                     'transaction_type' => $transaction->transaction_type,
-                    'avg_amount' => $this->calculateAverageAmount($bankStatementId, $similarTransactions, $transaction->id),
-                    'frequency' => 'recurring', // Could be enhanced
+                    'avg_amount' => $amounts['avg_amount'],
+                    'total_amount' => $amounts['total_amount'], // ✅ FIXED: Added total_amount
+                    'frequency' => $this->determineFrequency(count($allTransactionIds)),
                 ];
 
                 $processedDescriptions[] = $description;
             }
         }
 
-        // Sort by transaction count (most frequent first)
-        usort($suggestions, function($a, $b) {
-            return $b['transaction_count'] - $a['transaction_count'];
+        // Apply sorting
+        $sortBy = $filters['sort_by'] ?? 'frequency';
+        usort($suggestions, function($a, $b) use ($sortBy) {
+            switch ($sortBy) {
+                case 'amount':
+                    return $b['total_amount'] - $a['total_amount'];
+                case 'count':
+                    return $b['transaction_count'] - $a['transaction_count'];
+                case 'frequency':
+                default:
+                    return $b['transaction_count'] - $a['transaction_count'];
+            }
         });
 
         Log::info('Analysis complete', [
@@ -80,6 +109,41 @@ class KeywordSuggestionService
         ]);
 
         return $suggestions;
+    }
+
+    /**
+     * ✅ NEW: Calculate amounts for transactions
+     */
+    private function calculateAmounts(array $transactionIds): array
+    {
+        $transactions = StatementTransaction::whereIn('id', $transactionIds)->get();
+        
+        $totalAmount = 0;
+        foreach ($transactions as $transaction) {
+            $amount = $transaction->transaction_type === 'debit' 
+                ? $transaction->debit_amount 
+                : $transaction->credit_amount;
+            $totalAmount += $amount;
+        }
+        
+        $avgAmount = count($transactions) > 0 ? $totalAmount / count($transactions) : 0;
+
+        return [
+            'total_amount' => $totalAmount,
+            'avg_amount' => $avgAmount,
+        ];
+    }
+
+    /**
+     * ✅ NEW: Determine frequency pattern
+     */
+    private function determineFrequency(int $count): string
+    {
+        if ($count >= 20) return 'very_frequent';
+        if ($count >= 10) return 'frequent';
+        if ($count >= 5) return 'regular';
+        if ($count >= 2) return 'occasional';
+        return 'rare';
     }
 
     /**
@@ -115,8 +179,8 @@ class KeywordSuggestionService
             // Transfer & Payment
             '/\b(TRANSFER|TRF|OVERBOOKING|TUNAI|CASH|ATM|EDC|QRIS|QR)\b/i',
             
-            // General merchants
-            '/\b([A-Z]{3,}(?:\s+[A-Z]{3,}){0,2})\b/', // 3+ consecutive uppercase words
+            // General merchants (3+ consecutive uppercase words)
+            '/\b([A-Z]{3,}(?:\s+[A-Z]{3,}){0,2})\b/',
         ];
 
         foreach ($patterns as $pattern) {
@@ -193,43 +257,6 @@ class KeywordSuggestionService
     }
 
     /**
-     * Calculate average amount for similar transactions
-     */
-    private function calculateAverageAmount(int $bankStatementId, array $transactionIds, int $currentId): float
-    {
-        $allIds = array_merge($transactionIds, [$currentId]);
-        
-        $sum = StatementTransaction::whereIn('id', $allIds)
-            ->sum(DB::raw('CASE WHEN transaction_type = "debit" THEN debit_amount ELSE credit_amount END'));
-
-        return $sum / count($allIds);
-    }
-
-    /**
-     * Create keyword from suggestion
-     */
-    public function createKeywordFromSuggestion(array $suggestion, int $subCategoryId, array $options = []): Keyword
-    {
-        $keyword = Keyword::create([
-            'sub_category_id' => $subCategoryId,
-            'keyword' => $options['custom_keyword'] ?? $suggestion['suggested_keyword'],
-            'is_regex' => $options['is_regex'] ?? false,
-            'case_sensitive' => $options['case_sensitive'] ?? false,
-            'priority' => $options['priority'] ?? 5,
-            'is_active' => true,
-            'description' => "Auto-generated from {$suggestion['transaction_count']} similar transactions",
-        ]);
-
-        Log::info('Keyword created from suggestion', [
-            'keyword_id' => $keyword->id,
-            'keyword' => $keyword->keyword,
-            'transaction_count' => $suggestion['transaction_count'],
-        ]);
-
-        return $keyword;
-    }
-
-    /**
      * Apply keyword to suggested transactions
      */
     public function applyKeywordToTransactions(int $keywordId, array $transactionIds): int
@@ -260,7 +287,7 @@ class KeywordSuggestionService
     {
         return [
             'total_keywords' => Keyword::count(),
-            'active_keywords' => Keyword::active()->count(),
+            'active_keywords' => Keyword::where('is_active', true)->count(),
             'regex_keywords' => Keyword::where('is_regex', true)->count(),
             'case_sensitive_keywords' => Keyword::where('case_sensitive', true)->count(),
             'unused_keywords' => Keyword::doesntHave('matchedTransactions')->count(),

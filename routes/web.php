@@ -129,41 +129,79 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::resource('keywords', KeywordController::class);
 
    /*
-|--------------------------------------------------------------------------
-| Bank Statements & Transactions Management (Admin Only)
-|--------------------------------------------------------------------------
-*/
-   // Bank Statements Management
-    Route::prefix('bank-statements')->name('bank-statements.')->group(function () {
+    |--------------------------------------------------------------------------
+    | Bank Statements & Transactions Management (Admin Only)
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware(['auth'])->prefix('bank-statements')->name('bank-statements.')->group(function () {
+    
+        // ✅ Resource routes (index, create, store, show, edit, update, destroy)
         Route::get('/', [BankStatementController::class, 'index'])->name('index');
         Route::get('/create', [BankStatementController::class, 'create'])->name('create');
-        Route::post('/upload-preview', [BankStatementController::class, 'uploadAndPreview'])->name('upload-preview');
-        Route::post('/store', [BankStatementController::class, 'store'])->name('store');
-        Route::post('/cancel-upload', [BankStatementController::class, 'cancelUpload'])->name('cancel-upload');
+        Route::post('/', [BankStatementController::class, 'store'])->name('store');
         Route::get('/{bankStatement}', [BankStatementController::class, 'show'])->name('show');
-        Route::get('/{bankStatement}/download', [BankStatementController::class, 'download'])->name('download');
-        Route::get('/{bankStatement}/export', [BankStatementController::class, 'export'])->name('export');
-        Route::post('/{bankStatement}/process-matching', [BankStatementController::class, 'processMatching'])->name('process-matching');
-        Route::post('/{bankStatement}/rematch-all', [BankStatementController::class, 'rematchAll'])->name('rematch-all');
-        Route::post('/{bankStatement}/verify-all-matched', [BankStatementController::class, 'verifyAllMatched'])->name('verify-all-matched');
-        Route::post('/{bankStatement}/reprocess', [BankStatementController::class, 'reprocess'])->name('reprocess');
+        Route::get('/{bankStatement}/edit', [BankStatementController::class, 'edit'])->name('edit');
+        Route::put('/{bankStatement}', [BankStatementController::class, 'update'])->name('update');
         Route::delete('/{bankStatement}', [BankStatementController::class, 'destroy'])->name('destroy');
+
+        // ✅ Upload & Preview (before store)
+        Route::post('/upload/preview', [BankStatementController::class, 'uploadAndPreview'])
+            ->name('upload.preview');
+
+        // ✅ Replace existing statement
+        Route::post('/replace', [BankStatementController::class, 'replaceExisting'])
+            ->name('replace');
+
+        // ✅ Cancel upload
+        Route::post('/cancel', [BankStatementController::class, 'cancelUpload'])
+            ->name('cancel');
+
+        // ✅ Download PDF
+        Route::get('/{bankStatement}/download', [BankStatementController::class, 'download'])
+            ->name('download');
+
+        // ✅ Export to Excel/CSV
+        Route::get('/{bankStatement}/export', [BankStatementController::class, 'export'])
+            ->name('export');
+
+        // ✅ Reprocess OCR
+        Route::post('/{bankStatement}/reprocess', [BankStatementController::class, 'reprocess'])
+            ->name('reprocess');
+
+        // ✅ Matching Operations
+        Route::post('/{bankStatement}/match', [BankStatementController::class, 'matchTransactions'])
+            ->name('match');
         
-        // Transaction specific routes
-        Route::get('/{bankStatement}/transactions/{transaction}', [BankStatementController::class, 'getTransaction'])->name('get-transaction');
-        Route::get('/{bankStatement}/transactions/{transaction}/possible-matches', [BankStatementController::class, 'getPossibleMatches'])->name('get-possible-matches');
-        Route::post('/{bankStatement}/transactions/{transaction}/manual-match', [BankStatementController::class, 'manualMatchTransaction'])->name('manual-match-transaction');
-        Route::post('/{bankStatement}/transactions/{transaction}/unmatch', [BankStatementController::class, 'unmatchTransaction'])->name('unmatch-transaction');
-        Route::post('/{bankStatement}/transactions/{transaction}/verify', [BankStatementController::class, 'verifyTransaction'])->name('verify-transaction');
+        Route::post('/{bankStatement}/process-matching', [BankStatementController::class, 'processMatching'])
+            ->name('process-matching');
+        
+        Route::post('/{bankStatement}/rematch-all', [BankStatementController::class, 'rematchAll'])
+            ->name('rematch-all');
+
+        // ✅ Verification Operations
+        Route::post('/{bankStatement}/verify-all-matched', [BankStatementController::class, 'verifyAllMatched'])
+            ->name('verify-all-matched'); // FIXED: Removed duplicate
+
+        Route::post('/{bankStatement}/transactions/{transaction}/verify', [BankStatementController::class, 'verifyTransaction'])
+            ->name('transactions.verify');
+
+        // ✅ Get transaction detail (AJAX)
+        Route::get('/{bankStatement}/transactions/{transaction}', [BankStatementController::class, 'getTransaction'])
+            ->name('transactions.show');
+
+        // ✅ Statistics
+        Route::get('/stats/summary', [BankStatementController::class, 'statistics'])
+            ->name('statistics');
     });
 
-    // Keyword Suggestions
     Route::prefix('keyword-suggestions')->name('keyword-suggestions.')->group(function () {
-        Route::get('/analyze/{bankStatement}', [KeywordSuggestionController::class, 'analyze'])->name('analyze');
+        Route::get('/{bankStatement}/analyze', [KeywordSuggestionController::class, 'analyze'])->name('analyze');
         Route::post('/create', [KeywordSuggestionController::class, 'createFromSuggestion'])->name('create');
         Route::post('/batch-create', [KeywordSuggestionController::class, 'batchCreate'])->name('batch-create');
         Route::post('/dismiss', [KeywordSuggestionController::class, 'dismiss'])->name('dismiss');
         Route::post('/preview', [KeywordSuggestionController::class, 'preview'])->name('preview');
+        Route::get('/{bankStatement}/export', [KeywordSuggestionController::class, 'export'])->name('export');
+        Route::post('/{bankStatement}/refresh', [KeywordSuggestionController::class, 'refresh'])->name('refresh');
     });
 
 

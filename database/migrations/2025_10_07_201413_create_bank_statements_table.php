@@ -16,6 +16,7 @@ return new class extends Migration
             
             // File info
             $table->string('file_path');
+            $table->string('file_hash', 64)->nullable();
             $table->string('original_filename');
             $table->unsignedBigInteger('file_size')->nullable();
             
@@ -29,7 +30,7 @@ return new class extends Migration
             $table->date('period_to')->nullable(); // PeriodTo dari OCR
             $table->string('account_number', 50)->nullable(); // AccountNo dari OCR
             $table->string('currency', 10)->default('IDR'); // Currency dari OCR
-            $table->string('branch_code', 20)->nullable(); // Branch dari OCR
+            $table->string('branch_code', 256)->nullable(); // Branch dari OCR
             
             // Financial summary dari OCR
             $table->decimal('opening_balance', 15, 2)->nullable();

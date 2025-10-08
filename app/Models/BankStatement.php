@@ -8,7 +8,16 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Log;
 
+/**
+ * BankStatement Model
+ * 
+ * ✅ Auto-sanitization untuk input data:
+ * - branch_code (max 100 chars)
+ * - account_number (extract numeric only)
+ * - currency (uppercase, max 3 chars)
+ */
 class BankStatement extends Model
 {
     use HasFactory, SoftDeletes;
@@ -17,6 +26,7 @@ class BankStatement extends Model
         'bank_id',
         'user_id',
         'file_path',
+        'file_hash',
         'original_filename',
         'file_size',
         'ocr_status',
@@ -58,125 +68,175 @@ class BankStatement extends Model
         'processed_at' => 'datetime',
     ];
 
+    /*
+    |--------------------------------------------------------------------------
+    | ✅ MUTATORS - Auto Sanitization
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Get the bank that owns this statement
+     * ✅ Auto-truncate branch_code (max 100 chars)
+     * Mencegah error "Data too long for column"
      */
+    public function setBranchCodeAttribute($value): void
+    {
+        if (empty($value)) {
+            $this->attributes['branch_code'] = null;
+            return;
+        }
+
+        $sanitized = trim($value);
+
+        // Truncate jika lebih dari 100 chars
+        if (strlen($sanitized) > 100) {
+            $sanitized = substr($sanitized, 0, 97) . '...';
+            
+            Log::debug('Branch code truncated', [
+                'original_length' => strlen($value),
+                'truncated_length' => strlen($sanitized),
+            ]);
+        }
+
+        $this->attributes['branch_code'] = $sanitized;
+    }
+
+    /**
+     * ✅ Auto-extract account number (numeric only)
+     * Format: "833774466 IDR KIMIA FARMA APOTEK PT" → "833774466"
+     */
+    public function setAccountNumberAttribute($value): void
+    {
+        if (empty($value)) {
+            $this->attributes['account_number'] = null;
+            return;
+        }
+
+        $sanitized = trim($value);
+
+        // Extract hanya angka pertama
+        if (preg_match('/^(\d+)/', $sanitized, $matches)) {
+            $this->attributes['account_number'] = $matches[1];
+        } else {
+            // Fallback: truncate ke 50 chars
+            $this->attributes['account_number'] = substr($sanitized, 0, 50);
+            
+            Log::warning('Account number tidak berisi angka', [
+                'original' => substr($sanitized, 0, 50),
+            ]);
+        }
+    }
+
+    /**
+     * ✅ Auto-uppercase currency (max 3 chars)
+     */
+    public function setCurrencyAttribute($value): void
+    {
+        if (empty($value)) {
+            $this->attributes['currency'] = 'IDR'; // Default
+            return;
+        }
+
+        $this->attributes['currency'] = strtoupper(substr(trim($value), 0, 3));
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relations
+    |--------------------------------------------------------------------------
+    */
+
     public function bank(): BelongsTo
     {
         return $this->belongsTo(Bank::class);
     }
 
-    /**
-     * Get the user who uploaded this statement
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get all transactions for this statement
-     */
     public function transactions(): HasMany
     {
         return $this->hasMany(StatementTransaction::class);
     }
 
-    /**
-     * Get matched transactions
-     */
     public function matchedTransactions(): HasMany
     {
         return $this->hasMany(StatementTransaction::class)
             ->whereNotNull('matched_keyword_id');
     }
 
-    /**
-     * Get unmatched transactions
-     */
     public function unmatchedTransactions(): HasMany
     {
         return $this->hasMany(StatementTransaction::class)
             ->whereNull('matched_keyword_id');
     }
 
-    /**
-     * Get verified transactions
-     */
     public function verifiedTransactions(): HasMany
     {
         return $this->hasMany(StatementTransaction::class)
             ->where('is_verified', true);
     }
 
-    /**
-     * Scope: Filter by status
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Scopes
+    |--------------------------------------------------------------------------
+    */
+
     public function scopeStatus($query, $status)
     {
         return $query->where('ocr_status', $status);
     }
 
-    /**
-     * Scope: Filter by period
-     */
     public function scopePeriodBetween($query, $startDate, $endDate)
     {
         return $query->whereBetween('period_from', [$startDate, $endDate])
             ->orWhereBetween('period_to', [$startDate, $endDate]);
     }
 
-    /**
-     * Scope: Filter by bank
-     */
     public function scopeByBank($query, $bankId)
     {
         return $query->where('bank_id', $bankId);
     }
 
-    /**
-     * Scope: Filter by user
-     */
     public function scopeByUser($query, $userId)
     {
         return $query->where('user_id', $userId);
     }
 
-    /**
-     * Check if OCR is completed
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Status Methods
+    |--------------------------------------------------------------------------
+    */
+
     public function isOcrCompleted(): bool
     {
         return $this->ocr_status === 'completed';
     }
 
-    /**
-     * Check if OCR is processing
-     */
     public function isOcrProcessing(): bool
     {
         return $this->ocr_status === 'processing';
     }
 
-    /**
-     * Check if OCR failed
-     */
     public function isOcrFailed(): bool
     {
         return $this->ocr_status === 'failed';
     }
 
-    /**
-     * Mark as processing
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Update Methods
+    |--------------------------------------------------------------------------
+    */
+
     public function markAsProcessing(): void
     {
         $this->update(['ocr_status' => 'processing']);
     }
 
-    /**
-     * Mark as completed with OCR data
-     */
     public function markAsCompleted(array $ocrResponse, array $metadata = []): void
     {
         $this->update([
@@ -187,9 +247,6 @@ class BankStatement extends Model
         ]);
     }
 
-    /**
-     * Mark as failed
-     */
     public function markAsFailed(string $error): void
     {
         $this->update([
@@ -198,10 +255,29 @@ class BankStatement extends Model
         ]);
     }
 
-
     /**
-     * Get matching percentage
+     * ✅ Update matching statistics
+     * Called after matching/verification operations
      */
+    public function updateMatchingStats(): void
+    {
+        $matchedCount = $this->transactions()->whereNotNull('matched_keyword_id')->count();
+        $unmatchedCount = $this->transactions()->whereNull('matched_keyword_id')->count();
+        $verifiedCount = $this->transactions()->where('is_verified', true)->count();
+
+        $this->update([
+            'matched_count' => $matchedCount,
+            'unmatched_count' => $unmatchedCount,
+            'verified_count' => $verifiedCount,
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Accessors
+    |--------------------------------------------------------------------------
+    */
+
     public function matchingPercentage(): Attribute
     {
         return Attribute::make(
@@ -214,9 +290,6 @@ class BankStatement extends Model
         );
     }
 
-    /**
-     * Get verification percentage
-     */
     public function verificationPercentage(): Attribute
     {
         return Attribute::make(
@@ -229,9 +302,6 @@ class BankStatement extends Model
         );
     }
 
-    /**
-     * Get net amount (credits - debits)
-     */
     public function netAmount(): Attribute
     {
         return Attribute::make(
@@ -239,9 +309,6 @@ class BankStatement extends Model
         );
     }
 
-    /**
-     * Get balance difference
-     */
     public function balanceDifference(): Attribute
     {
         return Attribute::make(
@@ -249,18 +316,6 @@ class BankStatement extends Model
         );
     }
 
-    /**
-     * Check if balance is reconciled
-     */
-    public function isBalanceReconciled(): bool
-    {
-        $calculated = $this->opening_balance + $this->total_credit_amount - $this->total_debit_amount;
-        return abs($calculated - $this->closing_balance) < 0.01; // Allow 1 cent tolerance
-    }
-
-    /**
-     * Get file size in human readable format
-     */
     public function fileSizeFormatted(): Attribute
     {
         return Attribute::make(
@@ -279,9 +334,6 @@ class BankStatement extends Model
         );
     }
 
-    /**
-     * Get period label
-     */
     public function periodLabel(): Attribute
     {
         return Attribute::make(
@@ -289,43 +341,18 @@ class BankStatement extends Model
         );
     }
 
-    /**
-     * Update matching statistics (stored in database)
-     */
-    public function updateMatchingStats(): void
-    {
-        $total = $this->transactions()->count();
-        
-        // Count matched (either via keyword or manual)
-        $matched = $this->transactions()
-            ->where(function($query) {
-                $query->whereNotNull('matched_keyword_id')
-                    ->orWhere('is_manual_category', true);
-            })
-            ->count();
-        
-        $unmatched = $this->transactions()
-            ->whereNull('matched_keyword_id')
-            ->where('is_manual_category', false)
-            ->count();
-        
-        $manual = $this->transactions()
-            ->where('is_manual_category', true)
-            ->count();
-        
-        $matchPercentage = $total > 0 ? ($matched / $total) * 100 : 0;
+    /*
+    |--------------------------------------------------------------------------
+    | Helper Methods
+    |--------------------------------------------------------------------------
+    */
 
-        $this->update([
-            'matched_transactions_count' => $matched,
-            'unmatched_transactions_count' => $unmatched,
-            'manual_transactions_count' => $manual,
-            'match_percentage' => round($matchPercentage, 2),
-        ]);
+    public function isBalanceReconciled(): bool
+    {
+        $calculated = $this->opening_balance + $this->total_credit_amount - $this->total_debit_amount;
+        return abs($calculated - $this->closing_balance) < 0.01;
     }
 
-    /**
-     * Get matching statistics (real-time from transactions)
-     */
     public function getMatchingStats(): array
     {
         $transactions = $this->transactions;
@@ -352,9 +379,6 @@ class BankStatement extends Model
         ];
     }
 
-    /**
-     * Get low confidence count
-     */
     public function getLowConfidenceCount(): int
     {
         return $this->transactions()
