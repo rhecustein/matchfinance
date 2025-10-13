@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('banks', function (Blueprint $table) {
             $table->id();
             $table->string('code', 10)->unique();
+            $table->string('slug', 100)->unique();
             $table->string('name', 100);
             $table->string('logo')->nullable();
             $table->boolean('is_active')->default(true);

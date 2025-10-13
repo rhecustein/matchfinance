@@ -1,962 +1,362 @@
 {{-- resources/views/bank-statements/create.blade.php --}}
 <x-app-layout>
-    <x-slot name="header">Upload Bank Statement</x-slot>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            {{ __('Upload Bank Statement') }}
+        </h2>
+    </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
-            {{-- ✅ SUCCESS MESSAGE --}}
+            {{-- Success Message --}}
             @if(session('success'))
-                <div class="bg-green-600/20 border border-green-600 text-green-400 px-6 py-4 rounded-lg flex items-center space-x-3">
-                    <i class="fas fa-check-circle text-2xl"></i>
-                    <p class="font-semibold">{{ session('success') }}</p>
+                <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-check-circle text-green-500 text-xl"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-green-700 font-medium">
+                                {{ session('success') }}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             @endif
 
-            {{-- ✅ ERROR MESSAGE --}}
+            {{-- Error Message --}}
             @if(session('error'))
-                <div class="bg-red-600/20 border border-red-600 text-red-400 px-6 py-4 rounded-lg flex items-center space-x-3">
-                    <i class="fas fa-exclamation-circle text-2xl"></i>
-                    <p class="font-semibold">{{ session('error') }}</p>
+                <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-circle text-red-500 text-xl"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-red-700 font-medium">
+                                {{ session('error') }}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             @endif
 
-            {{-- Header --}}
-            <div class="flex justify-between items-center">
-                <div>
-                    <h2 class="text-2xl font-bold text-white mb-2">Upload Bank Statement</h2>
-                    <p class="text-gray-400">Upload and process your bank statement PDF</p>
+            {{-- Validation Errors --}}
+            @if($errors->any())
+                <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">{{ __('There were some errors with your submission') }}</h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                <ul class="list-disc list-inside space-y-1">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <a href="{{ route('bank-statements.index') }}" 
-                   class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-semibold transition">
-                    <i class="fas fa-arrow-left mr-2"></i>Back to List
-                </a>
-            </div>
+            @endif
 
-            {{-- Upload Form --}}
-            <div id="uploadSection" class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-slate-700 shadow-xl">
-                <h3 class="text-xl font-bold text-white mb-6">
-                    <i class="fas fa-upload mr-2"></i>Upload Bank Statement File
-                </h3>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
-                <form id="uploadForm" class="space-y-6">
-                    @csrf
-                    
-                    {{-- Bank Selection --}}
-                    <div>
-                        <label for="bank_id" class="block text-sm font-semibold text-gray-300 mb-2">
-                            <i class="fas fa-university mr-1"></i>Select Bank <span class="text-red-400">*</span>
-                        </label>
-                        <select id="bank_id" name="bank_id" required
-                            class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="">-- Select Bank --</option>
-                            @foreach($banks as $bank)
-                                <option value="{{ $bank->id }}" data-code="{{ $bank->code }}">
-                                    {{ $bank->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <p class="mt-2 text-sm text-gray-400">
-                            <i class="fas fa-info-circle mr-1"></i>Make sure the selected bank matches the statement file
-                        </p>
-                    </div>
-
-                    {{-- File Upload --}}
-                    <div>
-                        <label for="file" class="block text-sm font-semibold text-gray-300 mb-2">
-                            <i class="fas fa-file-pdf mr-1"></i>PDF File <span class="text-red-400">*</span>
-                        </label>
-                        <div class="flex items-center justify-center w-full">
-                            <label for="file" class="flex flex-col items-center justify-center w-full h-56 border-2 border-slate-600 border-dashed rounded-xl cursor-pointer bg-slate-900/30 hover:bg-slate-900/50 hover:border-blue-500 transition">
-                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                    <i class="fas fa-cloud-upload-alt text-6xl text-slate-500 mb-4"></i>
-                                    <p class="mb-2 text-sm text-gray-300">
-                                        <span class="font-semibold">Click to upload</span> or drag and drop
-                                    </p>
-                                    <p class="text-xs text-gray-500">PDF (MAX. 10MB)</p>
-                                </div>
-                                <input id="file" name="file" type="file" class="hidden" accept=".pdf" required />
-                            </label>
-                        </div>
-                        <div id="fileInfo" class="mt-3 text-sm text-gray-300 hidden flex items-center space-x-2">
-                            <i class="fas fa-file-pdf text-red-400"></i>
-                            <span id="fileName"></span>
-                        </div>
-                    </div>
-
-                    {{-- Submit Button --}}
-                    <div class="flex gap-3">
-                        <button type="submit" id="uploadBtn"
-                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition flex items-center justify-center">
-                            <i class="fas fa-upload mr-2"></i>Upload & Preview
-                        </button>
-                        <a href="{{ route('bank-statements.index') }}"
-                            class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-6 rounded-lg text-center transition">
-                            <i class="fas fa-times mr-2"></i>Cancel
-                        </a>
-                    </div>
-                </form>
-            </div>
-
-            {{-- Loading Spinner --}}
-            <div id="loadingSection" class="hidden bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 border border-slate-700 shadow-xl">
-                <div class="flex flex-col items-center justify-center py-12">
-                    <div class="relative">
-                        <div class="animate-spin rounded-full h-20 w-20 border-t-4 border-b-4 border-blue-500"></div>
-                        <i class="fas fa-file-pdf absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl text-blue-400"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-white mt-6 mb-2">Processing OCR...</h3>
-                    <p class="text-sm text-gray-400 mb-6">Please wait, processing your bank statement</p>
-                    <div class="w-full max-w-md">
-                        <div class="bg-slate-900/50 rounded-full h-3 overflow-hidden">
-                            <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
-                        </div>
-                        <p class="text-center text-xs text-gray-500 mt-2">
-                            <i class="fas fa-spinner fa-spin mr-1"></i>Processing...
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Preview Section --}}
-            <div id="previewSection" class="hidden space-y-6">
-                {{-- Header with Close Button --}}
-                <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-slate-700 shadow-xl">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h3 class="text-xl font-bold text-white mb-2">
-                                <i class="fas fa-eye mr-2"></i>OCR Data Preview
+                {{-- Upload Form --}}
+                <div class="lg:col-span-2">
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                        <div class="p-6 bg-white border-b border-gray-200">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-6">
+                                <i class="fas fa-cloud-upload-alt text-blue-600 mr-2"></i>
+                                Upload Bank Statement Files
                             </h3>
-                            <p class="text-gray-400">Review the processed data before saving</p>
+
+                            <form action="{{ route('bank-statements.store') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
+                                @csrf
+
+                                {{-- Bank Selection --}}
+                                <div class="mb-6">
+                                    <label for="bank_id" class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-university text-blue-600 mr-1"></i>
+                                        Select Bank <span class="text-red-500">*</span>
+                                    </label>
+                                    <select id="bank_id" name="bank_id" required
+                                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                                        <option value="">-- Choose Bank --</option>
+                                        @foreach($banks as $bank)
+                                            <option value="{{ $bank->id }}" {{ old('bank_id') == $bank->id ? 'selected' : '' }}>
+                                                {{ $bank->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <p class="mt-2 text-sm text-gray-500">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Select the bank that matches your statement
+                                    </p>
+                                </div>
+
+                                {{-- File Upload Area --}}
+                                <div class="mb-6">
+                                    <label for="files" class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-file-pdf text-red-600 mr-1"></i>
+                                        PDF Files <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-blue-400 transition cursor-pointer" id="dropZone">
+                                        <div class="space-y-1 text-center">
+                                            <i class="fas fa-cloud-upload-alt text-gray-400 text-5xl mb-3"></i>
+                                            <div class="flex text-sm text-gray-600">
+                                                <label for="files" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none">
+                                                    <span>Upload files</span>
+                                                    <input id="files" name="files[]" type="file" class="sr-only" accept=".pdf" multiple required>
+                                                </label>
+                                                <p class="pl-1">or drag and drop</p>
+                                            </div>
+                                            <p class="text-xs text-gray-500">
+                                                PDF up to 10MB per file (Max 10 files)
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {{-- Selected Files Preview --}}
+                                    <div id="filesList" class="mt-4 space-y-2 hidden"></div>
+                                </div>
+
+                                {{-- Action Buttons --}}
+                                <div class="flex items-center justify-between">
+                                    <a href="{{ route('bank-statements.index') }}" 
+                                       class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <i class="fas fa-arrow-left mr-2"></i>
+                                        Cancel
+                                    </a>
+                                    <button type="submit" id="submitBtn"
+                                        class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <i class="fas fa-upload mr-2"></i>
+                                        Upload & Process
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                        <button id="closePreview" class="text-gray-400 hover:text-white transition">
-                            <i class="fas fa-times text-2xl"></i>
-                        </button>
                     </div>
                 </div>
 
-                {{-- Summary Cards --}}
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-4 border border-blue-500/50 shadow-lg">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-xs text-blue-200 mb-1">Period</p>
-                                <p id="preview_period" class="text-lg font-bold text-white">-</p>
+                {{-- Information Sidebar --}}
+                <div class="lg:col-span-1">
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
+                        <div class="p-6 bg-white border-b border-gray-200">
+                            <h4 class="text-sm font-semibold text-gray-900 mb-4">
+                                <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                                Upload Instructions
+                            </h4>
+                            <div class="space-y-3 text-sm text-gray-600">
+                                <div class="flex items-start">
+                                    <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
+                                    <span>Select the correct bank</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
+                                    <span>Upload PDF files only</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
+                                    <span>Max 10 files at once</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
+                                    <span>Each file max 10MB</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
+                                    <span>Files will be processed automatically</span>
+                                </div>
                             </div>
-                            <i class="fas fa-calendar-alt text-3xl text-blue-300/50"></i>
                         </div>
                     </div>
-                    <div class="bg-gradient-to-br from-green-600 to-green-700 rounded-xl p-4 border border-green-500/50 shadow-lg">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-xs text-green-200 mb-1">Total Transactions</p>
-                                <p id="preview_total_transactions" class="text-lg font-bold text-white">-</p>
+
+                    {{-- Processing Info --}}
+                    <div class="bg-blue-50 overflow-hidden shadow-sm sm:rounded-lg">
+                        <div class="p-6">
+                            <h4 class="text-sm font-semibold text-blue-900 mb-3">
+                                <i class="fas fa-robot text-blue-600 mr-2"></i>
+                                Auto Processing
+                            </h4>
+                            <p class="text-sm text-blue-700 mb-3">
+                                After upload, your files will be automatically:
+                            </p>
+                            <div class="space-y-2 text-sm text-blue-600">
+                                <div class="flex items-center">
+                                    <i class="fas fa-circle text-xs mr-2"></i>
+                                    <span>Processed by OCR</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-circle text-xs mr-2"></i>
+                                    <span>Transactions extracted</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-circle text-xs mr-2"></i>
+                                    <span>Keywords matched</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-circle text-xs mr-2"></i>
+                                    <span>Ready for review</span>
+                                </div>
                             </div>
-                            <i class="fas fa-receipt text-3xl text-green-300/50"></i>
                         </div>
                     </div>
-                    <div class="bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl p-4 border border-purple-500/50 shadow-lg">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-xs text-purple-200 mb-1">Account Number</p>
-                                <p id="preview_account_number" class="text-sm font-bold text-white truncate">-</p>
+
+                    {{-- Supported Banks --}}
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mt-6">
+                        <div class="p-6">
+                            <h4 class="text-sm font-semibold text-gray-900 mb-3">
+                                <i class="fas fa-university text-blue-600 mr-2"></i>
+                                Supported Banks
+                            </h4>
+                            <div class="space-y-2">
+                                @foreach($banks as $bank)
+                                    <div class="flex items-center text-sm text-gray-600">
+                                        <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                        <span>{{ $bank->name }}</span>
+                                    </div>
+                                @endforeach
                             </div>
-                            <i class="fas fa-credit-card text-3xl text-purple-300/50"></i>
-                        </div>
-                    </div>
-                    <div class="bg-gradient-to-br from-orange-600 to-orange-700 rounded-xl p-4 border border-orange-500/50 shadow-lg">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-xs text-orange-200 mb-1">Keywords Detected</p>
-                                <p id="preview_keywords_count" class="text-lg font-bold text-white">-</p>
-                            </div>
-                            <i class="fas fa-tags text-3xl text-orange-300/50"></i>
                         </div>
                     </div>
                 </div>
 
-                {{-- Balance Info --}}
-                <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-slate-700 shadow-xl">
-                    <h4 class="text-lg font-bold text-white mb-4">
-                        <i class="fas fa-wallet mr-2"></i>Balance Summary
-                    </h4>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
-                            <p class="text-xs text-gray-400 mb-1">Opening Balance</p>
-                            <p id="preview_opening_balance" class="text-base font-semibold text-white">-</p>
-                        </div>
-                        <div class="bg-slate-900/50 rounded-lg p-4 border border-green-700/50">
-                            <p class="text-xs text-gray-400 mb-1">Total Credit</p>
-                            <p id="preview_total_credit" class="text-base font-semibold text-green-400">-</p>
-                        </div>
-                        <div class="bg-slate-900/50 rounded-lg p-4 border border-red-700/50">
-                            <p class="text-xs text-gray-400 mb-1">Total Debit</p>
-                            <p id="preview_total_debit" class="text-base font-semibold text-red-400">-</p>
-                        </div>
-                        <div class="bg-slate-900/50 rounded-lg p-4 border border-blue-700/50">
-                            <p class="text-xs text-gray-400 mb-1">Closing Balance</p>
-                            <p id="preview_closing_balance" class="text-base font-semibold text-blue-400">-</p>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Keywords Detected Section --}}
-                <div id="keywordsSection" class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-slate-700 shadow-xl">
-                    <h4 class="text-lg font-bold text-white mb-4">
-                        <i class="fas fa-tags mr-2"></i>Keywords Detected in Transactions
-                    </h4>
-                    <div id="keywordsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        <!-- Will be populated by JavaScript -->
-                    </div>
-                </div>
-
-                {{-- Transactions Preview --}}
-                <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 shadow-xl overflow-hidden">
-                    <div class="p-6 border-b border-slate-700">
-                        <h4 class="text-lg font-bold text-white">
-                            <i class="fas fa-list mr-2"></i>Transactions Preview (First 10)
-                        </h4>
-                    </div>
-                    <div class="p-6">
-                        <div id="previewTransactionsList" class="space-y-3">
-                            <!-- Will be populated by JavaScript -->
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Action Buttons --}}
-                <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-slate-700 shadow-xl">
-                    <div class="flex gap-3">
-                        <button id="confirmSave" type="button"
-                            class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition flex items-center justify-center">
-                            <i class="fas fa-check-circle mr-2"></i>Save to Database
-                        </button>
-                        <button id="cancelSave" type="button"
-                            class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition flex items-center justify-center">
-                            <i class="fas fa-times-circle mr-2"></i>Cancel
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    {{-- ✅ DUPLICATE MODAL --}}
-    <div id="duplicateModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            {{-- Modal Header --}}
-            <div class="bg-gradient-to-r from-yellow-600 to-orange-600 p-6 border-b border-slate-700">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <i class="fas fa-exclamation-triangle text-3xl text-white"></i>
-                        <div>
-                            <h3 class="text-xl font-bold text-white">Duplicate Detected</h3>
-                            <p class="text-sm text-yellow-100">A similar bank statement already exists</p>
-                        </div>
-                    </div>
-                    <button id="closeDuplicateModal" class="text-white hover:text-yellow-200 transition">
-                        <i class="fas fa-times text-2xl"></i>
-                    </button>
-                </div>
-            </div>
-
-            {{-- Modal Body --}}
-            <div class="p-6 space-y-6">
-                {{-- Error Message --}}
-                <div id="duplicateMessage" class="bg-yellow-600/20 border border-yellow-500/50 rounded-lg p-4">
-                    <p class="text-yellow-300 text-sm font-medium"></p>
-                </div>
-
-                {{-- Existing Data Info --}}
-                <div class="bg-slate-900/50 rounded-xl border border-slate-700 overflow-hidden">
-                    <div class="bg-slate-800/50 px-4 py-3 border-b border-slate-700">
-                        <h4 class="text-white font-semibold">
-                            <i class="fas fa-database mr-2"></i>Existing Data Information
-                        </h4>
-                    </div>
-                    <div class="p-4 space-y-3" id="existingDataInfo">
-                        <!-- Will be populated by JavaScript -->
-                    </div>
-                </div>
-
-                {{-- Warning --}}
-                <div class="bg-red-600/20 border border-red-500/50 rounded-lg p-4">
-                    <h4 class="text-red-300 font-semibold mb-2">
-                        <i class="fas fa-exclamation-circle mr-2"></i>Please Note
-                    </h4>
-                    <p class="text-sm text-red-200">
-                        The new upload will not be saved. Please cancel and check your existing data.
-                    </p>
-                </div>
-            </div>
-
-            {{-- Modal Footer --}}
-            <div class="p-6 border-t border-slate-700 bg-slate-800/30">
-                <button id="closeDuplicateBtn" type="button"
-                    class="w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-6 rounded-lg transition flex items-center justify-center">
-                    <i class="fas fa-times mr-2"></i>Close & Return to Upload
-                </button>
-            </div>
-        </div>
-    </div>
-
-    {{-- ✅ OCR ERROR MODAL --}}
-    <div id="ocrErrorModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            {{-- Modal Header --}}
-            <div class="bg-gradient-to-r from-red-600 to-red-700 p-6 border-b border-slate-700">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <i class="fas fa-exclamation-circle text-3xl text-white"></i>
-                        <div>
-                            <h3 class="text-xl font-bold text-white">OCR Processing Failed</h3>
-                            <p class="text-sm text-red-100">File rekening koran tidak dapat diproses</p>
-                        </div>
-                    </div>
-                    <button id="closeOcrErrorModal" class="text-white hover:text-red-200 transition">
-                        <i class="fas fa-times text-2xl"></i>
-                    </button>
-                </div>
-            </div>
-
-            {{-- Modal Body --}}
-            <div class="p-6 space-y-6">
-                {{-- Error Message --}}
-                <div class="bg-red-600/20 border border-red-500/50 rounded-lg p-4">
-                    <h4 class="text-red-300 font-semibold mb-2">
-                        <i class="fas fa-times-circle mr-2"></i>Error Details
-                    </h4>
-                    <p id="ocrErrorMessage" class="text-red-200 text-sm whitespace-pre-line"></p>
-                </div>
-
-                {{-- Possible Causes --}}
-                <div class="bg-slate-900/50 rounded-xl border border-slate-700 overflow-hidden">
-                    <div class="bg-slate-800/50 px-4 py-3 border-b border-slate-700">
-                        <h4 class="text-white font-semibold">
-                            <i class="fas fa-question-circle mr-2"></i>Kemungkinan Penyebab
-                        </h4>
-                    </div>
-                    <div class="p-4 space-y-2 text-sm text-gray-300">
-                        <div class="flex items-start space-x-2">
-                            <i class="fas fa-times text-red-400 mt-1"></i>
-                            <span>PDF bukan rekening koran asli dari bank</span>
-                        </div>
-                        <div class="flex items-start space-x-2">
-                            <i class="fas fa-times text-red-400 mt-1"></i>
-                            <span>Format PDF tidak sesuai dengan bank yang dipilih</span>
-                        </div>
-                        <div class="flex items-start space-x-2">
-                            <i class="fas fa-times text-red-400 mt-1"></i>
-                            <span>PDF rusak, ter-password, atau tidak dapat dibaca</span>
-                        </div>
-                        <div class="flex items-start space-x-2">
-                            <i class="fas fa-times text-red-400 mt-1"></i>
-                            <span>Informasi periode atau transaksi tidak terbaca dengan jelas</span>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Solutions --}}
-                <div class="bg-blue-600/20 border border-blue-500/50 rounded-lg p-4">
-                    <h4 class="text-blue-300 font-semibold mb-3">
-                        <i class="fas fa-lightbulb mr-2"></i>Solusi Yang Dapat Dicoba
-                    </h4>
-                    <div class="space-y-2 text-sm text-blue-200">
-                        <div class="flex items-start space-x-2">
-                            <i class="fas fa-check text-green-400 mt-1"></i>
-                            <span>Pastikan pilih bank yang <strong>sesuai</strong> dengan rekening koran</span>
-                        </div>
-                        <div class="flex items-start space-x-2">
-                            <i class="fas fa-check text-green-400 mt-1"></i>
-                            <span>Download ulang PDF dari <strong>internet banking</strong> resmi</span>
-                        </div>
-                        <div class="flex items-start space-x-2">
-                            <i class="fas fa-check text-green-400 mt-1"></i>
-                            <span>Pastikan PDF <strong>tidak ter-password</strong> atau terenkripsi</span>
-                        </div>
-                        <div class="flex items-start space-x-2">
-                            <i class="fas fa-check text-green-400 mt-1"></i>
-                            <span>Coba upload <strong>periode yang berbeda</strong> untuk testing</span>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Technical Details (Collapsible) --}}
-                <details class="bg-slate-900/50 rounded-lg border border-slate-700">
-                    <summary class="px-4 py-3 cursor-pointer text-gray-400 hover:text-white transition font-semibold">
-                        <i class="fas fa-code mr-2"></i>Technical Details (untuk debugging)
-                    </summary>
-                    <div class="px-4 pb-4">
-                        <pre id="technicalError" class="text-xs text-gray-500 bg-slate-950 p-3 rounded overflow-x-auto"></pre>
-                    </div>
-                </details>
-            </div>
-
-            {{-- Modal Footer --}}
-            <div class="p-6 border-t border-slate-700 bg-slate-800/30">
-                <button id="closeOcrErrorBtn" type="button"
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition flex items-center justify-center">
-                    <i class="fas fa-redo mr-2"></i>Upload File Baru
-                </button>
-            </div>
-        </div>
-    </div>
-
-    {{-- ✅ CONFIRM SAVE MODAL --}}
-    <div id="confirmSaveModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 shadow-2xl max-w-lg w-full">
-            {{-- Modal Header --}}
-            <div class="bg-gradient-to-r from-green-600 to-green-700 p-6 border-b border-slate-700">
-                <div class="flex items-center space-x-3">
-                    <i class="fas fa-save text-3xl text-white"></i>
-                    <div>
-                        <h3 class="text-xl font-bold text-white">Konfirmasi Simpan</h3>
-                        <p class="text-sm text-green-100">Simpan bank statement ke database?</p>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Modal Body --}}
-            <div class="p-6 space-y-4">
-                <div class="bg-blue-600/20 border border-blue-500/50 rounded-lg p-4">
-                    <p class="text-blue-200 text-sm mb-3">
-                        <i class="fas fa-info-circle mr-2"></i>Data yang akan disimpan:
-                    </p>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex justify-between text-gray-300">
-                            <span>Total Transaksi:</span>
-                            <span id="confirmTotalTrx" class="font-semibold text-white">-</span>
-                        </div>
-                        <div class="flex justify-between text-gray-300">
-                            <span>Periode:</span>
-                            <span id="confirmPeriod" class="font-semibold text-white">-</span>
-                        </div>
-                        <div class="flex justify-between text-gray-300">
-                            <span>Account:</span>
-                            <span id="confirmAccount" class="font-semibold text-white">-</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-yellow-600/20 border border-yellow-500/50 rounded-lg p-4">
-                    <p class="text-yellow-300 text-sm">
-                        <i class="fas fa-exclamation-triangle mr-2"></i>
-                        Setelah disimpan, data akan langsung masuk ke database dan dapat diproses untuk matching dengan keywords.
-                    </p>
-                </div>
-            </div>
-
-            {{-- Modal Footer --}}
-            <div class="p-6 border-t border-slate-700 bg-slate-800/30 flex gap-3">
-                <button id="cancelConfirmSave" type="button"
-                    class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-6 rounded-lg transition">
-                    <i class="fas fa-times mr-2"></i>Batal
-                </button>
-                <button id="proceedSave" type="button"
-                    class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition">
-                    <i class="fas fa-check mr-2"></i>Ya, Simpan
-                </button>
-            </div>
-        </div>
-    </div>
-
-    {{-- ✅ CANCEL PREVIEW MODAL --}}
-    <div id="cancelPreviewModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 shadow-2xl max-w-lg w-full">
-            {{-- Modal Header --}}
-            <div class="bg-gradient-to-r from-red-600 to-red-700 p-6 border-b border-slate-700">
-                <div class="flex items-center space-x-3">
-                    <i class="fas fa-exclamation-triangle text-3xl text-white"></i>
-                    <div>
-                        <h3 class="text-xl font-bold text-white">Konfirmasi Batal</h3>
-                        <p class="text-sm text-red-100">Batalkan preview dan hapus data?</p>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Modal Body --}}
-            <div class="p-6 space-y-4">
-                <div class="bg-red-600/20 border border-red-500/50 rounded-lg p-4">
-                    <p class="text-red-200 text-sm">
-                        <i class="fas fa-info-circle mr-2"></i>
-                        Semua data yang sudah diproses akan <strong>dihapus</strong> dan Anda harus upload ulang jika ingin menyimpan.
-                    </p>
-                </div>
-
-                <div class="bg-yellow-600/20 border border-yellow-500/50 rounded-lg p-4">
-                    <p class="text-yellow-300 text-sm">
-                        <i class="fas fa-lightbulb mr-2"></i>
-                        Jika Anda ragu, klik "Kembali ke Preview" untuk melanjutkan review data.
-                    </p>
-                </div>
-            </div>
-
-            {{-- Modal Footer --}}
-            <div class="p-6 border-t border-slate-700 bg-slate-800/30 flex gap-3">
-                <button id="backToPreview" type="button"
-                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition">
-                    <i class="fas fa-arrow-left mr-2"></i>Kembali ke Preview
-                </button>
-                <button id="proceedCancel" type="button"
-                    class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition">
-                    <i class="fas fa-trash mr-2"></i>Ya, Batalkan
-                </button>
             </div>
         </div>
     </div>
 
     @push('scripts')
     <script>
-        let previewData = null;
+        const fileInput = document.getElementById('files');
+        const filesList = document.getElementById('filesList');
+        const dropZone = document.getElementById('dropZone');
+        const submitBtn = document.getElementById('submitBtn');
+        let selectedFiles = [];
 
-        // ✅ File input change handler
-        document.getElementById('file').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const fileSize = (file.size / 1024 / 1024).toFixed(2);
-                document.getElementById('fileName').textContent = `${file.name} (${fileSize} MB)`;
-                document.getElementById('fileInfo').classList.remove('hidden');
-            }
+        // File input change handler
+        fileInput.addEventListener('change', function(e) {
+            handleFiles(Array.from(e.target.files));
         });
 
-        // ✅ Upload form submit
-        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+        // Drag and drop handlers
+        dropZone.addEventListener('dragover', function(e) {
             e.preventDefault();
+            dropZone.classList.add('border-blue-500', 'bg-blue-50');
+        });
 
-            const bankId = document.getElementById('bank_id').value;
-            const fileInput = document.getElementById('file');
+        dropZone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+        });
+
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
             
-            if (!bankId) {
-                showAlert('Please select a bank first!', 'error');
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type === 'application/pdf');
+            handleFiles(files);
+        });
+
+        // Handle selected files
+        function handleFiles(files) {
+            if (files.length === 0) return;
+
+            // Limit to 10 files
+            if (selectedFiles.length + files.length > 10) {
+                alert('Maximum 10 files allowed');
                 return;
             }
 
-            if (!fileInput.files.length) {
-                showAlert('Please select a PDF file first!', 'error');
+            // Validate file size and type
+            const validFiles = files.filter(file => {
+                if (file.type !== 'application/pdf') {
+                    alert(`${file.name} is not a PDF file`);
+                    return false;
+                }
+                if (file.size > 10 * 1024 * 1024) {
+                    alert(`${file.name} exceeds 10MB limit`);
+                    return false;
+                }
+                return true;
+            });
+
+            // Add to selected files
+            validFiles.forEach(file => {
+                if (!selectedFiles.find(f => f.name === file.name)) {
+                    selectedFiles.push(file);
+                }
+            });
+
+            displayFiles();
+            updateFileInput();
+        }
+
+        // Display selected files
+        function displayFiles() {
+            if (selectedFiles.length === 0) {
+                filesList.classList.add('hidden');
                 return;
             }
 
-            // Show loading
-            document.getElementById('uploadSection').classList.add('hidden');
-            document.getElementById('loadingSection').classList.remove('hidden');
-            document.getElementById('previewSection').classList.add('hidden');
+            filesList.classList.remove('hidden');
+            filesList.innerHTML = '';
 
-            // Progress bar animation
-            let progress = 0;
-            const progressInterval = setInterval(() => {
-                progress += 5;
-                if (progress <= 90) {
-                    document.getElementById('progressBar').style.width = progress + '%';
-                }
-            }, 200);
-
-            const formData = new FormData();
-            formData.append('bank_id', bankId);
-            formData.append('file', fileInput.files[0]);
-            formData.append('_token', '{{ csrf_token() }}');
-
-            try {
-                const response = await fetch('{{ route('bank-statements.upload.preview') }}', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json',
-                    }
-                });
-
-                clearInterval(progressInterval);
-                document.getElementById('progressBar').style.width = '100%';
-
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    const htmlText = await response.text();
-                    console.error('Server returned HTML:', htmlText.substring(0, 500));
-                    throw new Error('Server error. Check console or Laravel logs for details.');
-                }
-
-                const result = await response.json();
-
-                if (result.success) {
-                    previewData = result.data;
-                    setTimeout(() => showPreview(result.data), 500);
-                } else {
-                    // ✅ Handle different error types
-                    if (result.error_type === 'duplicate_file' || result.error_type === 'duplicate_period') {
-                        showDuplicateModal(result);
-                    } else if (result.error_type === 'bank_mismatch') {
-                        showOcrErrorModal(result.message, 'Bank tidak sesuai! ' + result.message);
-                    } else {
-                        // ✅ Show OCR error modal for any OCR-related errors
-                        showOcrErrorModal(result.message, result.technical_error || result.message);
-                    }
-                }
-
-            } catch (error) {
-                clearInterval(progressInterval);
-                console.error('Upload error:', error);
-                
-                let errorMessage = 'Upload failed: ';
-                let technicalDetails = error.message;
-                
-                if (error.message.includes('JSON') || error.message.includes('Server error')) {
-                    errorMessage = 'Server mengalami error saat memproses file.\n\nKemungkinan penyebab:\n- Format PDF tidak didukung\n- Server OCR sedang bermasalah\n- File terlalu besar atau rusak';
-                    technicalDetails = 'Server returned non-JSON response. Check storage/logs/laravel.log for details.\n\n' + error.message;
-                } else if (error.message.includes('timeout') || error.message.includes('timed out')) {
-                    errorMessage = 'Koneksi timeout saat memproses file.\n\nSolusi:\n- Coba upload file yang lebih kecil\n- Periksa koneksi internet\n- Coba lagi dalam beberapa saat';
-                    technicalDetails = error.message;
-                } else {
-                    errorMessage = 'Gagal memproses file rekening koran.\n\n' + error.message;
-                    technicalDetails = error.message + (error.stack ? '\n\n' + error.stack : '');
-                }
-                
-                showOcrErrorModal(errorMessage, technicalDetails);
-            }
-        });
-
-        // ✅ Show OCR Error Modal
-        function showOcrErrorModal(message, technicalError) {
-            const modal = document.getElementById('ocrErrorModal');
-            const messageEl = modal.querySelector('#ocrErrorMessage');
-            const technicalEl = modal.querySelector('#technicalError');
-
-            // Set user-friendly message
-            messageEl.textContent = message;
-
-            // Set technical details
-            if (technicalError) {
-                technicalEl.textContent = technicalError;
-            }
-
-            // Hide loading, show modal
-            document.getElementById('loadingSection').classList.add('hidden');
-            modal.classList.remove('hidden');
-        }
-
-        // ✅ Close OCR Error Modal
-        document.getElementById('closeOcrErrorBtn')?.addEventListener('click', function() {
-            document.getElementById('ocrErrorModal').classList.add('hidden');
-            document.getElementById('uploadSection').classList.remove('hidden');
-            document.getElementById('uploadForm').reset();
-            document.getElementById('fileInfo').classList.add('hidden');
-        });
-
-        document.getElementById('closeOcrErrorModal')?.addEventListener('click', function() {
-            document.getElementById('closeOcrErrorBtn').click();
-        });
-
-        // ✅ Show Duplicate Modal
-        function showDuplicateModal(errorData) {
-            const modal = document.getElementById('duplicateModal');
-            const messageEl = modal.querySelector('#duplicateMessage p');
-            const infoEl = modal.querySelector('#existingDataInfo');
-
-            // Set message
-            messageEl.textContent = errorData.message;
-
-            // Set existing data info
-            const existingData = errorData.existing_statement;
-            if (existingData) {
-                infoEl.innerHTML = `
-                    <div class="flex justify-between items-center py-2 border-b border-slate-700">
-                        <span class="text-gray-400 text-sm">Statement ID:</span>
-                        <span class="text-white font-semibold">#${existingData.id || 'N/A'}</span>
+            selectedFiles.forEach((file, index) => {
+                const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                const fileItem = document.createElement('div');
+                fileItem.className = 'flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-md';
+                fileItem.innerHTML = `
+                    <div class="flex items-center space-x-3 flex-1 min-w-0">
+                        <i class="fas fa-file-pdf text-red-500 text-xl flex-shrink-0"></i>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-900 truncate">${file.name}</p>
+                            <p class="text-xs text-gray-500">${fileSize} MB</p>
+                        </div>
                     </div>
-                    <div class="flex justify-between items-center py-2 border-b border-slate-700">
-                        <span class="text-gray-400 text-sm">Period:</span>
-                        <span class="text-white font-semibold">${existingData.period || 'N/A'}</span>
-                    </div>
-                    ${existingData.account ? `
-                    <div class="flex justify-between items-center py-2 border-b border-slate-700">
-                        <span class="text-gray-400 text-sm">Account:</span>
-                        <span class="text-white font-semibold">${existingData.account}</span>
-                    </div>
-                    ` : ''}
-                    <div class="flex justify-between items-center py-2">
-                        <span class="text-gray-400 text-sm">Uploaded At:</span>
-                        <span class="text-white font-semibold">${existingData.uploaded_at || 'N/A'}</span>
-                    </div>
+                    <button type="button" onclick="removeFile(${index})" 
+                        class="ml-3 flex-shrink-0 text-red-600 hover:text-red-800 focus:outline-none">
+                        <i class="fas fa-times"></i>
+                    </button>
                 `;
-            }
-
-            // Hide loading, show modal
-            document.getElementById('loadingSection').classList.add('hidden');
-            modal.classList.remove('hidden');
-        }
-
-        // ✅ Close Duplicate Modal
-        document.getElementById('closeDuplicateBtn')?.addEventListener('click', function() {
-            document.getElementById('duplicateModal').classList.add('hidden');
-            document.getElementById('uploadSection').classList.remove('hidden');
-            document.getElementById('uploadForm').reset();
-            document.getElementById('fileInfo').classList.add('hidden');
-        });
-
-        document.getElementById('closeDuplicateModal')?.addEventListener('click', function() {
-            document.getElementById('closeDuplicateBtn').click();
-        });
-
-        // ✅ Show Preview
-        function showPreview(data) {
-            document.getElementById('loadingSection').classList.add('hidden');
-            document.getElementById('previewSection').classList.remove('hidden');
-
-            document.getElementById('preview_period').textContent = data.summary.period;
-            document.getElementById('preview_total_transactions').textContent = data.summary.total_transactions;
-            document.getElementById('preview_account_number').textContent = data.summary.account_number;
-            document.getElementById('preview_opening_balance').textContent = formatCurrency(data.summary.opening_balance);
-            document.getElementById('preview_total_credit').textContent = formatCurrency(data.summary.total_credit);
-            document.getElementById('preview_total_debit').textContent = formatCurrency(data.summary.total_debit);
-            document.getElementById('preview_closing_balance').textContent = formatCurrency(data.summary.closing_balance);
-
-            const keywords = extractKeywords(data.ocr_data.transactions);
-            displayKeywords(keywords);
-
-            const transactionsList = document.getElementById('previewTransactionsList');
-            transactionsList.innerHTML = '';
-            
-            const transactions = data.ocr_data.transactions.slice(0, 10);
-            transactions.forEach(transaction => {
-                const card = createTransactionCard(transaction);
-                transactionsList.innerHTML += card;
+                filesList.appendChild(fileItem);
             });
         }
 
-        // ✅ Extract Keywords
-        function extractKeywords(transactions) {
-            const keywordMap = new Map();
-            
-            transactions.forEach(transaction => {
-                const desc = transaction.description.toUpperCase();
-                
-                const patterns = [
-                    { regex: /INDOMARET|ALFAMART|SUPERINDO/i, category: 'Minimarket', color: 'blue' },
-                    { regex: /KIMIA FARMA|GUARDIAN|APOTEK/i, category: 'Pharmacy', color: 'green' },
-                    { regex: /GOPAY|OVO|DANA|SHOPEEPAY/i, category: 'E-Wallet', color: 'purple' },
-                    { regex: /GRAB|GOJEK|UBER/i, category: 'Transportation', color: 'orange' },
-                    { regex: /TOKOPEDIA|SHOPEE|LAZADA|BUKALAPAK/i, category: 'E-Commerce', color: 'pink' },
-                    { regex: /RESTORAN|RESTAURANT|CAFE|WARUNG/i, category: 'Restaurant', color: 'red' },
-                    { regex: /TRANSFER|TRF|OVERBOOKING/i, category: 'Transfer', color: 'indigo' },
-                ];
+        // Remove file
+        window.removeFile = function(index) {
+            selectedFiles.splice(index, 1);
+            displayFiles();
+            updateFileInput();
+        };
 
-                patterns.forEach(pattern => {
-                    if (pattern.regex.test(desc)) {
-                        const match = desc.match(pattern.regex)[0];
-                        if (!keywordMap.has(match)) {
-                            keywordMap.set(match, { keyword: match, category: pattern.category, color: pattern.color, count: 1 });
-                        } else {
-                            keywordMap.get(match).count++;
-                        }
-                    }
-                });
-            });
-
-            return Array.from(keywordMap.values());
+        // Update actual file input
+        function updateFileInput() {
+            const dt = new DataTransfer();
+            selectedFiles.forEach(file => dt.items.add(file));
+            fileInput.files = dt.files;
         }
 
-        // ✅ Display Keywords
-        function displayKeywords(keywords) {
-            const keywordsList = document.getElementById('keywordsList');
-            document.getElementById('preview_keywords_count').textContent = keywords.length;
-
-            if (keywords.length === 0) {
-                keywordsList.innerHTML = `
-                    <div class="col-span-full text-center py-8">
-                        <i class="fas fa-tags text-gray-600 text-4xl mb-3"></i>
-                        <p class="text-gray-400">No keywords detected</p>
-                    </div>
-                `;
+        // Form submit handler
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            if (!document.getElementById('bank_id').value) {
+                e.preventDefault();
+                alert('Please select a bank first');
                 return;
             }
 
-            keywordsList.innerHTML = '';
-            keywords.forEach(kw => {
-                keywordsList.innerHTML += `
-                    <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-700 hover:border-${kw.color}-500 transition">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="px-3 py-1 bg-${kw.color}-600/20 text-${kw.color}-400 border border-${kw.color}-500/50 rounded-lg text-xs font-semibold">
-                                <i class="fas fa-tag mr-1"></i>${kw.keyword}
-                            </span>
-                            <span class="px-2 py-1 bg-slate-800 text-gray-400 rounded text-xs">${kw.count}x</span>
-                        </div>
-                        <p class="text-xs text-gray-500"><i class="fas fa-folder mr-1"></i>${kw.category}</p>
-                    </div>
-                `;
-            });
-        }
-
-        // ✅ Create Transaction Card
-        function createTransactionCard(transaction) {
-            const isDebit = transaction.debit_amount > 0;
-            const amount = isDebit ? transaction.debit_amount : transaction.credit_amount;
-            
-            return `
-                <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-700 hover:border-blue-500 transition">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-center space-x-3 mb-2">
-                                <span class="px-2 py-1 bg-slate-800 rounded text-xs text-gray-400">${transaction.date}</span>
-                                ${isDebit ? 
-                                    '<span class="px-2 py-1 bg-red-600/20 text-red-400 rounded text-xs font-semibold"><i class="fas fa-arrow-down mr-1"></i>Debit</span>' :
-                                    '<span class="px-2 py-1 bg-green-600/20 text-green-400 rounded text-xs font-semibold"><i class="fas fa-arrow-up mr-1"></i>Credit</span>'
-                                }
-                            </div>
-                            <p class="text-white font-semibold mb-2">${truncate(transaction.description, 80)}</p>
-                            <div class="flex items-center space-x-2 text-xs text-gray-500">
-                                <span><i class="fas fa-wallet mr-1"></i>Balance: ${formatCurrency(transaction.balance)}</span>
-                            </div>
-                        </div>
-                        <div class="ml-4 text-right">
-                            <div class="text-2xl font-bold ${isDebit ? 'text-red-400' : 'text-green-400'}">
-                                ${isDebit ? '-' : '+'}${formatCurrency(amount)}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // ✅ Show Error
-        function showError(message, errorType = null) {
-            document.getElementById('loadingSection').classList.add('hidden');
-            document.getElementById('uploadSection').classList.remove('hidden');
-            showAlert(message, 'error');
-        }
-
-        // ✅ Show Alert
-        function showAlert(message, type = 'info') {
-            const colors = {
-                error: 'bg-red-600/20 text-red-400 border-red-500',
-                success: 'bg-green-600/20 text-green-400 border-green-500',
-                warning: 'bg-yellow-600/20 text-yellow-400 border-yellow-500',
-                info: 'bg-blue-600/20 text-blue-400 border-blue-500'
-            };
-
-            const icons = {
-                error: 'fa-times-circle',
-                success: 'fa-check-circle',
-                warning: 'fa-exclamation-triangle',
-                info: 'fa-info-circle'
-            };
-
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `${colors[type]} border-l-4 p-4 mb-4 rounded-r-lg`;
-            alertDiv.innerHTML = `
-                <div class="flex items-center">
-                    <i class="fas ${icons[type]} text-2xl mr-3"></i>
-                    <p class="font-medium">${message}</p>
-                </div>
-            `;
-            
-            const container = document.querySelector('.max-w-7xl');
-            const firstChild = container.firstElementChild;
-            container.insertBefore(alertDiv, firstChild);
-
-            setTimeout(() => alertDiv.remove(), 10000);
-        }
-
-        // ✅ Confirm Save - Show Modal Instead of Confirm
-        document.getElementById('confirmSave').addEventListener('click', function() {
-            if (!previewData) return;
-
-            // Populate confirm modal
-            document.getElementById('confirmTotalTrx').textContent = previewData.summary.total_transactions;
-            document.getElementById('confirmPeriod').textContent = previewData.summary.period;
-            document.getElementById('confirmAccount').textContent = previewData.summary.account_number;
-
-            // Show modal
-            document.getElementById('confirmSaveModal').classList.remove('hidden');
-        });
-
-        // ✅ Cancel confirm save
-        document.getElementById('cancelConfirmSave')?.addEventListener('click', function() {
-            document.getElementById('confirmSaveModal').classList.add('hidden');
-        });
-
-        // ✅ Proceed with save
-        document.getElementById('proceedSave')?.addEventListener('click', function() {
-            // Hide modal
-            document.getElementById('confirmSaveModal').classList.add('hidden');
-
-            // Disable button
-            const saveBtn = document.getElementById('confirmSave');
-            saveBtn.disabled = true;
-            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan ke Database...';
-
-            // ✅ Create a real form and submit it
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '{{ route('bank-statements.store') }}';
-            
-            // Add CSRF token
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '_token';
-            csrfInput.value = '{{ csrf_token() }}';
-            form.appendChild(csrfInput);
-
-            // Append to body and submit
-            document.body.appendChild(form);
-            form.submit();
-        });
-
-        // ✅ Cancel Save - Show Modal Instead of Confirm
-        document.getElementById('cancelSave').addEventListener('click', function() {
-            if (!previewData) return;
-
-            // Show cancel modal
-            document.getElementById('cancelPreviewModal').classList.remove('hidden');
-        });
-
-        // ✅ Back to preview (don't cancel)
-        document.getElementById('backToPreview')?.addEventListener('click', function() {
-            document.getElementById('cancelPreviewModal').classList.add('hidden');
-        });
-
-        // ✅ Proceed with cancel
-        document.getElementById('proceedCancel')?.addEventListener('click', async function() {
-            // Hide modal
-            document.getElementById('cancelPreviewModal').classList.add('hidden');
-
-            try {
-                await fetch('{{ route('bank-statements.cancel') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify({ file_path: previewData.file_path })
-                });
-            } catch (error) {
-                console.error('Error canceling:', error);
+            if (selectedFiles.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one PDF file');
+                return;
             }
 
-            document.getElementById('uploadForm').reset();
-            document.getElementById('fileInfo').classList.add('hidden');
-            document.getElementById('previewSection').classList.add('hidden');
-            document.getElementById('uploadSection').classList.remove('hidden');
-            previewData = null;
+            // Disable submit button
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading...';
         });
-
-        // ✅ Close Preview - Show Cancel Modal
-        document.getElementById('closePreview').addEventListener('click', function() {
-            document.getElementById('cancelSave').click();
-        });
-
-        // ✅ Format Currency
-        function formatCurrency(amount) {
-            return 'Rp ' + new Intl.NumberFormat('id-ID', {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            }).format(amount);
-        }
-
-        // ✅ Truncate String
-        function truncate(str, length) {
-            return str.length > length ? str.substring(0, length) + '...' : str;
-        }
     </script>
     @endpush
 </x-app-layout>
