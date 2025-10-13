@@ -4,7 +4,6 @@ namespace App\Jobs;
 
 use App\Models\BankStatement;
 use App\Models\StatementTransaction;
-// ✅ FIX: Import from correct file - all parsers are in one file
 use App\Services\BankParsers\BCAParser;
 use App\Services\BankParsers\BNIParser;
 use App\Services\BankParsers\BRIParser;
@@ -51,7 +50,7 @@ class ProcessBankStatementOCR implements ShouldQueue
                 'ocr_started_at' => now(),
             ]);
 
-            // ✅ ULTIMATE FIX: Try multiple path strategies
+            // Get file path with multiple fallback strategies
             $filePath = $this->getFilePath();
             
             if (!$filePath) {
@@ -104,7 +103,10 @@ class ProcessBankStatementOCR implements ShouldQueue
                 'processed_transactions' => 0,
             ]);
 
-            // Insert transactions
+            // CRITICAL FIX: Get company_id from bank statement
+            $companyId = $this->bankStatement->company_id;
+
+            // Insert transactions with explicit company_id and uuid
             $transactionsInserted = 0;
             foreach ($parsedData['transactions'] as $transaction) {
                 if (empty($transaction['transaction_date'])) {
@@ -112,20 +114,26 @@ class ProcessBankStatementOCR implements ShouldQueue
                     continue;
                 }
 
-                StatementTransaction::create([
+                // CRITICAL: Create instance with explicit company_id and uuid
+                $statementTransaction = new StatementTransaction([
+                    'uuid' => \Illuminate\Support\Str::uuid()->toString(), // EXPLICIT UUID
+                    'company_id' => $companyId, // EXPLICIT SET from bank statement
                     'bank_statement_id' => $this->bankStatement->id,
                     'transaction_date' => $transaction['transaction_date'],
-                    'transaction_time' => $transaction['transaction_time'],
-                    'value_date' => $transaction['value_date'],
-                    'branch_code' => $transaction['branch_code'],
-                    'description' => $transaction['description'],
-                    'reference_no' => $transaction['reference_no'],
-                    'debit_amount' => $transaction['debit_amount'],
-                    'credit_amount' => $transaction['credit_amount'],
-                    'balance' => $transaction['balance'],
-                    'transaction_type' => $transaction['transaction_type'],
-                    'amount' => $transaction['amount'],
+                    'transaction_time' => $transaction['transaction_time'] ?? null,
+                    'value_date' => $transaction['value_date'] ?? null,
+                    'branch_code' => $transaction['branch_code'] ?? null,
+                    'description' => $transaction['description'] ?? null,
+                    'reference_no' => $transaction['reference_no'] ?? null,
+                    'debit_amount' => $transaction['debit_amount'] ?? 0,
+                    'credit_amount' => $transaction['credit_amount'] ?? 0,
+                    'balance' => $transaction['balance'] ?? 0,
+                    'transaction_type' => $transaction['transaction_type'] ?? null,
+                    'amount' => $transaction['amount'] ?? 0,
                 ]);
+                
+                // Save without triggering trait events (bypass BelongsToTenant)
+                $statementTransaction->saveQuietly();
 
                 $transactionsInserted++;
             }
@@ -137,10 +145,13 @@ class ProcessBankStatementOCR implements ShouldQueue
 
             DB::commit();
 
-            Log::info("Successfully processed OCR for Bank Statement ID: {$this->bankStatement->id}, Transactions: {$transactionsInserted}");
+            Log::info("Successfully processed OCR for Bank Statement ID: {$this->bankStatement->id}", [
+                'company_id' => $companyId,
+                'transactions' => $transactionsInserted,
+            ]);
 
             // Dispatch matching job after successful OCR processing
-            ProcessTransactionMatching::dispatch($this->bankStatement);
+            \App\Jobs\ProcessTransactionMatching::dispatch($this->bankStatement);
 
         } catch (\Exception $e) {
             DB::rollBack();

@@ -50,10 +50,17 @@
                 <h2 class="text-2xl font-bold text-white mb-2">Bank Statements</h2>
                 <p class="text-gray-400">Upload and manage your bank statements for automatic transaction processing</p>
             </div>
-            <a href="{{ route('bank-statements.create') }}" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg flex items-center space-x-2">
-                <i class="fas fa-upload"></i>
-                <span>Upload Statement</span>
-            </a>
+            @if(auth()->user()->isSuperAdmin())
+                <a href="{{ route('bank-statements.select-company') }}" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg flex items-center space-x-2">
+                    <i class="fas fa-upload"></i>
+                    <span>Upload Statement</span>
+                </a>
+            @else
+                <a href="{{ route('bank-statements.create') }}" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg flex items-center space-x-2">
+                    <i class="fas fa-upload"></i>
+                    <span>Upload Statement</span>
+                </a>
+            @endif
         </div>
 
         {{-- Statistics Cards --}}

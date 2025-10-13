@@ -110,66 +110,124 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Show the form for creating a new bank statement (COMPANY SCOPED or SUPER ADMIN)
+     * Show company selection form (Super Admin Only)
+     */
+    public function selectCompany()
+    {
+        $user = auth()->user();
+        
+        // Only super admin can access
+        abort_unless($user->isSuperAdmin(), 403);
+        
+        // Get all companies with bank count
+        $companies = Company::withCount(['banks' => function($query) {
+                $query->where('is_active', true);
+            }])
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get();
+        
+        return view('bank-statements.select-company', compact('companies'));
+    }
+
+    /**
+     * Show the form for creating a new bank statement
+     * - Super Admin: Must have company context (via company_id parameter)
+     * - User Biasa: Auto-scoped to their company
      */
     public function create(Request $request)
     {
         $user = auth()->user();
 
-        // SUPER ADMIN: Must select company first
+        // SUPER ADMIN: Must have company context
         if ($user->isSuperAdmin()) {
-            $companies = Company::orderBy('name')->get(['id', 'name']);
+            // Check if company_id provided in query string
+            $companyId = $request->input('company_id');
             
-            // If company_id provided in query string
-            $selectedCompanyId = $request->input('company_id');
-            
-            if ($selectedCompanyId) {
-                $selectedCompany = Company::findOrFail($selectedCompanyId);
-                
-                // COMPANY SCOPED BANKS for selected company
-                $banks = Bank::where('company_id', $selectedCompanyId)
-                    ->active()
-                    ->orderBy('name')
-                    ->get(['id', 'name', 'code']);
-                
-                return view('bank-statements.create', compact('banks', 'companies', 'selectedCompany'));
+            if (!$companyId) {
+                // Redirect to company selection page
+                return redirect()->route('bank-statements.select-company')
+                    ->with('info', 'Please select a company first.');
             }
             
-            // Show company selection first
-            return view('bank-statements.create', compact('companies'));
+            // Verify company exists
+            $company = Company::findOrFail($companyId);
+            
+            // Get banks for selected company (bypass global scope)
+            $banks = Bank::withoutGlobalScope('company')
+                ->where('company_id', $companyId)
+                ->active()
+                ->orderBy('name')
+                ->get(['id', 'name', 'code']);
+            
+            // Check if company has banks
+            if ($banks->isEmpty()) {
+                return redirect()->route('bank-statements.select-company')
+                    ->with('error', "Company '{$company->name}' has no active banks. Please add banks first.");
+            }
+            
+            return view('bank-statements.create', compact('banks', 'company'));
         }
-
-        // Regular users: COMPANY SCOPED BANKS
-        $banks = Bank::where('company_id', $user->company_id)
-            ->active()
+        
+        // REGULAR USER: Company scoped (auto by trait)
+        // Verify user has company
+        if (!$user->company_id) {
+            return redirect()->route('dashboard')
+                ->with('error', 'You are not assigned to any company. Please contact administrator.');
+        }
+        
+        // Get banks for user's company (auto-scoped by trait)
+        $banks = Bank::active()
             ->orderBy('name')
             ->get(['id', 'name', 'code']);
+        
+        // If no banks available
+        if ($banks->isEmpty()) {
+            return redirect()->route('bank-statements.index')
+                ->with('error', 'No banks available. Please add a bank first.');
+        }
         
         return view('bank-statements.create', compact('banks'));
     }
 
     /**
-     * Store a newly created bank statement (COMPANY SCOPED or SUPER ADMIN)
-     * Updated: Replace duplicate files instead of skipping
+     * Store a newly created bank statement
+     * - Super Admin: Use company_id from request
+     * - User Biasa: Auto use their company_id
      */
     public function store(Request $request)
     {
         $user = auth()->user();
 
-        $validated = $request->validate([
-            'company_id' => $user->isSuperAdmin() ? 'required|exists:companies,id' : 'nullable',
+        // Validation
+        $rules = [
             'bank_id' => 'required|exists:banks,id',
             'files' => 'required|array|min:1|max:10',
             'files.*' => 'required|file|mimes:pdf|max:10240', // 10MB max
-        ]);
+        ];
+        
+        // Super admin must provide company_id
+        if ($user->isSuperAdmin()) {
+            $rules['company_id'] = 'required|exists:companies,id';
+        }
+        
+        $validated = $request->validate($rules);
 
         // Determine company_id
         $companyId = $user->isSuperAdmin() 
             ? $validated['company_id'] 
             : $user->company_id;
+        
+        // Verify user has company
+        if (!$companyId) {
+            return back()
+                ->with('error', 'No company context found.')
+                ->withInput();
+        }
 
         // VERIFY BANK BELONGS TO COMPANY
-        $bank = Bank::where('id', $request->bank_id)
+        $bank = Bank::withoutGlobalScope('company')
+            ->where('id', $request->bank_id)
             ->where('company_id', $companyId)
             ->firstOrFail();
         
@@ -188,7 +246,8 @@ class BankStatementController extends Controller
                     $fileHash = hash_file('sha256', $file->getRealPath());
 
                     // Check for existing file (COMPANY SCOPED - including soft deleted)
-                    $existingStatement = BankStatement::withTrashed()
+                    $existingStatement = BankStatement::withoutGlobalScope('company')
+                        ->withTrashed()
                         ->where('company_id', $companyId)
                         ->where('file_hash', $fileHash)
                         ->where('bank_id', $bank->id)
@@ -255,7 +314,8 @@ class BankStatementController extends Controller
                 ->with('success', $message)
                 ->with('uploaded_count', $uploadedCount)
                 ->with('replaced_count', $replacedCount)
-                ->with('failed_files', $failedFiles);
+                ->with('failed_files', $failedFiles)
+                ->with('queued_count', $uploadedCount + $replacedCount);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -270,7 +330,6 @@ class BankStatementController extends Controller
                 ->withInput();
         }
     }
-
     /**
      * Display the specified bank statement (COMPANY SCOPED or SUPER ADMIN)
      */

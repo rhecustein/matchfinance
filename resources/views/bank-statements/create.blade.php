@@ -1,4 +1,3 @@
-{{-- resources/views/bank-statements/create.blade.php --}}
 <x-app-layout>
     <x-slot name="header">Upload Bank Statement</x-slot>
 
@@ -134,6 +133,17 @@
                 <form action="{{ route('bank-statements.store') }}" method="POST" enctype="multipart/form-data" id="uploadForm" class="space-y-6">
                     @csrf
                     
+                    {{-- Hidden Company ID for Super Admin --}}
+                    @if(isset($company))
+                        <input type="hidden" name="company_id" value="{{ $company->id }}">
+                        <div class="bg-blue-600/20 border border-blue-500 rounded-lg p-4 mb-4">
+                            <p class="text-sm text-blue-300">
+                                <i class="fas fa-building mr-2"></i>
+                                Uploading for company: <strong class="text-white">{{ $company->name }}</strong>
+                            </p>
+                        </div>
+                    @endif
+                    
                     {{-- Bank Selection --}}
                     <div>
                         <label for="bank_id" class="block text-sm font-semibold text-gray-300 mb-2">
@@ -142,11 +152,13 @@
                         <select id="bank_id" name="bank_id" required
                             class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                             <option value="">-- Select Bank --</option>
-                            @foreach($banks as $bank)
+                            @forelse($banks as $bank)
                                 <option value="{{ $bank->id }}" {{ old('bank_id') == $bank->id ? 'selected' : '' }}>
-                                    {{ $bank->name }}
+                                    {{ $bank->name }} @if($bank->code)({{ $bank->code }})@endif
                                 </option>
-                            @endforeach
+                            @empty
+                                <option value="" disabled>No banks available</option>
+                            @endforelse
                         </select>
                         @error('bank_id')
                             <p class="mt-2 text-sm text-red-400">{{ $message }}</p>
@@ -199,6 +211,49 @@
                 </form>
             </div>
 
+            {{-- Information Card --}}
+            <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-slate-700 shadow-xl">
+                <h3 class="text-lg font-bold text-white mb-4">
+                    <i class="fas fa-info-circle mr-2 text-blue-400"></i>Upload Guidelines
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-300">
+                    <div class="flex items-start space-x-3">
+                        <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                        <div>
+                            <p class="font-semibold text-white">Supported Format</p>
+                            <p class="text-gray-400">PDF files only</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                        <div>
+                            <p class="font-semibold text-white">File Size</p>
+                            <p class="text-gray-400">Maximum 10MB per file</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                        <div>
+                            <p class="font-semibold text-white">Multiple Upload</p>
+                            <p class="text-gray-400">Up to 10 files at once</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                        <div>
+                            <p class="font-semibold text-white">Auto Processing</p>
+                            <p class="text-gray-400">OCR extraction starts automatically</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 p-4 bg-blue-600/10 border border-blue-500/30 rounded-lg">
+                    <p class="text-sm text-blue-300">
+                        <i class="fas fa-lightbulb mr-2"></i>
+                        <strong>Tip:</strong> For duplicate files (same bank, same hash), the system will automatically replace the old data with new upload, clearing all previous transactions and OCR results.
+                    </p>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -243,14 +298,14 @@
                 fileCard.innerHTML = `
                     <div class="flex items-center space-x-3 flex-1">
                         <i class="fas fa-file-pdf text-2xl ${isValid ? 'text-red-400' : 'text-red-600'}"></i>
-                        <div class="flex-1">
+                        <div class="flex-1 min-w-0">
                             <p class="text-white font-semibold truncate">${file.name}</p>
                             <p class="text-sm ${isValid ? 'text-gray-400' : 'text-red-400'}">
                                 ${fileSize} MB ${!isValid ? '- TOO LARGE!' : ''}
                             </p>
                         </div>
                     </div>
-                    <button type="button" onclick="removeFile(${index})" class="text-red-400 hover:text-red-300 transition ml-3">
+                    <button type="button" onclick="removeFile(${index})" class="text-red-400 hover:text-red-300 transition ml-3 flex-shrink-0">
                         <i class="fas fa-times"></i>
                     </button>
                 `;

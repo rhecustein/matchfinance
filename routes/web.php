@@ -218,6 +218,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('bank-statements')->name('bank-statements.')->group(function () {
         // List & View
         Route::get('/', [BankStatementController::class, 'index'])->name('index');
+        
+        // ADD THIS - Company selection for super admin
+        Route::get('/select-company', [BankStatementController::class, 'selectCompany'])
+        ->name('select-company')
+        ->middleware('role:super_admin'); // Only super admin
+        
         Route::get('/create', [BankStatementController::class, 'create'])->name('create');
         Route::get('/{bankStatement}', [BankStatementController::class, 'show'])->name('show');
         
@@ -227,18 +233,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/{bankStatement}', [BankStatementController::class, 'update'])->name('update');
         Route::delete('/{bankStatement}', [BankStatementController::class, 'destroy'])->name('destroy');
         
-        // Upload & Preview
-        Route::post('/upload/preview', [BankStatementController::class, 'uploadAndPreview'])->name('upload.preview');
-        Route::post('/replace', [BankStatementController::class, 'replaceExisting'])->name('replace');
-        Route::post('/cancel', [BankStatementController::class, 'cancelUpload'])->name('cancel');
-        
         // Download & Export
         Route::get('/{bankStatement}/download', [BankStatementController::class, 'download'])->name('download');
-        Route::get('/{bankStatement}/export', [BankStatementController::class, 'export'])->name('export');
         
         // OCR Operations
         Route::post('/{bankStatement}/reprocess', [BankStatementController::class, 'reprocess'])->name('reprocess');
-        Route::get('/{bankStatement}/status', [BankStatementController::class, 'getStatus'])->name('status');
         Route::post('/{bankStatement}/retry', [BankStatementController::class, 'retryOCR'])->name('retry');
         
         // Matching Operations
@@ -248,10 +247,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         // Verification Operations
         Route::post('/{bankStatement}/verify-all-matched', [BankStatementController::class, 'verifyAllMatched'])->name('verify-all-matched');
-        Route::post('/{bankStatement}/transactions/{transaction}/verify', [BankStatementController::class, 'verifyTransaction'])->name('transactions.verify');
         
-        // Transaction Details
-        Route::get('/{bankStatement}/transactions/{transaction}', [BankStatementController::class, 'getTransaction'])->name('transactions.show');
+        // Reconciliation
+        Route::post('/{bankStatement}/reconcile', [BankStatementController::class, 'reconcile'])->name('reconcile');
+        Route::post('/{bankStatement}/unreconcile', [BankStatementController::class, 'unreconcile'])->name('unreconcile');
         
         // Statistics
         Route::get('/stats/summary', [BankStatementController::class, 'statistics'])->name('statistics');
