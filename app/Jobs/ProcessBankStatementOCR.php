@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\BankStatement;
 use App\Models\StatementTransaction;
+// ✅ FIX: Import from correct file - all parsers are in one file
 use App\Services\BankParsers\BCAParser;
 use App\Services\BankParsers\BNIParser;
 use App\Services\BankParsers\BRIParser;
@@ -50,12 +51,23 @@ class ProcessBankStatementOCR implements ShouldQueue
                 'ocr_started_at' => now(),
             ]);
 
-            // Get the file from storage
-            $filePath = Storage::path($this->bankStatement->file_path);
+            // ✅ ULTIMATE FIX: Try multiple path strategies
+            $filePath = $this->getFilePath();
             
-            if (!file_exists($filePath)) {
-                throw new \Exception("File not found: {$filePath}");
+            if (!$filePath) {
+                throw new \Exception("File not found after trying all path strategies");
             }
+
+            // Verify file is readable
+            if (!is_readable($filePath)) {
+                throw new \Exception("File is not readable: {$filePath}");
+            }
+
+            Log::info("File found and readable", [
+                'path' => $filePath,
+                'size' => filesize($filePath),
+                'mime' => mime_content_type($filePath),
+            ]);
 
             // Call External OCR API
             $ocrResponse = $this->callOCRApi($filePath, $this->bankSlug);
@@ -145,6 +157,55 @@ class ProcessBankStatementOCR implements ShouldQueue
 
             throw $e;
         }
+    }
+
+    /**
+     * Get file path with multiple fallback strategies
+     */
+    private function getFilePath(): ?string
+    {
+        $dbPath = $this->bankStatement->file_path;
+        
+        // Strategy 1: Storage::path() - Laravel's default way
+        $path1 = Storage::path($dbPath);
+        Log::info("Trying Strategy 1: Storage::path()", ['path' => $path1, 'exists' => file_exists($path1)]);
+        if (file_exists($path1)) {
+            return $path1;
+        }
+
+        // Strategy 2: storage_path('app/') + db_path
+        $path2 = storage_path('app/' . $dbPath);
+        Log::info("Trying Strategy 2: storage_path('app/')", ['path' => $path2, 'exists' => file_exists($path2)]);
+        if (file_exists($path2)) {
+            return $path2;
+        }
+
+        // Strategy 3: Just storage_path() + db_path (if db_path already includes 'app')
+        $path3 = storage_path($dbPath);
+        Log::info("Trying Strategy 3: storage_path()", ['path' => $path3, 'exists' => file_exists($path3)]);
+        if (file_exists($path3)) {
+            return $path3;
+        }
+
+        // Strategy 4: Check if file exists using Storage facade
+        if (Storage::exists($dbPath)) {
+            $path4 = Storage::path($dbPath);
+            Log::info("Trying Strategy 4: Storage::exists() confirmed", ['path' => $path4]);
+            return $path4;
+        }
+
+        // Log all attempted paths for debugging
+        Log::error("File not found in any strategy", [
+            'db_path' => $dbPath,
+            'attempted_paths' => [
+                'strategy_1' => $path1,
+                'strategy_2' => $path2,
+                'strategy_3' => $path3,
+            ],
+            'storage_exists' => Storage::exists($dbPath),
+        ]);
+
+        return null;
     }
 
     /**

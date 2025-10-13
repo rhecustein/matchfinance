@@ -1,362 +1,359 @@
 {{-- resources/views/bank-statements/create.blade.php --}}
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Upload Bank Statement') }}
-        </h2>
-    </x-slot>
+    <x-slot name="header">Upload Bank Statement</x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             
-            {{-- Success Message --}}
-            @if(session('success'))
-                <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-check-circle text-green-500 text-xl"></i>
+            {{-- Processing Queue Alert --}}
+            @if(session('queued_count'))
+                <div class="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500 rounded-xl p-6 shadow-lg">
+                    <div class="flex items-start space-x-4 mb-4">
+                        <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-check-circle text-white text-xl"></i>
                         </div>
-                        <div class="ml-3">
-                            <p class="text-sm text-green-700 font-medium">
-                                {{ session('success') }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            @endif
-
-            {{-- Error Message --}}
-            @if(session('error'))
-                <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-exclamation-circle text-red-500 text-xl"></i>
-                        </div>
-                        <div class="ml-3">
-                            <p class="text-sm text-red-700 font-medium">
-                                {{ session('error') }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            @endif
-
-            {{-- Validation Errors --}}
-            @if($errors->any())
-                <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
-                        </div>
-                        <div class="ml-3">
-                            <h3 class="text-sm font-medium text-red-800">{{ __('There were some errors with your submission') }}</h3>
-                            <div class="mt-2 text-sm text-red-700">
-                                <ul class="list-disc list-inside space-y-1">
-                                    @foreach($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endif
-
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                {{-- Upload Form --}}
-                <div class="lg:col-span-2">
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <div class="p-6 bg-white border-b border-gray-200">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-6">
-                                <i class="fas fa-cloud-upload-alt text-blue-600 mr-2"></i>
-                                Upload Bank Statement Files
-                            </h3>
-
-                            <form action="{{ route('bank-statements.store') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
-                                @csrf
-
-                                {{-- Bank Selection --}}
-                                <div class="mb-6">
-                                    <label for="bank_id" class="block text-sm font-medium text-gray-700 mb-2">
-                                        <i class="fas fa-university text-blue-600 mr-1"></i>
-                                        Select Bank <span class="text-red-500">*</span>
-                                    </label>
-                                    <select id="bank_id" name="bank_id" required
-                                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                                        <option value="">-- Choose Bank --</option>
-                                        @foreach($banks as $bank)
-                                            <option value="{{ $bank->id }}" {{ old('bank_id') == $bank->id ? 'selected' : '' }}>
-                                                {{ $bank->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <p class="mt-2 text-sm text-gray-500">
-                                        <i class="fas fa-info-circle mr-1"></i>
-                                        Select the bank that matches your statement
-                                    </p>
-                                </div>
-
-                                {{-- File Upload Area --}}
-                                <div class="mb-6">
-                                    <label for="files" class="block text-sm font-medium text-gray-700 mb-2">
-                                        <i class="fas fa-file-pdf text-red-600 mr-1"></i>
-                                        PDF Files <span class="text-red-500">*</span>
-                                    </label>
-                                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-blue-400 transition cursor-pointer" id="dropZone">
-                                        <div class="space-y-1 text-center">
-                                            <i class="fas fa-cloud-upload-alt text-gray-400 text-5xl mb-3"></i>
-                                            <div class="flex text-sm text-gray-600">
-                                                <label for="files" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none">
-                                                    <span>Upload files</span>
-                                                    <input id="files" name="files[]" type="file" class="sr-only" accept=".pdf" multiple required>
-                                                </label>
-                                                <p class="pl-1">or drag and drop</p>
-                                            </div>
-                                            <p class="text-xs text-gray-500">
-                                                PDF up to 10MB per file (Max 10 files)
-                                            </p>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-white text-lg mb-2">
+                                Upload Successful!
+                            </h4>
+                            <div class="space-y-2 text-sm">
+                                @if(session('uploaded_count') > 0)
+                                    <div class="flex items-center text-green-300">
+                                        <i class="fas fa-plus-circle mr-2"></i>
+                                        <span><strong>{{ session('uploaded_count') }}</strong> new file(s) uploaded and queued</span>
+                                    </div>
+                                @endif
+                                
+                                @if(session('replaced_count') > 0)
+                                    <div class="flex items-center text-blue-300">
+                                        <i class="fas fa-sync-alt mr-2"></i>
+                                        <span><strong>{{ session('replaced_count') }}</strong> file(s) replaced (duplicate detected, old data cleared)</span>
+                                    </div>
+                                @endif
+                                
+                                @if(session('failed_files') && count(session('failed_files')) > 0)
+                                    <div class="flex items-start text-red-300">
+                                        <i class="fas fa-times-circle mr-2 mt-0.5"></i>
+                                        <div>
+                                            <span><strong>{{ count(session('failed_files')) }}</strong> file(s) failed:</span>
+                                            <ul class="list-disc list-inside ml-4 mt-1 text-xs">
+                                                @foreach(session('failed_files') as $failedFile)
+                                                    <li>{{ $failedFile }}</li>
+                                                @endforeach
+                                            </ul>
                                         </div>
                                     </div>
-
-                                    {{-- Selected Files Preview --}}
-                                    <div id="filesList" class="mt-4 space-y-2 hidden"></div>
-                                </div>
-
-                                {{-- Action Buttons --}}
-                                <div class="flex items-center justify-between">
-                                    <a href="{{ route('bank-statements.index') }}" 
-                                       class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                        <i class="fas fa-arrow-left mr-2"></i>
-                                        Cancel
-                                    </a>
-                                    <button type="submit" id="submitBtn"
-                                        class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                        <i class="fas fa-upload mr-2"></i>
-                                        Upload & Process
-                                    </button>
-                                </div>
-                            </form>
+                                @endif
+                            </div>
                         </div>
+                    </div>
+                    
+                    <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+                        <div class="flex items-center justify-between text-sm mb-3">
+                            <div class="flex items-center text-blue-200">
+                                <i class="fas fa-cog fa-spin mr-2"></i>
+                                <span>OCR processing will start automatically...</span>
+                            </div>
+                            <a href="{{ route('bank-statements.index') }}" class="text-blue-400 hover:text-blue-300 font-semibold transition">
+                                View Progress <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                        </div>
+                        <div class="bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                            <div class="processing-pulse bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 h-2.5 rounded-full" style="width: 100%; animation: pulse 2s ease-in-out infinite"></div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Processing time varies based on PDF size and complexity (usually 30s - 2min per file)
+                        </p>
+                        
+                        @if(session('replaced_count') > 0)
+                            <div class="mt-3 bg-yellow-600/20 border border-yellow-500/30 rounded-lg p-3">
+                                <p class="text-xs text-yellow-300">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                    <strong>Note:</strong> Replaced files will overwrite existing data. Previous transactions and OCR results have been cleared.
+                                </p>
+                            </div>
+                        @endif
                     </div>
                 </div>
-
-                {{-- Information Sidebar --}}
-                <div class="lg:col-span-1">
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                        <div class="p-6 bg-white border-b border-gray-200">
-                            <h4 class="text-sm font-semibold text-gray-900 mb-4">
-                                <i class="fas fa-info-circle text-blue-600 mr-2"></i>
-                                Upload Instructions
-                            </h4>
-                            <div class="space-y-3 text-sm text-gray-600">
-                                <div class="flex items-start">
-                                    <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
-                                    <span>Select the correct bank</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
-                                    <span>Upload PDF files only</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
-                                    <span>Max 10 files at once</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
-                                    <span>Each file max 10MB</span>
-                                </div>
-                                <div class="flex items-start">
-                                    <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
-                                    <span>Files will be processed automatically</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Processing Info --}}
-                    <div class="bg-blue-50 overflow-hidden shadow-sm sm:rounded-lg">
-                        <div class="p-6">
-                            <h4 class="text-sm font-semibold text-blue-900 mb-3">
-                                <i class="fas fa-robot text-blue-600 mr-2"></i>
-                                Auto Processing
-                            </h4>
-                            <p class="text-sm text-blue-700 mb-3">
-                                After upload, your files will be automatically:
-                            </p>
-                            <div class="space-y-2 text-sm text-blue-600">
-                                <div class="flex items-center">
-                                    <i class="fas fa-circle text-xs mr-2"></i>
-                                    <span>Processed by OCR</span>
-                                </div>
-                                <div class="flex items-center">
-                                    <i class="fas fa-circle text-xs mr-2"></i>
-                                    <span>Transactions extracted</span>
-                                </div>
-                                <div class="flex items-center">
-                                    <i class="fas fa-circle text-xs mr-2"></i>
-                                    <span>Keywords matched</span>
-                                </div>
-                                <div class="flex items-center">
-                                    <i class="fas fa-circle text-xs mr-2"></i>
-                                    <span>Ready for review</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Supported Banks --}}
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mt-6">
-                        <div class="p-6">
-                            <h4 class="text-sm font-semibold text-gray-900 mb-3">
-                                <i class="fas fa-university text-blue-600 mr-2"></i>
-                                Supported Banks
-                            </h4>
-                            <div class="space-y-2">
-                                @foreach($banks as $bank)
-                                    <div class="flex items-center text-sm text-gray-600">
-                                        <i class="fas fa-check-circle text-green-500 mr-2"></i>
-                                        <span>{{ $bank->name }}</span>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
+                
+                <style>
+                    @keyframes pulse {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0.5; }
+                    }
+                </style>
+            @endif
+            
+            {{-- SUCCESS MESSAGE --}}
+            @if(session('success'))
+                <div class="bg-green-600/20 border border-green-600 text-green-400 px-6 py-4 rounded-lg flex items-center space-x-3">
+                    <i class="fas fa-check-circle text-2xl"></i>
+                    <p class="font-semibold">{{ session('success') }}</p>
                 </div>
+            @endif
 
+            {{-- ERROR MESSAGE --}}
+            @if(session('error'))
+                <div class="bg-red-600/20 border border-red-600 text-red-400 px-6 py-4 rounded-lg flex items-center space-x-3">
+                    <i class="fas fa-exclamation-circle text-2xl"></i>
+                    <p class="font-semibold">{{ session('error') }}</p>
+                </div>
+            @endif
+
+            {{-- VALIDATION ERRORS --}}
+            @if($errors->any())
+                <div class="bg-red-600/20 border border-red-600 text-red-400 px-6 py-4 rounded-lg">
+                    <h4 class="font-semibold mb-2"><i class="fas fa-exclamation-triangle mr-2"></i>Validation Errors:</h4>
+                    <ul class="list-disc list-inside space-y-1">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            {{-- Header --}}
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-2">Upload Bank Statement</h2>
+                    <p class="text-gray-400">Upload bank statement PDF files (Max 10 files at once)</p>
+                </div>
+                <a href="{{ route('bank-statements.index') }}" 
+                   class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-semibold transition">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to List
+                </a>
             </div>
+
+            {{-- Upload Form --}}
+            <div id="uploadSection" class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-slate-700 shadow-xl">
+                <h3 class="text-xl font-bold text-white mb-6">
+                    <i class="fas fa-upload mr-2"></i>Upload Bank Statement File(s)
+                </h3>
+                
+                <form action="{{ route('bank-statements.store') }}" method="POST" enctype="multipart/form-data" id="uploadForm" class="space-y-6">
+                    @csrf
+                    
+                    {{-- Bank Selection --}}
+                    <div>
+                        <label for="bank_id" class="block text-sm font-semibold text-gray-300 mb-2">
+                            <i class="fas fa-university mr-1"></i>Select Bank <span class="text-red-400">*</span>
+                        </label>
+                        <select id="bank_id" name="bank_id" required
+                            class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">-- Select Bank --</option>
+                            @foreach($banks as $bank)
+                                <option value="{{ $bank->id }}" {{ old('bank_id') == $bank->id ? 'selected' : '' }}>
+                                    {{ $bank->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('bank_id')
+                            <p class="mt-2 text-sm text-red-400">{{ $message }}</p>
+                        @enderror
+                        <p class="mt-2 text-sm text-gray-400">
+                            <i class="fas fa-info-circle mr-1"></i>Make sure the selected bank matches the statement file(s)
+                        </p>
+                    </div>
+
+                    {{-- Multi-File Upload --}}
+                    <div>
+                        <label for="files" class="block text-sm font-semibold text-gray-300 mb-2">
+                            <i class="fas fa-file-pdf mr-1"></i>PDF File(s) <span class="text-red-400">*</span>
+                            <span class="text-gray-500 font-normal">(Max 10 files, 10MB each)</span>
+                        </label>
+                        <div class="flex items-center justify-center w-full">
+                            <label for="files" class="flex flex-col items-center justify-center w-full h-56 border-2 border-slate-600 border-dashed rounded-xl cursor-pointer bg-slate-900/30 hover:bg-slate-900/50 hover:border-blue-500 transition">
+                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                    <i class="fas fa-cloud-upload-alt text-6xl text-slate-500 mb-4"></i>
+                                    <p class="mb-2 text-sm text-gray-300">
+                                        <span class="font-semibold">Click to upload</span> or drag and drop
+                                    </p>
+                                    <p class="text-xs text-gray-500">PDF only (MAX. 10 files, 10MB each)</p>
+                                </div>
+                                <input id="files" name="files[]" type="file" class="hidden" accept=".pdf" multiple required />
+                            </label>
+                        </div>
+                        @error('files')
+                            <p class="mt-2 text-sm text-red-400">{{ $message }}</p>
+                        @enderror
+                        @error('files.*')
+                            <p class="mt-2 text-sm text-red-400">{{ $message }}</p>
+                        @enderror
+                        
+                        {{-- Selected Files List --}}
+                        <div id="filesList" class="mt-4 space-y-2 hidden"></div>
+                    </div>
+
+                    {{-- Submit Button --}}
+                    <div class="flex gap-3">
+                        <button type="submit" id="uploadBtn"
+                            class="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition flex items-center justify-center">
+                            <i class="fas fa-upload mr-2"></i>Upload & Process
+                        </button>
+                        <a href="{{ route('bank-statements.index') }}"
+                            class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-6 rounded-lg text-center transition">
+                            <i class="fas fa-times mr-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+
         </div>
     </div>
 
     @push('scripts')
     <script>
-        const fileInput = document.getElementById('files');
+        // Multi-file upload handler
+        const filesInput = document.getElementById('files');
         const filesList = document.getElementById('filesList');
-        const dropZone = document.getElementById('dropZone');
-        const submitBtn = document.getElementById('submitBtn');
+        const uploadBtn = document.getElementById('uploadBtn');
         let selectedFiles = [];
 
-        // File input change handler
-        fileInput.addEventListener('change', function(e) {
-            handleFiles(Array.from(e.target.files));
-        });
-
-        // Drag and drop handlers
-        dropZone.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            dropZone.classList.add('border-blue-500', 'bg-blue-50');
-        });
-
-        dropZone.addEventListener('dragleave', function(e) {
-            e.preventDefault();
-            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
-        });
-
-        dropZone.addEventListener('drop', function(e) {
-            e.preventDefault();
-            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+        filesInput.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
             
-            const files = Array.from(e.dataTransfer.files).filter(file => file.type === 'application/pdf');
-            handleFiles(files);
-        });
-
-        // Handle selected files
-        function handleFiles(files) {
-            if (files.length === 0) return;
-
-            // Limit to 10 files
-            if (selectedFiles.length + files.length > 10) {
-                alert('Maximum 10 files allowed');
+            // Validate max 10 files
+            if (files.length > 10) {
+                showAlert('Maximum 10 files allowed at once!', 'error');
+                filesInput.value = '';
                 return;
             }
 
-            // Validate file size and type
-            const validFiles = files.filter(file => {
-                if (file.type !== 'application/pdf') {
-                    alert(`${file.name} is not a PDF file`);
-                    return false;
-                }
-                if (file.size > 10 * 1024 * 1024) {
-                    alert(`${file.name} exceeds 10MB limit`);
-                    return false;
-                }
-                return true;
-            });
+            selectedFiles = files;
+            displaySelectedFiles(files);
+        });
 
-            // Add to selected files
-            validFiles.forEach(file => {
-                if (!selectedFiles.find(f => f.name === file.name)) {
-                    selectedFiles.push(file);
-                }
-            });
-
-            displayFiles();
-            updateFileInput();
-        }
-
-        // Display selected files
-        function displayFiles() {
-            if (selectedFiles.length === 0) {
+        function displaySelectedFiles(files) {
+            if (files.length === 0) {
                 filesList.classList.add('hidden');
+                filesList.innerHTML = '';
                 return;
             }
 
             filesList.classList.remove('hidden');
             filesList.innerHTML = '';
 
-            selectedFiles.forEach((file, index) => {
+            files.forEach((file, index) => {
                 const fileSize = (file.size / 1024 / 1024).toFixed(2);
-                const fileItem = document.createElement('div');
-                fileItem.className = 'flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-md';
-                fileItem.innerHTML = `
-                    <div class="flex items-center space-x-3 flex-1 min-w-0">
-                        <i class="fas fa-file-pdf text-red-500 text-xl flex-shrink-0"></i>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-gray-900 truncate">${file.name}</p>
-                            <p class="text-xs text-gray-500">${fileSize} MB</p>
+                const isValid = file.size <= 10 * 1024 * 1024; // 10MB
+                
+                const fileCard = document.createElement('div');
+                fileCard.className = `bg-slate-900/50 rounded-lg p-4 border ${isValid ? 'border-slate-700' : 'border-red-600'} flex items-center justify-between`;
+                fileCard.innerHTML = `
+                    <div class="flex items-center space-x-3 flex-1">
+                        <i class="fas fa-file-pdf text-2xl ${isValid ? 'text-red-400' : 'text-red-600'}"></i>
+                        <div class="flex-1">
+                            <p class="text-white font-semibold truncate">${file.name}</p>
+                            <p class="text-sm ${isValid ? 'text-gray-400' : 'text-red-400'}">
+                                ${fileSize} MB ${!isValid ? '- TOO LARGE!' : ''}
+                            </p>
                         </div>
                     </div>
-                    <button type="button" onclick="removeFile(${index})" 
-                        class="ml-3 flex-shrink-0 text-red-600 hover:text-red-800 focus:outline-none">
+                    <button type="button" onclick="removeFile(${index})" class="text-red-400 hover:text-red-300 transition ml-3">
                         <i class="fas fa-times"></i>
                     </button>
                 `;
-                filesList.appendChild(fileItem);
+                filesList.appendChild(fileCard);
             });
+
+            // Check if any file is too large
+            const hasInvalidFile = files.some(f => f.size > 10 * 1024 * 1024);
+            uploadBtn.disabled = hasInvalidFile;
+            
+            if (hasInvalidFile) {
+                showAlert('One or more files exceed 10MB limit!', 'error');
+            }
         }
 
-        // Remove file
         window.removeFile = function(index) {
             selectedFiles.splice(index, 1);
-            displayFiles();
-            updateFileInput();
-        };
-
-        // Update actual file input
-        function updateFileInput() {
+            
+            // Update the file input
             const dt = new DataTransfer();
             selectedFiles.forEach(file => dt.items.add(file));
-            fileInput.files = dt.files;
+            filesInput.files = dt.files;
+            
+            displaySelectedFiles(selectedFiles);
+        };
+
+        // Form validation before submit
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            const bankId = document.getElementById('bank_id').value;
+            const files = filesInput.files;
+
+            if (!bankId) {
+                e.preventDefault();
+                showAlert('Please select a bank!', 'error');
+                return;
+            }
+
+            if (files.length === 0) {
+                e.preventDefault();
+                showAlert('Please select at least one PDF file!', 'error');
+                return;
+            }
+
+            if (files.length > 10) {
+                e.preventDefault();
+                showAlert('Maximum 10 files allowed!', 'error');
+                return;
+            }
+
+            // Check file sizes
+            for (let file of files) {
+                if (file.size > 10 * 1024 * 1024) {
+                    e.preventDefault();
+                    showAlert(`File "${file.name}" exceeds 10MB limit!`, 'error');
+                    return;
+                }
+            }
+
+            // Show loading state
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading & Processing...';
+        });
+
+        // Show Alert Function
+        function showAlert(message, type = 'info') {
+            const colors = {
+                error: 'bg-red-600/20 text-red-400 border-red-500',
+                success: 'bg-green-600/20 text-green-400 border-green-500',
+                warning: 'bg-yellow-600/20 text-yellow-400 border-yellow-500',
+                info: 'bg-blue-600/20 text-blue-400 border-blue-500'
+            };
+
+            const icons = {
+                error: 'fa-times-circle',
+                success: 'fa-check-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `${colors[type]} border px-6 py-4 rounded-lg flex items-center space-x-3 mb-4`;
+            alertDiv.innerHTML = `
+                <i class="fas ${icons[type]} text-2xl"></i>
+                <p class="font-semibold">${message}</p>
+            `;
+            
+            const container = document.querySelector('.max-w-7xl');
+            const firstChild = container.children[0];
+            container.insertBefore(alertDiv, firstChild);
+
+            setTimeout(() => alertDiv.remove(), 5000);
         }
 
-        // Form submit handler
-        document.getElementById('uploadForm').addEventListener('submit', function(e) {
-            if (!document.getElementById('bank_id').value) {
-                e.preventDefault();
-                alert('Please select a bank first');
-                return;
-            }
-
-            if (selectedFiles.length === 0) {
-                e.preventDefault();
-                alert('Please select at least one PDF file');
-                return;
-            }
-
-            // Disable submit button
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading...';
-        });
+        // Auto-hide success/error messages after 10 seconds
+        setTimeout(() => {
+            document.querySelectorAll('.bg-green-600\\/20, .bg-red-600\\/20').forEach(el => {
+                if (el.textContent.includes('successfully') || el.textContent.includes('failed')) {
+                    el.style.transition = 'opacity 0.5s';
+                    el.style.opacity = '0';
+                    setTimeout(() => el.remove(), 500);
+                }
+            });
+        }, 10000);
     </script>
     @endpush
 </x-app-layout>

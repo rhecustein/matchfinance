@@ -157,6 +157,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         // Statistics
         Route::get('/stats/summary', [BankStatementController::class, 'statistics'])->name('statistics');
+
+        //match-transactions
+        Route::post('/{bankStatement}/match-transactions', [BankStatementController::class, 'matchTransactions'])->name('match-transactions');
     });
 
     // Keyword Suggestions

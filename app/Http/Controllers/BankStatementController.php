@@ -69,6 +69,7 @@ class BankStatementController extends Controller
 
     /**
      * Store a newly created bank statement (from web form)
+     * Updated: Replace duplicate files instead of skipping
      */
     public function store(Request $request)
     {
@@ -81,7 +82,8 @@ class BankStatementController extends Controller
         $bank = Bank::findOrFail($request->bank_id);
         
         $uploadedCount = 0;
-        $duplicateCount = 0;
+        $replacedCount = 0;
+        $failedFiles = [];
 
         DB::beginTransaction();
 
@@ -89,62 +91,191 @@ class BankStatementController extends Controller
             foreach ($request->file('files') as $file) {
                 $fileHash = hash_file('sha256', $file->getRealPath());
 
-                // Check duplicate
-                if (BankStatement::where('file_hash', $fileHash)->where('bank_id', $bank->id)->exists()) {
-                    $duplicateCount++;
-                    continue;
+                // Check for existing file (including soft deleted)
+                $existingStatement = BankStatement::withTrashed()
+                    ->where('file_hash', $fileHash)
+                    ->where('bank_id', $bank->id)
+                    ->first();
+
+                try {
+                    // Generate unique filename with full timestamp
+                    $originalName = $file->getClientOriginalName();
+                    $extension = $file->getClientOriginalExtension();
+                    
+                    $timestamp = now()->format('Ymd_His');
+                    $microseconds = now()->format('u');
+                    $randomString = Str::random(8);
+                    
+                    $baseFilename = Str::slug(pathinfo($originalName, PATHINFO_FILENAME));
+                    $filename = sprintf(
+                        '%s_%s_%s_%s.%s',
+                        $baseFilename,
+                        $timestamp,
+                        $microseconds,
+                        $randomString,
+                        $extension
+                    );
+
+                    // Store file - use default 'local' disk
+                    $path = $file->storeAs(
+                        "bank-statements/{$bank->slug}/" . date('Y/m'),
+                        $filename
+                    );
+
+                    // Verify file was stored
+                    if (!Storage::exists($path)) {
+                        throw new \Exception("Failed to store file: {$originalName}");
+                    }
+
+                    if ($existingStatement) {
+                        // REPLACE: Update existing record and delete old file
+                        
+                        // Delete old file from storage if exists
+                        if ($existingStatement->file_path && Storage::exists($existingStatement->file_path)) {
+                            Storage::delete($existingStatement->file_path);
+                            Log::info('Old file deleted', ['old_path' => $existingStatement->file_path]);
+                        }
+
+                        // Delete existing transactions
+                        $existingStatement->transactions()->delete();
+
+                        // Restore if soft deleted
+                        if ($existingStatement->trashed()) {
+                            $existingStatement->restore();
+                            Log::info('Soft deleted statement restored', ['id' => $existingStatement->id]);
+                        }
+
+                        // Update existing record
+                        $existingStatement->update([
+                            'user_id' => Auth::id(),
+                            'file_path' => $path,
+                            'file_hash' => $fileHash,
+                            'original_filename' => $originalName,
+                            'file_size' => $file->getSize(),
+                            'mime_type' => $file->getMimeType(),
+                            'ocr_status' => 'pending',
+                            'ocr_job_id' => Str::uuid()->toString(),
+                            'ocr_error' => null,
+                            'ocr_response' => null,
+                            'ocr_started_at' => null,
+                            'ocr_completed_at' => null,
+                            'uploaded_at' => now(),
+                            // Reset financial data
+                            'bank_name' => null,
+                            'period_from' => null,
+                            'period_to' => null,
+                            'account_number' => null,
+                            'opening_balance' => null,
+                            'closing_balance' => null,
+                            'total_credit_count' => 0,
+                            'total_debit_count' => 0,
+                            'total_credit_amount' => 0,
+                            'total_debit_amount' => 0,
+                            'total_transactions' => 0,
+                            'processed_transactions' => 0,
+                            'matched_transactions' => 0,
+                            'unmatched_transactions' => 0,
+                            'verified_transactions' => 0,
+                        ]);
+
+                        // Dispatch new OCR job
+                        ProcessBankStatementOCR::dispatch($existingStatement, $bank->slug)
+                            ->onQueue('ocr-processing');
+
+                        $replacedCount++;
+
+                        Log::info('Bank statement REPLACED successfully', [
+                            'bank_statement_id' => $existingStatement->id,
+                            'user_id' => Auth::id(),
+                            'filename' => $originalName,
+                            'stored_as' => $filename,
+                            'bank' => $bank->name,
+                            'file_path' => $path,
+                        ]);
+
+                    } else {
+                        // NEW: Create new record
+                        $bankStatement = BankStatement::create([
+                            'bank_id' => $bank->id,
+                            'user_id' => Auth::id(),
+                            'file_path' => $path,
+                            'file_hash' => $fileHash,
+                            'original_filename' => $originalName,
+                            'file_size' => $file->getSize(),
+                            'mime_type' => $file->getMimeType(),
+                            'ocr_status' => 'pending',
+                            'ocr_job_id' => Str::uuid()->toString(),
+                            'uploaded_at' => now(),
+                        ]);
+
+                        // Dispatch job
+                        ProcessBankStatementOCR::dispatch($bankStatement, $bank->slug)
+                            ->onQueue('ocr-processing');
+
+                        $uploadedCount++;
+
+                        Log::info('Bank statement uploaded successfully', [
+                            'bank_statement_id' => $bankStatement->id,
+                            'user_id' => Auth::id(),
+                            'filename' => $originalName,
+                            'stored_as' => $filename,
+                            'bank' => $bank->name,
+                            'file_path' => $path,
+                        ]);
+                    }
+
+                } catch (\Exception $e) {
+                    Log::error('Failed to upload individual file', [
+                        'filename' => $originalName ?? 'unknown',
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                    
+                    $failedFiles[] = $originalName ?? 'unknown file';
                 }
-
-                // Generate unique filename
-                $originalName = $file->getClientOriginalName();
-                $extension = $file->getClientOriginalExtension();
-                $filename = Str::slug(pathinfo($originalName, PATHINFO_FILENAME)) 
-                    . '_' . time() . '_' . Str::random(8) 
-                    . '.' . $extension;
-
-                // Store file
-                $path = $file->storeAs(
-                    "bank-statements/{$bank->slug}/" . date('Y/m'),
-                    $filename,
-                    'private'
-                );
-
-                // Create record
-                $bankStatement = BankStatement::create([
-                    'bank_id' => $bank->id,
-                    'user_id' => Auth::id(),
-                    'file_path' => $path,
-                    'file_hash' => $fileHash,
-                    'original_filename' => $originalName,
-                    'file_size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
-                    'ocr_status' => 'pending',
-                    'ocr_job_id' => Str::uuid()->toString(),
-                    'uploaded_at' => now(),
-                ]);
-
-                // Dispatch job
-                ProcessBankStatementOCR::dispatch($bankStatement, $bank->slug)
-                    ->onQueue('ocr-processing');
-
-                $uploadedCount++;
             }
 
             DB::commit();
 
-            $message = "{$uploadedCount} file(s) uploaded successfully";
-            if ($duplicateCount > 0) {
-                $message .= ", {$duplicateCount} duplicate(s) skipped";
+            // Build success message
+            $messageParts = [];
+            
+            if ($uploadedCount > 0) {
+                $messageParts[] = "{$uploadedCount} new file(s) uploaded";
+            }
+            
+            if ($replacedCount > 0) {
+                $messageParts[] = "{$replacedCount} file(s) replaced";
+            }
+            
+            if (count($failedFiles) > 0) {
+                $messageParts[] = count($failedFiles) . " file(s) failed";
             }
 
+            $message = implode(', ', $messageParts);
+            if ($uploadedCount > 0 || $replacedCount > 0) {
+                $message .= ' and queued for OCR processing';
+            }
+
+            // Flash messages for UI
             return redirect()->route('bank-statements.index')
-                ->with('success', $message);
+                ->with('success', $message)
+                ->with('queued_count', $uploadedCount + $replacedCount)
+                ->with('uploaded_count', $uploadedCount)
+                ->with('replaced_count', $replacedCount)
+                ->with('failed_files', $failedFiles);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Bank statement upload failed', ['error' => $e->getMessage()]);
             
-            return back()->with('error', 'Upload failed: ' . $e->getMessage())->withInput();
+            Log::error('Bank statement upload failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            return back()
+                ->with('error', 'Upload failed: ' . $e->getMessage())
+                ->withInput();
         }
     }
 
@@ -197,8 +328,8 @@ class BankStatementController extends Controller
     {
         try {
             // Delete file from storage
-            if (Storage::disk('private')->exists($bankStatement->file_path)) {
-                Storage::disk('private')->delete($bankStatement->file_path);
+            if ($bankStatement->file_path && Storage::exists($bankStatement->file_path)) {
+                Storage::delete($bankStatement->file_path);
             }
 
             // Delete record (will cascade delete transactions)
@@ -222,11 +353,11 @@ class BankStatementController extends Controller
      */
     public function download(BankStatement $bankStatement)
     {
-        if (!Storage::disk('private')->exists($bankStatement->file_path)) {
+        if (!Storage::exists($bankStatement->file_path)) {
             abort(404, 'File not found.');
         }
 
-        return Storage::disk('private')->download(
+        return Storage::download(
             $bankStatement->file_path,
             $bankStatement->original_filename
         );
@@ -407,6 +538,7 @@ class BankStatementController extends Controller
 
     /**
      * Core upload method for all banks with multi-file support (API)
+     * Updated: Replace duplicate files instead of skipping
      */
     private function uploadBankStatement(Request $request, string $bankSlug)
     {
@@ -414,7 +546,7 @@ class BankStatementController extends Controller
             // Validate request
             $validated = $request->validate([
                 'files' => 'required|array|min:1|max:10',
-                'files.*' => 'required|file|mimes:pdf|max:10240', // Max 10MB per file
+                'files.*' => 'required|file|mimes:pdf|max:10240',
             ], [
                 'files.required' => 'Please select at least one file to upload.',
                 'files.array' => 'Files must be uploaded as an array.',
@@ -430,8 +562,8 @@ class BankStatementController extends Controller
             $bank = Bank::where('slug', $bankSlug)->firstOrFail();
 
             $uploadedStatements = [];
+            $replacedStatements = [];
             $errors = [];
-            $duplicates = [];
 
             DB::beginTransaction();
 
@@ -440,76 +572,159 @@ class BankStatementController extends Controller
                     // Calculate file hash for duplicate detection
                     $fileHash = hash_file('sha256', $file->getRealPath());
 
-                    // Check for duplicates
-                    $existingStatement = BankStatement::where('file_hash', $fileHash)
+                    // Check for existing file (including soft deleted)
+                    $existingStatement = BankStatement::withTrashed()
+                        ->where('file_hash', $fileHash)
                         ->where('bank_id', $bank->id)
                         ->first();
 
-                    if ($existingStatement) {
-                        $duplicates[] = [
-                            'filename' => $file->getClientOriginalName(),
-                            'message' => 'This file has already been uploaded.',
-                            'existing_id' => $existingStatement->id,
-                            'uploaded_at' => $existingStatement->uploaded_at,
-                        ];
-                        continue;
-                    }
-
-                    // Generate unique filename
+                    // Generate unique filename with full timestamp
                     $originalName = $file->getClientOriginalName();
                     $extension = $file->getClientOriginalExtension();
-                    $filename = Str::slug(pathinfo($originalName, PATHINFO_FILENAME)) 
-                        . '_' . time() . '_' . Str::random(8) 
-                        . '.' . $extension;
+                    
+                    $timestamp = now()->format('Ymd_His');
+                    $microseconds = now()->format('u');
+                    $randomString = Str::random(8);
+                    
+                    $baseFilename = Str::slug(pathinfo($originalName, PATHINFO_FILENAME));
+                    $filename = sprintf(
+                        '%s_%s_%s_%s.%s',
+                        $baseFilename,
+                        $timestamp,
+                        $microseconds,
+                        $randomString,
+                        $extension
+                    );
 
-                    // Store file
+                    // Store file using default 'local' disk
                     $path = $file->storeAs(
                         "bank-statements/{$bankSlug}/" . date('Y/m'),
-                        $filename,
-                        'private'
+                        $filename
                     );
 
                     if (!$path) {
                         throw new \Exception("Failed to store file: {$originalName}");
                     }
 
-                    // Create bank statement record
-                    $bankStatement = BankStatement::create([
-                        'bank_id' => $bank->id,
-                        'user_id' => Auth::id(),
-                        'file_path' => $path,
-                        'file_hash' => $fileHash,
-                        'original_filename' => $originalName,
-                        'file_size' => $file->getSize(),
-                        'mime_type' => $file->getMimeType(),
-                        'ocr_status' => 'pending',
-                        'ocr_job_id' => Str::uuid()->toString(),
-                        'uploaded_at' => now(),
-                    ]);
+                    // Verify file exists
+                    if (!Storage::exists($path)) {
+                        throw new \Exception("File was not properly stored: {$originalName}");
+                    }
 
-                    // Dispatch OCR processing job
-                    ProcessBankStatementOCR::dispatch($bankStatement, $bankSlug)
-                        ->onQueue('ocr-processing');
+                    if ($existingStatement) {
+                        // REPLACE: Update existing record
+                        
+                        // Delete old file from storage if exists
+                        if ($existingStatement->file_path && Storage::exists($existingStatement->file_path)) {
+                            Storage::delete($existingStatement->file_path);
+                        }
 
-                    $uploadedStatements[] = [
-                        'id' => $bankStatement->id,
-                        'filename' => $originalName,
-                        'size' => $this->formatBytes($file->getSize()),
-                        'status' => 'queued',
-                        'message' => 'File uploaded successfully and queued for OCR processing.',
-                    ];
+                        // Delete existing transactions
+                        $existingStatement->transactions()->delete();
 
-                    Log::info("Bank statement uploaded", [
-                        'bank' => $bankSlug,
-                        'user_id' => Auth::id(),
-                        'statement_id' => $bankStatement->id,
-                        'filename' => $originalName,
-                    ]);
+                        // Restore if soft deleted
+                        if ($existingStatement->trashed()) {
+                            $existingStatement->restore();
+                        }
+
+                        // Update existing record
+                        $existingStatement->update([
+                            'user_id' => Auth::id(),
+                            'file_path' => $path,
+                            'file_hash' => $fileHash,
+                            'original_filename' => $originalName,
+                            'file_size' => $file->getSize(),
+                            'mime_type' => $file->getMimeType(),
+                            'ocr_status' => 'pending',
+                            'ocr_job_id' => Str::uuid()->toString(),
+                            'ocr_error' => null,
+                            'ocr_response' => null,
+                            'ocr_started_at' => null,
+                            'ocr_completed_at' => null,
+                            'uploaded_at' => now(),
+                            // Reset financial data
+                            'bank_name' => null,
+                            'period_from' => null,
+                            'period_to' => null,
+                            'account_number' => null,
+                            'opening_balance' => null,
+                            'closing_balance' => null,
+                            'total_credit_count' => 0,
+                            'total_debit_count' => 0,
+                            'total_credit_amount' => 0,
+                            'total_debit_amount' => 0,
+                            'total_transactions' => 0,
+                            'processed_transactions' => 0,
+                            'matched_transactions' => 0,
+                            'unmatched_transactions' => 0,
+                            'verified_transactions' => 0,
+                        ]);
+
+                        // Dispatch OCR processing job
+                        ProcessBankStatementOCR::dispatch($existingStatement, $bankSlug)
+                            ->onQueue('ocr-processing');
+
+                        $replacedStatements[] = [
+                            'id' => $existingStatement->id,
+                            'filename' => $originalName,
+                            'stored_as' => $filename,
+                            'size' => $this->formatBytes($file->getSize()),
+                            'status' => 'replaced',
+                            'message' => 'File replaced successfully and queued for OCR processing.',
+                        ];
+
+                        Log::info("Bank statement REPLACED", [
+                            'bank' => $bankSlug,
+                            'user_id' => Auth::id(),
+                            'statement_id' => $existingStatement->id,
+                            'filename' => $originalName,
+                            'stored_as' => $filename,
+                            'path' => $path,
+                        ]);
+
+                    } else {
+                        // NEW: Create new record
+                        $bankStatement = BankStatement::create([
+                            'bank_id' => $bank->id,
+                            'user_id' => Auth::id(),
+                            'file_path' => $path,
+                            'file_hash' => $fileHash,
+                            'original_filename' => $originalName,
+                            'file_size' => $file->getSize(),
+                            'mime_type' => $file->getMimeType(),
+                            'ocr_status' => 'pending',
+                            'ocr_job_id' => Str::uuid()->toString(),
+                            'uploaded_at' => now(),
+                        ]);
+
+                        // Dispatch OCR processing job
+                        ProcessBankStatementOCR::dispatch($bankStatement, $bankSlug)
+                            ->onQueue('ocr-processing');
+
+                        $uploadedStatements[] = [
+                            'id' => $bankStatement->id,
+                            'filename' => $originalName,
+                            'stored_as' => $filename,
+                            'size' => $this->formatBytes($file->getSize()),
+                            'status' => 'queued',
+                            'message' => 'File uploaded successfully and queued for OCR processing.',
+                        ];
+
+                        Log::info("Bank statement uploaded", [
+                            'bank' => $bankSlug,
+                            'user_id' => Auth::id(),
+                            'statement_id' => $bankStatement->id,
+                            'filename' => $originalName,
+                            'stored_as' => $filename,
+                            'path' => $path,
+                        ]);
+                    }
 
                 } catch (\Exception $e) {
                     Log::error("Failed to upload file", [
                         'filename' => $file->getClientOriginalName(),
                         'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
                     ]);
 
                     $errors[] = [
@@ -526,7 +741,7 @@ class BankStatementController extends Controller
                 'success' => true,
                 'message' => $this->generateResponseMessage(
                     count($uploadedStatements),
-                    count($duplicates),
+                    count($replacedStatements),
                     count($errors)
                 ),
                 'data' => [
@@ -540,9 +755,9 @@ class BankStatementController extends Controller
                 ],
             ];
 
-            if (!empty($duplicates)) {
-                $response['data']['duplicates'] = $duplicates;
-                $response['data']['total_duplicates'] = count($duplicates);
+            if (!empty($replacedStatements)) {
+                $response['data']['replaced'] = $replacedStatements;
+                $response['data']['total_replaced'] = count($replacedStatements);
             }
 
             if (!empty($errors)) {
@@ -577,17 +792,18 @@ class BankStatementController extends Controller
 
     /**
      * Generate response message based on upload results
+     * Updated: Include replaced count
      */
-    private function generateResponseMessage(int $uploaded, int $duplicates, int $errors): string
+    private function generateResponseMessage(int $uploaded, int $replaced, int $errors): string
     {
         $messages = [];
 
         if ($uploaded > 0) {
-            $messages[] = "{$uploaded} file(s) uploaded successfully";
+            $messages[] = "{$uploaded} new file(s) uploaded";
         }
 
-        if ($duplicates > 0) {
-            $messages[] = "{$duplicates} duplicate(s) skipped";
+        if ($replaced > 0) {
+            $messages[] = "{$replaced} file(s) replaced";
         }
 
         if ($errors > 0) {

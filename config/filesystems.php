@@ -32,13 +32,13 @@ return [
             'throw' => false,
         ],
 
-        // ===== ADD THIS: Private Disk Configuration =====
-        'private' => [
-            'driver' => 'local',
-            'root' => storage_path('app/private'),
-            'visibility' => 'private',
-            'throw' => false,
-        ],
+        // ❌ REMOVE OR COMMENT OUT 'private' disk if not needed
+        // 'private' => [
+        //     'driver' => 'local',
+        //     'root' => storage_path('app/private'),
+        //     'visibility' => 'private',
+        //     'throw' => false,
+        // ],
 
         's3' => [
             'driver' => 's3',
