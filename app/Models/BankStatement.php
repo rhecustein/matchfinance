@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Str;
 use App\Traits\BelongsToTenant;
@@ -105,6 +107,74 @@ class BankStatement extends Model
     | Relationships
     |--------------------------------------------------------------------------
     */
+    /**
+     * Scope: Not in any collection
+     */
+    public function scopeNotInCollection($query)
+    {
+        return $query->whereDoesntHave('documentItem');
+    }
+
+    /**
+     * Scope: In a collection
+     */
+    public function scopeInCollection($query)
+    {
+        return $query->whereHas('documentItem');
+    }
+
+    /**
+     * Check if this statement is already in a collection
+     */
+    public function isInCollection(): bool
+    {
+        return $this->documentItem()->exists();
+    }
+        /*
+    |--------------------------------------------------------------------------
+    | Relationships - Document Collections (AI Chat)
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Get the document item (if this statement is in a collection)
+     */
+    public function documentItem(): HasOne
+    {
+        return $this->hasOne(DocumentItem::class);
+    }
+
+    /**
+     * Get the document items (if this statement is in multiple collections)
+     */
+    public function documentItems(): HasMany
+    {
+        return $this->hasMany(DocumentItem::class);
+    }
+
+    /**
+     * Get the document collection through document item
+     */
+    public function documentCollection(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            DocumentCollection::class,
+            DocumentItem::class,
+            'bank_statement_id',
+            'id',
+            'id',
+            'document_collection_id'
+        );
+    }
+
+    /**
+     * Get chat sessions related to this statement
+     */
+    public function chatSessions(): HasMany
+    {
+        return $this->hasMany(ChatSession::class);
+    }
+
 
     public function company(): BelongsTo
     {

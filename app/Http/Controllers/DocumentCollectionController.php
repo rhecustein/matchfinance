@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DocumentCollection;
 use App\Models\BankStatement;
+use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -12,14 +13,27 @@ use Illuminate\Support\Facades\Log;
 class DocumentCollectionController extends Controller
 {
     /**
-     * Display listing of document collections (Company Scoped)
+     * Display listing of document collections (Company Scoped or Super Admin)
      */
     public function index(Request $request)
     {
         $user = auth()->user();
 
-        $query = DocumentCollection::where('company_id', $user->company_id)
-            ->withCount(['items', 'chatSessions']);
+        // Super Admin: Can see all collections from all companies
+        if ($user->isSuperAdmin()) {
+            $query = DocumentCollection::with(['company', 'user'])
+                ->withCount(['items', 'chatSessions']);
+
+            // Filter by company
+            if ($request->filled('company_id')) {
+                $query->where('company_id', $request->company_id);
+            }
+        } else {
+            // Regular users: Only their company
+            $query = DocumentCollection::where('company_id', $user->company_id)
+                ->with('user')
+                ->withCount(['items', 'chatSessions']);
+        }
 
         // Filter by active status
         if ($request->filled('status')) {
@@ -38,30 +52,73 @@ class DocumentCollectionController extends Controller
 
         $collections = $query->latest()->paginate(20);
 
-        $stats = [
-            'total' => DocumentCollection::where('company_id', $user->company_id)->count(),
-            'active' => DocumentCollection::where('company_id', $user->company_id)
-                ->where('is_active', true)
-                ->count(),
-            'inactive' => DocumentCollection::where('company_id', $user->company_id)
-                ->where('is_active', false)
-                ->count(),
-        ];
+        // Stats
+        if ($user->isSuperAdmin()) {
+            $statsQuery = DocumentCollection::query();
+            if ($request->filled('company_id')) {
+                $statsQuery->where('company_id', $request->company_id);
+            }
+            
+            $stats = [
+                'total' => $statsQuery->count(),
+                'active' => (clone $statsQuery)->where('is_active', true)->count(),
+                'inactive' => (clone $statsQuery)->where('is_active', false)->count(),
+            ];
 
-        return view('document-collections.index', compact('collections', 'stats'));
+            // Get companies list for filter
+            $companies = Company::orderBy('name')->get(['id', 'name']);
+        } else {
+            $stats = [
+                'total' => DocumentCollection::where('company_id', $user->company_id)->count(),
+                'active' => DocumentCollection::where('company_id', $user->company_id)
+                    ->where('is_active', true)
+                    ->count(),
+                'inactive' => DocumentCollection::where('company_id', $user->company_id)
+                    ->where('is_active', false)
+                    ->count(),
+            ];
+            $companies = null;
+        }
+
+        return view('document-collections.index', compact('collections', 'stats', 'companies'));
     }
 
     /**
      * Show form for creating new collection
      */
-    public function create()
+    public function create(Request $request)
     {
         $user = auth()->user();
 
-        // Get available bank statements (completed OCR, not already in a collection)
+        // Super Admin must select a company first
+        if ($user->isSuperAdmin()) {
+            $companies = Company::orderBy('name')->get(['id', 'name']);
+            
+            // If company_id provided in query string
+            $selectedCompanyId = $request->input('company_id');
+            
+            if ($selectedCompanyId) {
+                $selectedCompany = Company::findOrFail($selectedCompanyId);
+                
+                // Get available bank statements for selected company
+                $bankStatements = BankStatement::where('company_id', $selectedCompanyId)
+                    ->where('ocr_status', 'completed')
+                    ->whereDoesntHave('documentItem')
+                    ->with('bank')
+                    ->latest()
+                    ->get();
+                
+                return view('document-collections.create', compact('bankStatements', 'companies', 'selectedCompany'));
+            }
+            
+            // Show company selection first
+            return view('document-collections.create', compact('companies'));
+        }
+
+        // Regular user: use their company
         $bankStatements = BankStatement::where('company_id', $user->company_id)
             ->where('ocr_status', 'completed')
-            ->whereDoesntHave('documentItem') // Not already in collection
+            ->whereDoesntHave('documentItem')
             ->with('bank')
             ->latest()
             ->get();
@@ -77,6 +134,7 @@ class DocumentCollectionController extends Controller
         $user = auth()->user();
 
         $validated = $request->validate([
+            'company_id' => $user->isSuperAdmin() ? 'required|exists:companies,id' : 'nullable',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
             'bank_statement_ids' => 'nullable|array',
@@ -84,15 +142,20 @@ class DocumentCollectionController extends Controller
             'is_active' => 'boolean',
         ]);
 
+        // Determine company_id
+        $companyId = $user->isSuperAdmin() 
+            ? $validated['company_id'] 
+            : $user->company_id;
+
         try {
             DB::beginTransaction();
 
             $collection = DocumentCollection::create([
                 'uuid' => Str::uuid(),
-                'company_id' => $user->company_id,
+                'company_id' => $companyId,
                 'user_id' => $user->id,
                 'name' => $validated['name'],
-                'description' => $validated['description'],
+                'description' => $validated['description'] ?? null,
                 'is_active' => $validated['is_active'] ?? true,
                 'document_count' => 0,
             ]);
@@ -103,10 +166,11 @@ class DocumentCollectionController extends Controller
                 foreach ($validated['bank_statement_ids'] as $statementId) {
                     $statement = BankStatement::find($statementId);
                     
-                    if ($statement && $statement->company_id === $user->company_id) {
+                    // Verify statement belongs to the same company
+                    if ($statement && $statement->company_id === $companyId) {
                         $collection->items()->create([
                             'uuid' => Str::uuid(),
-                            'company_id' => $user->company_id,
+                            'company_id' => $companyId,
                             'bank_statement_id' => $statementId,
                             'document_type' => 'bank_statement',
                             'sort_order' => $sortOrder++,
@@ -137,9 +201,16 @@ class DocumentCollectionController extends Controller
      */
     public function show(DocumentCollection $documentCollection)
     {
-        abort_unless($documentCollection->company_id === auth()->user()->company_id, 403);
+        $user = auth()->user();
+        
+        // Authorization: super admin or same company
+        if (!$user->isSuperAdmin() && $documentCollection->company_id !== $user->company_id) {
+            abort(403);
+        }
 
         $documentCollection->load([
+            'company',
+            'user',
             'items.bankStatement.bank',
             'chatSessions' => function($q) {
                 $q->latest('last_activity_at')->limit(10);
@@ -154,12 +225,16 @@ class DocumentCollectionController extends Controller
      */
     public function edit(DocumentCollection $documentCollection)
     {
-        abort_unless($documentCollection->company_id === auth()->user()->company_id, 403);
+        $user = auth()->user();
+        
+        // Authorization
+        if (!$user->isSuperAdmin() && $documentCollection->company_id !== $user->company_id) {
+            abort(403);
+        }
 
         $documentCollection->load('items.bankStatement');
 
-        $user = auth()->user();
-        $availableStatements = BankStatement::where('company_id', $user->company_id)
+        $availableStatements = BankStatement::where('company_id', $documentCollection->company_id)
             ->where('ocr_status', 'completed')
             ->whereDoesntHave('documentItem')
             ->with('bank')
@@ -174,7 +249,12 @@ class DocumentCollectionController extends Controller
      */
     public function update(Request $request, DocumentCollection $documentCollection)
     {
-        abort_unless($documentCollection->company_id === auth()->user()->company_id, 403);
+        $user = auth()->user();
+        
+        // Authorization
+        if (!$user->isSuperAdmin() && $documentCollection->company_id !== $user->company_id) {
+            abort(403);
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -201,7 +281,12 @@ class DocumentCollectionController extends Controller
      */
     public function destroy(DocumentCollection $documentCollection)
     {
-        abort_unless($documentCollection->company_id === auth()->user()->company_id, 403);
+        $user = auth()->user();
+        
+        // Authorization
+        if (!$user->isSuperAdmin() && $documentCollection->company_id !== $user->company_id) {
+            abort(403);
+        }
 
         try {
             // Check if collection has active chat sessions
@@ -226,7 +311,12 @@ class DocumentCollectionController extends Controller
      */
     public function toggleActive(DocumentCollection $documentCollection)
     {
-        abort_unless($documentCollection->company_id === auth()->user()->company_id, 403);
+        $user = auth()->user();
+        
+        // Authorization
+        if (!$user->isSuperAdmin() && $documentCollection->company_id !== $user->company_id) {
+            abort(403);
+        }
 
         try {
             $documentCollection->update([
