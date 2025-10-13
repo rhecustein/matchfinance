@@ -160,6 +160,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         //match-transactions
         Route::post('/{bankStatement}/match-transactions', [BankStatementController::class, 'matchTransactions'])->name('match-transactions');
+
+        //match-accounts
+        Route::post('/{bankStatement}/match-accounts', [BankStatementController::class, 'matchAccounts'])->name('match-accounts');
     });
 
     // Keyword Suggestions

@@ -262,22 +262,25 @@ class TransactionCategory extends Model
      * Get category path (Type > Category > SubCategory)
      */
     public function categoryPath(): Attribute
-    {
-        return Attribute::make(
-            get: function () {
-                if (!$this->relationLoaded('type') || !$this->relationLoaded('category') || !$this->relationLoaded('subCategory')) {
-                    $this->load(['type', 'category', 'subCategory']);
-                }
-
-                return sprintf(
-                    '%s > %s > %s',
-                    $this->type->name ?? 'N/A',
-                    $this->category->name ?? 'N/A',
-                    $this->subCategory->name ?? 'N/A'
-                );
+{
+    return Attribute::make(
+        get: function () {
+            // Pastikan relation loaded dulu
+            if (!$this->relationLoaded('type') || 
+                !$this->relationLoaded('category') || 
+                !$this->relationLoaded('subCategory')) {
+                $this->loadMissing(['type', 'category', 'subCategory']);
             }
-        );
-    }
+            
+            return sprintf(
+                '%s > %s > %s',
+                $this->type?->name ?? 'N/A',
+                $this->category?->name ?? 'N/A',
+                $this->subCategory?->name ?? 'N/A'
+            );
+        }
+    );
+}
 
     /**
      * Get full details as array

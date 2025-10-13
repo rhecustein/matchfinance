@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Builder;
 
 class StatementTransaction extends Model
 {
@@ -25,22 +25,27 @@ class StatementTransaction extends Model
         'debit_amount',
         'credit_amount',
         'balance',
-        'amount',
         'transaction_type',
+        'amount',
+        'account_id',
+        'matched_account_keyword_id',
+        'account_confidence_score',
+        'is_manual_account',
         'matched_keyword_id',
         'sub_category_id',
         'category_id',
         'type_id',
         'confidence_score',
         'is_manual_category',
+        'matching_reason',
         'is_verified',
         'verified_by',
         'verified_at',
         'notes',
-        'account_id',
-        'matched_account_keyword_id',
-        'account_confidence_score',
-        'is_manual_account',
+        'metadata',
+        'is_transfer',
+        'is_recurring',
+        'recurring_pattern',
     ];
 
     protected $casts = [
@@ -49,159 +54,30 @@ class StatementTransaction extends Model
         'debit_amount' => 'decimal:2',
         'credit_amount' => 'decimal:2',
         'balance' => 'decimal:2',
+        'amount' => 'decimal:2',
+        'account_confidence_score' => 'integer',
+        'is_manual_account' => 'boolean',
         'confidence_score' => 'integer',
         'is_manual_category' => 'boolean',
         'is_verified' => 'boolean',
         'verified_at' => 'datetime',
-        'account_confidence_score' => 'integer',
-        'is_manual_account' => 'boolean',
+        'metadata' => 'array',
+        'is_transfer' => 'boolean',
+        'is_recurring' => 'boolean',
     ];
 
-    protected $appends = [
-        'amount',
-        'signed_amount',
-    ];
-    
-    
-    /**
-     * Get the account yang di-assign ke transaction ini
-     */
-    public function account(): BelongsTo
-    {
-        return $this->belongsTo(Account::class);
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships - Core
+    |--------------------------------------------------------------------------
+    */
 
-    /**
-     * Get the matched account keyword
-     */
-    public function matchedAccountKeyword(): BelongsTo
-    {
-        return $this->belongsTo(AccountKeyword::class, 'matched_account_keyword_id');
-    }
-
-    /**
-     * Get all account matching logs untuk transaction ini
-     */
-    public function accountMatchingLogs(): HasMany
-    {
-        return $this->hasMany(AccountMatchingLog::class);
-    }
-
-    /**
-     * Check apakah transaction ini punya account assigned
-     */
-    public function hasAccount(): bool
-    {
-        return !is_null($this->account_id);
-    }
-
-    /**
-     * Accessor untuk account confidence label
-     */
-    public function accountConfidenceLabel(): Attribute
-    {
-        return Attribute::make(
-            get: function () {
-                if (is_null($this->account_confidence_score)) {
-                    return 'N/A';
-                }
-
-                return match(true) {
-                    $this->account_confidence_score >= 90 => 'Very High',
-                    $this->account_confidence_score >= 75 => 'High',
-                    $this->account_confidence_score >= 60 => 'Medium',
-                    $this->account_confidence_score >= 40 => 'Low',
-                    default => 'Very Low',
-                };
-            }
-        );
-    }
-
-    /**
-     * Scope untuk filter by account
-     */
-    public function scopeByAccount($query, $accountId)
-    {
-        return $query->where('account_id', $accountId);
-    }
-
-    /**
-     * Scope untuk transactions yang belum punya account
-     */
-    public function scopeWithoutAccount($query)
-    {
-        return $query->whereNull('account_id');
-    }
-
-    /**
-     * Scope untuk transactions dengan account
-     */
-    public function scopeWithAccount($query)
-    {
-        return $query->whereNotNull('account_id');
-    }
-
-    /**
-     * Get full categorization info (Category + Account)
-     */
-    public function fullCategorization(): Attribute
-    {
-        return Attribute::make(
-            get: fn () => [
-                'category' => [
-                    'type' => $this->type?->name,
-                    'category' => $this->category?->name,
-                    'sub_category' => $this->subCategory?->name,
-                    'confidence' => $this->confidence_score,
-                    'is_manual' => $this->is_manual_category,
-                ],
-                'account' => [
-                    'code' => $this->account?->code,
-                    'name' => $this->account?->name,
-                    'confidence' => $this->account_confidence_score,
-                    'is_manual' => $this->is_manual_account,
-                ],
-            ]
-        );
-    }
     /**
      * Get the bank statement that owns this transaction
      */
     public function bankStatement(): BelongsTo
     {
         return $this->belongsTo(BankStatement::class);
-    }
-
-    /**
-     * Get the matched keyword
-     */
-    public function matchedKeyword(): BelongsTo
-    {
-        return $this->belongsTo(Keyword::class, 'matched_keyword_id');
-    }
-
-    /**
-     * Get the sub category
-     */
-    public function subCategory(): BelongsTo
-    {
-        return $this->belongsTo(SubCategory::class);
-    }
-
-    /**
-     * Get the category
-     */
-    public function category(): BelongsTo
-    {
-        return $this->belongsTo(Category::class);
-    }
-
-    /**
-     * Get the type
-     */
-    public function type(): BelongsTo
-    {
-        return $this->belongsTo(Type::class);
     }
 
     /**
@@ -212,12 +88,120 @@ class StatementTransaction extends Model
         return $this->belongsTo(User::class, 'verified_by');
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships - Account Matching
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Get all matching logs for this transaction
+     * Get the matched account
+     */
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(Account::class);
+    }
+
+    /**
+     * Get the account keyword that matched
+     */
+    public function matchedAccountKeyword(): BelongsTo
+    {
+        return $this->belongsTo(AccountKeyword::class, 'matched_account_keyword_id');
+    }
+
+    /**
+     * Get all account matching logs
+     */
+    public function accountMatchingLogs(): HasMany
+    {
+        return $this->hasMany(AccountMatchingLog::class);
+    }
+
+    /**
+     * Get selected account match log
+     */
+    public function selectedAccountMatch(): HasOne
+    {
+        return $this->hasOne(AccountMatchingLog::class)->where('is_selected', true);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships - Category Matching (Denormalized)
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Get the matched keyword (primary)
+     */
+    public function matchedKeyword(): BelongsTo
+    {
+        return $this->belongsTo(Keyword::class, 'matched_keyword_id');
+    }
+
+    /**
+     * Get the sub category (primary)
+     */
+    public function subCategory(): BelongsTo
+    {
+        return $this->belongsTo(SubCategory::class);
+    }
+
+    /**
+     * Get the category (primary)
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Get the type (primary)
+     */
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(Type::class);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships - Multi-Category Support
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Get all category assignments for this transaction
+     */
+    public function transactionCategories(): HasMany
+    {
+        return $this->hasMany(TransactionCategory::class);
+    }
+
+    /**
+     * Get primary category assignment
+     */
+    public function primaryCategory(): HasOne
+    {
+        return $this->hasOne(TransactionCategory::class)
+            ->where('is_primary', true)
+            ->with(['type', 'category', 'subCategory']);
+    }
+
+    /**
+     * Get all matching logs
      */
     public function matchingLogs(): HasMany
     {
-        return $this->hasMany(MatchingLog::class, 'statement_transaction_id');
+        return $this->hasMany(MatchingLog::class);
+    }
+
+    /**
+     * Get selected matching log
+     */
+    public function selectedMatch(): HasOne
+    {
+        return $this->hasOne(MatchingLog::class)->where('is_selected', true);
     }
 
     /*
@@ -227,296 +211,131 @@ class StatementTransaction extends Model
     */
 
     /**
-     * Scope: Filter by matched status
+     * Scope for verified transactions
      */
-    public function scopeMatched(Builder $query): Builder
-    {
-        return $query->whereNotNull('matched_keyword_id');
-    }
-
-    /**
-     * Scope: Filter by unmatched status
-     */
-    public function scopeUnmatched(Builder $query): Builder
-    {
-        return $query->whereNull('matched_keyword_id');
-    }
-
-    /**
-     * Scope: Filter by verified status
-     */
-    public function scopeVerified(Builder $query): Builder
+    public function scopeVerified($query)
     {
         return $query->where('is_verified', true);
     }
 
     /**
-     * Scope: Filter by unverified status
+     * Scope for unverified transactions
      */
-    public function scopeUnverified(Builder $query): Builder
+    public function scopeUnverified($query)
     {
         return $query->where('is_verified', false);
     }
 
     /**
-     * Scope: Filter by low confidence (< 80)
+     * Scope for manually categorized
      */
-    public function scopeLowConfidence(Builder $query): Builder
-    {
-        return $query->where('confidence_score', '<', 80)
-            ->whereNotNull('matched_keyword_id');
-    }
-
-    /**
-     * Scope: Filter by high confidence (>= 80)
-     */
-    public function scopeHighConfidence(Builder $query): Builder
-    {
-        return $query->where('confidence_score', '>=', 80)
-            ->whereNotNull('matched_keyword_id');
-    }
-
-    /**
-     * Scope: Filter by transaction type
-     */
-    public function scopeType(Builder $query, string $type): Builder
-    {
-        return $query->where('transaction_type', $type);
-    }
-
-    /**
-     * Scope: Filter debit transactions
-     */
-    public function scopeDebit(Builder $query): Builder
-    {
-        return $query->where('transaction_type', 'debit');
-    }
-
-    /**
-     * Scope: Filter credit transactions
-     */
-    public function scopeCredit(Builder $query): Builder
-    {
-        return $query->where('transaction_type', 'credit');
-    }
-
-    /**
-     * Scope: Filter by date range
-     */
-    public function scopeDateBetween(Builder $query, $startDate, $endDate): Builder
-    {
-        return $query->whereBetween('transaction_date', [$startDate, $endDate]);
-    }
-
-    /**
-     * Scope: Filter by category
-     */
-    public function scopeByCategory(Builder $query, int $categoryId): Builder
-    {
-        return $query->where('category_id', $categoryId);
-    }
-
-    /**
-     * Scope: Filter by sub category
-     */
-    public function scopeBySubCategory(Builder $query, int $subCategoryId): Builder
-    {
-        return $query->where('sub_category_id', $subCategoryId);
-    }
-
-    /**
-     * Scope: Filter by type
-     */
-    public function scopeByType(Builder $query, int $typeId): Builder
-    {
-        return $query->where('type_id', $typeId);
-    }
-
-    /**
-     * Scope: Search by description
-     */
-    public function scopeSearchDescription(Builder $query, string $search): Builder
-    {
-        return $query->where('description', 'like', "%{$search}%");
-    }
-
-    /**
-     * Scope: Filter manually categorized
-     */
-    public function scopeManuallyCategorized(Builder $query): Builder
+    public function scopeManualCategory($query)
     {
         return $query->where('is_manual_category', true);
     }
 
     /**
-     * Scope: Filter automatically categorized
+     * Scope for auto-categorized
      */
-    public function scopeAutoCategorized(Builder $query): Builder
+    public function scopeAutoCategory($query)
     {
-        return $query->where('is_manual_category', false)
-            ->whereNotNull('matched_keyword_id');
+        return $query->where('is_manual_category', false);
     }
 
     /**
-     * Scope: Order by date and time
+     * Scope for high confidence matches
      */
-    public function scopeOrderByDateTime(Builder $query, string $direction = 'asc'): Builder
+    public function scopeHighConfidence($query, $threshold = 80)
     {
-        return $query->orderBy('transaction_date', $direction)
-            ->orderBy('transaction_time', $direction);
+        return $query->where('confidence_score', '>=', $threshold);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Helper Methods
-    |--------------------------------------------------------------------------
-    */
-
     /**
-     * Check if transaction is matched
+     * Scope for low confidence matches
      */
-    public function isMatched(): bool
+    public function scopeLowConfidence($query, $threshold = 50)
     {
-        return !is_null($this->matched_keyword_id);
+        return $query->where('confidence_score', '<', $threshold);
     }
 
     /**
-     * Check if transaction is verified
+     * Scope for debit transactions
      */
-    public function isVerified(): bool
+    public function scopeDebits($query)
     {
-        return $this->is_verified;
+        return $query->where('transaction_type', 'debit');
     }
 
     /**
-     * Check if confidence is low (< 80)
+     * Scope for credit transactions
      */
-    public function isLowConfidence(): bool
+    public function scopeCredits($query)
     {
-        return $this->confidence_score < 80 && $this->isMatched();
+        return $query->where('transaction_type', 'credit');
     }
 
     /**
-     * Check if manually categorized
+     * Scope for transfer transactions
      */
-    public function isManuallyCategorized(): bool
+    public function scopeTransfers($query)
     {
-        return $this->is_manual_category;
+        return $query->where('is_transfer', true);
     }
 
     /**
-     * Mark as verified
+     * Scope for recurring transactions
      */
-    public function markAsVerified(int $userId, ?string $notes = null): bool
+    public function scopeRecurring($query)
     {
-        $result = $this->update([
-            'is_verified' => true,
-            'verified_by' => $userId,
-            'verified_at' => now(),
-            'notes' => $notes ?? $this->notes,
-        ]);
-
-        if ($result && $this->bankStatement) {
-            // Update statement statistics
-            $this->bankStatement->updateMatchingStats();
-        }
-
-        return $result;
+        return $query->where('is_recurring', true);
     }
 
     /**
-     * Unverify transaction
+     * Scope for date range
      */
-    public function unverify(): bool
+    public function scopeDateRange($query, $from, $to)
     {
-        $result = $this->update([
-            'is_verified' => false,
-            'verified_by' => null,
-            'verified_at' => null,
-        ]);
-
-        if ($result && $this->bankStatement) {
-            // Update statement statistics
-            $this->bankStatement->updateMatchingStats();
-        }
-
-        return $result;
+        return $query->whereBetween('transaction_date', [$from, $to]);
     }
 
     /**
-     * Set matching result
+     * Scope for specific account
      */
-    public function setMatchingResult(
-        int $keywordId,
-        int $subCategoryId,
-        int $categoryId,
-        int $typeId,
-        int $confidenceScore
-    ): bool {
-        $result = $this->update([
-            'matched_keyword_id' => $keywordId,
-            'sub_category_id' => $subCategoryId,
-            'category_id' => $categoryId,
-            'type_id' => $typeId,
-            'confidence_score' => $confidenceScore,
-            'is_manual_category' => false,
-        ]);
-
-        if ($result && $this->bankStatement) {
-            // Update statement statistics
-            $this->bankStatement->updateMatchingStats();
-        }
-
-        return $result;
-    }
-
-    /**
-     * Set manual category
-     */
-    public function setManualCategory(
-        int $subCategoryId,
-        int $categoryId,
-        int $typeId,
-        ?string $notes = null
-    ): bool {
-        $result = $this->update([
-            'sub_category_id' => $subCategoryId,
-            'category_id' => $categoryId,
-            'type_id' => $typeId,
-            'confidence_score' => 100,
-            'is_manual_category' => true,
-            'matched_keyword_id' => null,
-            'notes' => $notes,
-        ]);
-
-        if ($result && $this->bankStatement) {
-            // Update statement statistics
-            $this->bankStatement->updateMatchingStats();
-        }
-
-        return $result;
-    }
-
-    /**
-     * Clear matching
-     */
-    public function clearMatching(): bool
+    public function scopeForAccount($query, $accountId)
     {
-        $result = $this->update([
-            'matched_keyword_id' => null,
-            'sub_category_id' => null,
-            'category_id' => null,
-            'type_id' => null,
-            'confidence_score' => 0,
-            'is_manual_category' => false,
-        ]);
+        return $query->where('account_id', $accountId);
+    }
 
-        if ($result && $this->bankStatement) {
-            // Update statement statistics
-            $this->bankStatement->updateMatchingStats();
-        }
+    /**
+     * Scope for specific category
+     */
+    public function scopeForCategory($query, $categoryId)
+    {
+        return $query->where('category_id', $categoryId);
+    }
 
-        return $result;
+    /**
+     * Scope for specific type
+     */
+    public function scopeForType($query, $typeId)
+    {
+        return $query->where('type_id', $typeId);
+    }
+
+    /**
+     * Scope for uncategorized transactions
+     */
+    public function scopeUncategorized($query)
+    {
+        return $query->whereNull('sub_category_id');
+    }
+
+    /**
+     * Scope for categorized transactions
+     */
+    public function scopeCategorized($query)
+    {
+        return $query->whereNotNull('sub_category_id');
     }
 
     /*
@@ -526,85 +345,225 @@ class StatementTransaction extends Model
     */
 
     /**
-     * Get amount (debit or credit)
-     * FIXED: Handle NULL values properly
-     */
-    public function getAmountAttribute(): float
-    {
-        if ($this->transaction_type === 'debit') {
-            return (float) ($this->debit_amount ?? 0);
-        }
-        
-        return (float) ($this->credit_amount ?? 0);
-    }
-
-    /**
-     * Get amount with sign
-     * FIXED: Handle NULL values properly
-     */
-    public function getSignedAmountAttribute(): float
-    {
-        if ($this->transaction_type === 'debit') {
-            return -(float) ($this->debit_amount ?? 0);
-        }
-        
-        return (float) ($this->credit_amount ?? 0);
-    }
-
-    /**
-     * Get confidence level label
-     */
-    public function getConfidenceLabelAttribute(): string
-    {
-        if ($this->confidence_score >= 90) return 'High';
-        if ($this->confidence_score >= 80) return 'Medium';
-        if ($this->confidence_score >= 70) return 'Low';
-        return 'Very Low';
-    }
-
-    /**
-     * Get confidence color
-     */
-    public function getConfidenceColorAttribute(): string
-    {
-        if ($this->confidence_score >= 90) return 'green';
-        if ($this->confidence_score >= 80) return 'blue';
-        if ($this->confidence_score >= 70) return 'yellow';
-        return 'red';
-    }
-
-    /**
-     * Get status badge
-     */
-    public function getStatusBadgeAttribute(): string
-    {
-        if ($this->is_verified) return 'Verified';
-        if ($this->isMatched() && $this->confidence_score >= 80) return 'Matched';
-        if ($this->isMatched() && $this->confidence_score < 80) return 'Need Review';
-        return 'Unmatched';
-    }
-
-    /**
-     * Get formatted transaction date
-     */
-    public function getFormattedDateAttribute(): string
-    {
-        return $this->transaction_date ? $this->transaction_date->format('d M Y') : '-';
-    }
-
-    /**
      * Get formatted amount with currency
      */
-    public function getFormattedAmountAttribute(): string
+    public function formattedAmount(): Attribute
     {
-        return 'Rp ' . number_format($this->amount, 0, ',', '.');
+        return Attribute::make(
+            get: fn() => 'Rp ' . number_format($this->amount, 0, ',', '.')
+        );
     }
 
     /**
-     * Get formatted balance
+     * Get confidence label
      */
-    public function getFormattedBalanceAttribute(): string
+    public function confidenceLabel(): Attribute
     {
-        return 'Rp ' . number_format($this->balance ?? 0, 0, ',', '.');
+        return Attribute::make(
+            get: function() {
+                if ($this->confidence_score >= 90) return 'Very High';
+                if ($this->confidence_score >= 70) return 'High';
+                if ($this->confidence_score >= 50) return 'Medium';
+                if ($this->confidence_score >= 30) return 'Low';
+                return 'Very Low';
+            }
+        );
+    }
+
+    /**
+     * Get account confidence label
+     */
+    public function accountConfidenceLabel(): Attribute
+    {
+        return Attribute::make(
+            get: function() {
+                if (!$this->account_confidence_score) return 'N/A';
+                if ($this->account_confidence_score >= 90) return 'Very High';
+                if ($this->account_confidence_score >= 70) return 'High';
+                if ($this->account_confidence_score >= 50) return 'Medium';
+                if ($this->account_confidence_score >= 30) return 'Low';
+                return 'Very Low';
+            }
+        );
+    }
+
+    /**
+     * Get category path (Type > Category > SubCategory)
+     */
+    public function categoryPath(): Attribute
+    {
+        return Attribute::make(
+            get: function() {
+                if (!$this->relationLoaded('type') || !$this->relationLoaded('category') || !$this->relationLoaded('subCategory')) {
+                    $this->loadMissing(['type', 'category', 'subCategory']);
+                }
+
+                return sprintf(
+                    '%s > %s > %s',
+                    $this->type?->name ?? 'N/A',
+                    $this->category?->name ?? 'N/A',
+                    $this->subCategory?->name ?? 'N/A'
+                );
+            }
+        );
+    }
+
+    /**
+     * Get categorization status
+     */
+    public function categorizationStatus(): Attribute
+    {
+        return Attribute::make(
+            get: function() {
+                if ($this->is_manual_category) return 'Manual';
+                if ($this->sub_category_id) return 'Auto';
+                return 'Uncategorized';
+            }
+        );
+    }
+
+    /**
+     * Get account assignment status
+     */
+    public function accountStatus(): Attribute
+    {
+        return Attribute::make(
+            get: function() {
+                if ($this->is_manual_account) return 'Manual';
+                if ($this->account_id) return 'Auto';
+                return 'Unassigned';
+            }
+        );
+    }
+
+    /**
+     * Check if needs review (low confidence + not verified)
+     */
+    public function needsReview(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => !$this->is_verified && $this->confidence_score < 70
+        );
+    }
+
+    /**
+     * Get transaction direction icon/label
+     */
+    public function directionLabel(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->transaction_type === 'credit' ? 'In' : 'Out'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Helper Methods
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Mark as verified
+     */
+    public function markAsVerified(?int $userId = null): bool
+    {
+        return $this->update([
+            'is_verified' => true,
+            'verified_by' => $userId ?? auth()->id(),
+            'verified_at' => now(),
+        ]);
+    }
+
+    /**
+     * Assign account manually
+     */
+    public function assignAccount(int $accountId, ?string $reason = null): bool
+    {
+        return $this->update([
+            'account_id' => $accountId,
+            'is_manual_account' => true,
+            'account_confidence_score' => 100,
+            'matching_reason' => $reason,
+        ]);
+    }
+
+    /**
+     * Assign category manually
+     */
+    public function assignCategory(int $subCategoryId, ?string $reason = null): bool
+    {
+        $subCategory = SubCategory::with(['category.type'])->find($subCategoryId);
+        
+        if (!$subCategory) {
+            return false;
+        }
+
+        return $this->update([
+            'sub_category_id' => $subCategory->id,
+            'category_id' => $subCategory->category_id,
+            'type_id' => $subCategory->category->type_id,
+            'is_manual_category' => true,
+            'confidence_score' => 100,
+            'matching_reason' => $reason,
+        ]);
+    }
+
+    /**
+     * Clear categorization
+     */
+    public function clearCategory(): bool
+    {
+        return $this->update([
+            'matched_keyword_id' => null,
+            'sub_category_id' => null,
+            'category_id' => null,
+            'type_id' => null,
+            'confidence_score' => 0,
+            'is_manual_category' => false,
+            'matching_reason' => null,
+        ]);
+    }
+
+    /**
+     * Clear account assignment
+     */
+    public function clearAccount(): bool
+    {
+        return $this->update([
+            'account_id' => null,
+            'matched_account_keyword_id' => null,
+            'account_confidence_score' => null,
+            'is_manual_account' => false,
+        ]);
+    }
+
+    /**
+     * Get full transaction details
+     */
+    public function getDetails(): array
+    {
+        return [
+            'id' => $this->id,
+            'date' => $this->transaction_date->format('Y-m-d'),
+            'time' => $this->transaction_time,
+            'description' => $this->description,
+            'type' => $this->transaction_type,
+            'amount' => $this->amount,
+            'formatted_amount' => $this->formatted_amount,
+            'balance' => $this->balance,
+            'reference_no' => $this->reference_no,
+            'account' => $this->account?->name,
+            'account_status' => $this->account_status,
+            'account_confidence' => $this->account_confidence_label,
+            'category_path' => $this->category_path,
+            'categorization_status' => $this->categorization_status,
+            'confidence_score' => $this->confidence_score,
+            'confidence_label' => $this->confidence_label,
+            'is_verified' => $this->is_verified,
+            'needs_review' => $this->needs_review,
+            'is_transfer' => $this->is_transfer,
+            'is_recurring' => $this->is_recurring,
+            'notes' => $this->notes,
+        ];
     }
 }

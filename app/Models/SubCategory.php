@@ -33,12 +33,15 @@ class SubCategory extends Model
         return $this->belongsTo(Category::class);
     }
 
-    /**
-     * Get all keywords for this sub category
-     */
-    public function keywords(): HasMany
+        public function keywords(): HasMany
     {
-        return $this->hasMany(Keyword::class)->orderBy('priority', 'desc');
+        return $this->hasMany(Keyword::class);
+    }
+
+    // Tambahkan relasi ke transaction_categories
+    public function transactionCategories(): HasMany
+    {
+        return $this->hasMany(TransactionCategory::class);
     }
 
     /**

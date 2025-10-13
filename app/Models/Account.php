@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Account extends Model
 {
@@ -27,6 +27,12 @@ class Account extends Model
         'is_active' => 'boolean',
     ];
 
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
     /**
      * Get all keywords for this account
      */
@@ -40,72 +46,130 @@ class Account extends Model
      */
     public function activeKeywords(): HasMany
     {
-        return $this->keywords()->where('is_active', true);
+        return $this->hasMany(AccountKeyword::class)
+                    ->where('is_active', true)
+                    ->orderBy('priority', 'desc');
     }
 
     /**
-     * Get all transactions for this account
-     * Note: Assuming you have a transactions table with account_id
+     * Get all transactions assigned to this account
      */
     public function transactions(): HasMany
     {
-        return $this->hasMany(StatementTransaction::class, 'account_id');
+        return $this->hasMany(StatementTransaction::class);
     }
 
     /**
-     * Scope: Only active accounts
+     * Get all matching logs for this account
      */
-    public function scopeActive(Builder $query): Builder
+    public function matchingLogs(): HasMany
+    {
+        return $this->hasMany(AccountMatchingLog::class);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Query Scopes
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Scope for active accounts
+     */
+    public function scopeActive($query)
     {
         return $query->where('is_active', true);
     }
 
     /**
-     * Scope: Only inactive accounts
+     * Scope for inactive accounts
      */
-    public function scopeInactive(Builder $query): Builder
+    public function scopeInactive($query)
     {
         return $query->where('is_active', false);
     }
 
     /**
-     * Scope: Order by priority (highest first)
+     * Scope by account type
      */
-    public function scopeByPriority(Builder $query): Builder
-    {
-        return $query->orderBy('priority', 'desc')
-                     ->orderBy('name', 'asc');
-    }
-
-    /**
-     * Scope: Filter by account type
-     */
-    public function scopeOfType(Builder $query, string $type): Builder
+    public function scopeOfType($query, $type)
     {
         return $query->where('account_type', $type);
     }
 
     /**
-     * Check if account has keywords
+     * Scope by priority order
      */
-    public function hasKeywords(): bool
+    public function scopeByPriority($query)
     {
-        return $this->keywords()->exists();
+        return $query->orderBy('priority', 'desc')->orderBy('name');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Accessors & Mutators
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Get formatted account type
+     */
+    public function formattedAccountType(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => ucwords(str_replace('_', ' ', $this->account_type ?? 'N/A'))
+        );
     }
 
     /**
-     * Check if account has active keywords
+     * Get total transactions count
      */
-    public function hasActiveKeywords(): bool
+    public function totalTransactions(): Attribute
     {
-        return $this->activeKeywords()->exists();
+        return Attribute::make(
+            get: fn() => $this->transactions()->count()
+        );
     }
 
     /**
-     * Get total match count from all keywords
+     * Get total amount for this account
      */
-    public function getTotalMatchCountAttribute(): int
+    public function totalAmount(): Attribute
     {
-        return $this->keywords()->sum('match_count') ?? 0;
+        return Attribute::make(
+            get: fn() => $this->transactions()->sum('amount')
+        );
+    }
+
+    /**
+     * Get formatted total amount
+     */
+    public function formattedTotalAmount(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => 'Rp ' . number_format($this->total_amount, 0, ',', '.')
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Helper Methods
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Get account display name with code
+     */
+    public function getDisplayName(): string
+    {
+        return $this->code ? "[$this->code] $this->name" : $this->name;
+    }
+
+    /**
+     * Toggle active status
+     */
+    public function toggleActive(): bool
+    {
+        return $this->update(['is_active' => !$this->is_active]);
     }
 }
