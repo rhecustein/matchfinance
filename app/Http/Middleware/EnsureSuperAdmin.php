@@ -6,26 +6,25 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class CheckRole
+class EnsureSuperAdmin
 {
     /**
      * Handle an incoming request.
-     * Check if user has specific role(s)
-     * 
-     * Usage: ->middleware('role:owner,admin')
+     * Only allow super_admin users (company_id = NULL)
      */
-    public function handle(Request $request, Closure $next, string ...$roles): Response
+    public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
 
+        // Check if user is authenticated
         if (!$user) {
             return redirect()->route('login')
                 ->with('error', 'Please login to continue.');
         }
 
-        // Check if user has any of the specified roles
-        if (!$user->hasAnyRole($roles)) {
-            abort(403, 'You do not have the required role to access this resource.');
+        // Check if user is super admin
+        if (!$user->isSuperAdmin()) {
+            abort(403, 'This action requires Super Admin privileges.');
         }
 
         return $next($request);

@@ -3,59 +3,55 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
-use App\Models\AccountKeyword;
-use App\Services\AccountMatchingService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class AccountController extends Controller
 {
-    protected AccountMatchingService $matchingService;
-
-    public function __construct(AccountMatchingService $matchingService)
-    {
-        $this->matchingService = $matchingService;
-    }
-
     /**
-     * Display listing of accounts
+     * Display a listing of accounts (Company Scoped)
      */
     public function index(Request $request)
     {
-        $query = Account::with(['keywords' => function ($q) {
-            $q->where('is_active', true);
-        }]);
+        $user = auth()->user();
+
+        $query = Account::where('company_id', $user->company_id)
+            ->withCount('transactions');
+
+        // Filter by account type
+        if ($request->filled('account_type')) {
+            $query->where('account_type', $request->account_type);
+        }
 
         // Filter by status
         if ($request->filled('status')) {
-            $query->where('is_active', $request->status === 'active');
-        }
-
-        // Filter by type
-        if ($request->filled('account_type')) {
-            $query->where('account_type', $request->account_type);
+            $isActive = $request->status === 'active';
+            $query->where('is_active', $isActive);
         }
 
         // Search
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('code', 'like', "%{$search}%")
-                  ->orWhere('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%")
+                  ->orWhere('account_number', 'like', "%{$search}%");
             });
         }
 
-        $accounts = $query->byPriority()->paginate(20)->withQueryString();
+        $accounts = $query->orderBy('code')->paginate(20);
 
-        // Get account types untuk filter
-        $accountTypes = Account::distinct()->pluck('account_type')->filter();
+        $stats = [
+            'total' => Account::where('company_id', $user->company_id)->count(),
+            'active' => Account::where('company_id', $user->company_id)->where('is_active', true)->count(),
+            'inactive' => Account::where('company_id', $user->company_id)->where('is_active', false)->count(),
+        ];
 
-        return view('accounts.index', compact('accounts', 'accountTypes'));
+        return view('accounts.index', compact('accounts', 'stats'));
     }
 
     /**
-     * Show create form
+     * Show the form for creating a new account
      */
     public function create()
     {
@@ -63,200 +59,148 @@ class AccountController extends Controller
     }
 
     /**
-     * Store new account
+     * Store a newly created account
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'code' => 'required|string|max:20',
             'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:50|unique:accounts,code',
+            'account_type' => 'required|in:asset,liability,equity,revenue,expense',
+            'account_number' => 'nullable|string|max:50',
             'description' => 'nullable|string',
-            'account_type' => 'nullable|string|max:50',
-            'color' => 'nullable|string|max:20',
-            'priority' => 'required|integer|min:1|max:10',
             'is_active' => 'boolean',
-            'keywords' => 'array',
-            'keywords.*.keyword' => 'required|string',
-            'keywords.*.match_type' => 'required|in:exact,contains,starts_with,ends_with,regex',
-            'keywords.*.is_regex' => 'boolean',
-            'keywords.*.case_sensitive' => 'boolean',
-            'keywords.*.priority' => 'required|integer|min:1|max:10',
-            'keywords.*.is_active' => 'boolean',
         ]);
 
-        DB::beginTransaction();
-        try {
-            // Create account
-            $account = Account::create([
-                'name' => $validated['name'],
-                'code' => $validated['code'] ?? null,
-                'description' => $validated['description'] ?? null,
-                'account_type' => $validated['account_type'] ?? null,
-                'color' => $validated['color'] ?? '#3B82F6',
-                'priority' => $validated['priority'],
-                'is_active' => $validated['is_active'] ?? true,
-            ]);
+        $account = Account::create([
+            'uuid' => Str::uuid(),
+            'company_id' => auth()->user()->company_id,
+            'code' => strtoupper($validated['code']),
+            'name' => $validated['name'],
+            'account_type' => $validated['account_type'],
+            'account_number' => $validated['account_number'] ?? null,
+            'description' => $validated['description'] ?? null,
+            'is_active' => $validated['is_active'] ?? true,
+        ]);
 
-            // Create keywords
-            if (!empty($validated['keywords'])) {
-                foreach ($validated['keywords'] as $keywordData) {
-                    $account->keywords()->create([
-                        'keyword' => $keywordData['keyword'],
-                        'match_type' => $keywordData['match_type'],
-                        'is_regex' => $keywordData['is_regex'] ?? false,
-                        'case_sensitive' => $keywordData['case_sensitive'] ?? false,
-                        'priority' => $keywordData['priority'],
-                        'is_active' => $keywordData['is_active'] ?? true,
-                    ]);
-                }
-            }
-
-            // Clear cache
-            $this->matchingService->clearKeywordsCache();
-
-            DB::commit();
-
-            return redirect()
-                ->route('accounts.show', $account)
-                ->with('success', 'Account created successfully!');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()
-                ->withInput()
-                ->with('error', 'Failed to create account: ' . $e->getMessage());
-        }
+        return redirect()->route('accounts.index')
+            ->with('success', "Account '{$account->name}' berhasil ditambahkan.");
     }
 
     /**
-     * Show account detail
+     * Display the specified account
      */
     public function show(Account $account)
     {
-        $account->load([
-            'keywords' => function ($q) {
-                $q->orderBy('priority', 'desc');
-            },
-            'transactions' => function ($q) {
-                $q->latest()->limit(10);
-            }
-        ]);
+        abort_unless($account->company_id === auth()->user()->company_id, 403);
 
-        // Get statistics
-        $statistics = $this->matchingService->getAccountStatistics($account->id);
+        $account->loadCount('transactions');
 
-        return view('accounts.show', compact('account', 'statistics'));
+        // Get recent transactions
+        $recentTransactions = $account->transactions()
+            ->with('bankStatement.bank')
+            ->latest('transaction_date')
+            ->limit(15)
+            ->get();
+
+        // Get keywords
+        $keywords = $account->keywords()
+            ->orderBy('priority', 'desc')
+            ->get();
+
+        return view('accounts.show', compact('account', 'recentTransactions', 'keywords'));
     }
 
     /**
-     * Show edit form
+     * Show the form for editing the specified account
      */
     public function edit(Account $account)
     {
-        $account->load('keywords');
+        abort_unless($account->company_id === auth()->user()->company_id, 403);
+
         return view('accounts.edit', compact('account'));
     }
 
     /**
-     * Update account
+     * Update the specified account
      */
     public function update(Request $request, Account $account)
     {
+        abort_unless($account->company_id === auth()->user()->company_id, 403);
+
         $validated = $request->validate([
+            'code' => 'required|string|max:20',
             'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:50|unique:accounts,code,' . $account->id,
+            'account_type' => 'required|in:asset,liability,equity,revenue,expense',
+            'account_number' => 'nullable|string|max:50',
             'description' => 'nullable|string',
-            'account_type' => 'nullable|string|max:50',
-            'color' => 'nullable|string|max:20',
-            'priority' => 'required|integer|min:1|max:10',
             'is_active' => 'boolean',
         ]);
 
-        try {
-            $account->update($validated);
+        $account->update([
+            'code' => strtoupper($validated['code']),
+            'name' => $validated['name'],
+            'account_type' => $validated['account_type'],
+            'account_number' => $validated['account_number'],
+            'description' => $validated['description'],
+            'is_active' => $validated['is_active'] ?? $account->is_active,
+        ]);
 
-            // Clear cache
-            $this->matchingService->clearKeywordsCache();
-
-            return redirect()
-                ->route('accounts.show', $account)
-                ->with('success', 'Account updated successfully!');
-        } catch (\Exception $e) {
-            return back()
-                ->withInput()
-                ->with('error', 'Failed to update account: ' . $e->getMessage());
-        }
+        return redirect()->route('accounts.show', $account)
+            ->with('success', 'Account berhasil diupdate.');
     }
 
     /**
-     * Delete account
+     * Remove the specified account
      */
     public function destroy(Account $account)
     {
-        try {
-            // Check if account has transactions
-            $transactionCount = $account->transactions()->count();
-            
-            if ($transactionCount > 0) {
-                return back()->with('error', "Cannot delete account with {$transactionCount} associated transactions.");
-            }
+        abort_unless($account->company_id === auth()->user()->company_id, 403);
 
-            $account->delete();
-
-            // Clear cache
-            $this->matchingService->clearKeywordsCache();
-
-            return redirect()
-                ->route('accounts.index')
-                ->with('success', 'Account deleted successfully!');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Failed to delete account: ' . $e->getMessage());
+        // Check if account has transactions
+        if ($account->transactions()->exists()) {
+            return back()->with('error', 'Tidak dapat menghapus account yang memiliki transactions.');
         }
+
+        $accountName = $account->name;
+        $account->delete();
+
+        return redirect()->route('accounts.index')
+            ->with('success', "Account '{$accountName}' berhasil dihapus.");
     }
 
     /**
-     * Toggle account status
+     * Toggle account active status
      */
-    public function toggleStatus(Account $account)
+    public function toggleActive(Account $account)
     {
-        try {
-            $account->update(['is_active' => !$account->is_active]);
+        abort_unless($account->company_id === auth()->user()->company_id, 403);
 
-            // Clear cache
-            $this->matchingService->clearKeywordsCache();
+        $account->update(['is_active' => !$account->is_active]);
 
-            $status = $account->is_active ? 'activated' : 'deactivated';
-            return back()->with('success', "Account {$status} successfully!");
-        } catch (\Exception $e) {
-            return back()->with('error', 'Failed to toggle status: ' . $e->getMessage());
-        }
+        $status = $account->is_active ? 'diaktifkan' : 'dinonaktifkan';
+
+        return back()->with('success', "Account '{$account->name}' berhasil {$status}.");
     }
 
     /**
-     * Rematch all transactions for this account
+     * API: Search accounts (for autocomplete)
      */
-    public function rematch(Account $account)
+    public function apiSearch(Request $request)
     {
-        try {
-            $transactionIds = $account->transactions()->pluck('id')->toArray();
-            
-            if (empty($transactionIds)) {
-                return back()->with('info', 'No transactions to rematch for this account.');
-            }
+        $search = $request->get('q', '');
+        
+        $accounts = Account::where('company_id', auth()->user()->company_id)
+            ->where('is_active', true)
+            ->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%")
+                  ->orWhere('account_number', 'like', "%{$search}%");
+            })
+            ->orderBy('code')
+            ->limit(20)
+            ->get(['id', 'uuid', 'code', 'name', 'account_type']);
 
-            $results = $this->matchingService->processBatchTransactions($transactionIds, true);
-
-            return back()->with('success', "Rematched {$results['matched']} transactions successfully!");
-        } catch (\Exception $e) {
-            return back()->with('error', 'Failed to rematch transactions: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Get account statistics
-     */
-    public function statistics(Account $account)
-    {
-        $statistics = $this->matchingService->getAccountStatistics($account->id);
-        return response()->json($statistics);
+        return response()->json($accounts);
     }
 }

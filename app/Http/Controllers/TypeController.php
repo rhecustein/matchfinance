@@ -4,18 +4,29 @@ namespace App\Http\Controllers;
 
 use App\Models\Type;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class TypeController extends Controller
 {
     /**
-     * Display a listing of the types
+     * Display a listing of types (Company Scoped)
      */
-    public function index()
+    public function index(Request $request)
     {
-        $types = Type::withCount('categories')
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->paginate(15);
+        $user = auth()->user();
+
+        $query = Type::where('company_id', $user->company_id)
+            ->withCount(['categories', 'transactions']);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $types = $query->orderBy('sort_order')->paginate(20);
 
         return view('types.index', compact('types'));
     }
@@ -33,68 +44,45 @@ class TypeController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:100|unique:types,name',
-            'description' => 'nullable|string|max:1000',
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'description' => 'nullable|string',
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
-        try {
-            Type::create($request->all());
+        $type = Type::create([
+            'uuid' => Str::uuid(),
+            'company_id' => auth()->user()->company_id,
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'sort_order' => $validated['sort_order'] ?? 0,
+        ]);
 
-            return redirect()
-                ->route('types.index')
-                ->with('success', 'Type created successfully.');
-
-        } catch (\Exception $e) {
-            return back()
-                ->with('error', 'Failed to create type: ' . $e->getMessage())
-                ->withInput();
-        }
+        return redirect()->route('types.index')
+            ->with('success', "Type '{$type->name}' berhasil ditambahkan.");
     }
 
     /**
-     * Display the specified type with detailed statistics
-     * 
-     * PERBAIKAN:
-     * - Menggunakan loadCount untuk efisiensi query
-     * - Menghitung verified transactions dengan conditional count
-     * - Load categories dengan relasi yang dibutuhkan
+     * Display the specified type
      */
     public function show(Type $type)
     {
-        // Eager load counts untuk menghindari N+1 query
-        $type->loadCount([
-            'categories',
-            'transactions',
-            'transactions as verified_transactions_count' => function ($query) {
-                $query->where('is_verified', true);
-            }
-        ]);
+        abort_unless($type->company_id === auth()->user()->company_id, 403);
 
-        // Load categories dengan subcategories count untuk display
-        $type->load(['categories' => function($query) {
-            $query->withCount('subCategories')
-                  ->orderBy('sort_order')
-                  ->orderBy('name');
+        $type->load(['categories' => function($q) {
+            $q->withCount(['subCategories', 'transactions']);
         }]);
 
-        // Prepare statistics dari loaded counts
-        // Ini lebih efisien karena tidak melakukan query lagi
-        $stats = [
-            'total_categories' => $type->categories_count,
-            'total_transactions' => $type->transactions_count,
-            'verified_transactions' => $type->verified_transactions_count,
-        ];
-
-        return view('types.show', compact('type', 'stats'));
+        return view('types.show', compact('type'));
     }
 
     /**
-     * Show the form for editing the type
+     * Show the form for editing the specified type
      */
     public function edit(Type $type)
     {
+        abort_unless($type->company_id === auth()->user()->company_id, 403);
+
         return view('types.edit', compact('type'));
     }
 
@@ -103,24 +91,18 @@ class TypeController extends Controller
      */
     public function update(Request $request, Type $type)
     {
-        $request->validate([
-            'name' => 'required|string|max:100|unique:types,name,' . $type->id,
-            'description' => 'nullable|string|max:1000',
+        abort_unless($type->company_id === auth()->user()->company_id, 403);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'description' => 'nullable|string',
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
-        try {
-            $type->update($request->all());
+        $type->update($validated);
 
-            return redirect()
-                ->route('types.index')
-                ->with('success', 'Type updated successfully.');
-
-        } catch (\Exception $e) {
-            return back()
-                ->with('error', 'Failed to update type: ' . $e->getMessage())
-                ->withInput();
-        }
+        return redirect()->route('types.show', $type)
+            ->with('success', 'Type berhasil diupdate.');
     }
 
     /**
@@ -128,50 +110,37 @@ class TypeController extends Controller
      */
     public function destroy(Type $type)
     {
-        try {
-            // Check if type has categories
-            if ($type->categories()->exists()) {
-                return back()->with('error', 'Cannot delete type with existing categories.');
-            }
+        abort_unless($type->company_id === auth()->user()->company_id, 403);
 
-            $type->delete();
-
-            return redirect()
-                ->route('types.index')
-                ->with('success', 'Type deleted successfully.');
-
-        } catch (\Exception $e) {
-            return back()->with('error', 'Failed to delete type: ' . $e->getMessage());
+        // Check if type has categories
+        if ($type->categories()->exists()) {
+            return back()->with('error', 'Tidak dapat menghapus type yang memiliki categories.');
         }
+
+        $typeName = $type->name;
+        $type->delete();
+
+        return redirect()->route('types.index')
+            ->with('success', "Type '{$typeName}' berhasil dihapus.");
     }
 
     /**
-     * Reorder types via drag and drop
+     * Reorder types (AJAX)
      */
     public function reorder(Request $request)
     {
-        $request->validate([
-            'types' => 'required|array',
-            'types.*.id' => 'required|exists:types,id',
-            'types.*.sort_order' => 'required|integer|min:0',
+        $validated = $request->validate([
+            'orders' => 'required|array',
+            'orders.*.id' => 'required|exists:types,id',
+            'orders.*.sort_order' => 'required|integer|min:0',
         ]);
 
-        try {
-            foreach ($request->types as $typeData) {
-                Type::where('id', $typeData['id'])
-                    ->update(['sort_order' => $typeData['sort_order']]);
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Types reordered successfully.'
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to reorder types: ' . $e->getMessage()
-            ], 500);
+        foreach ($validated['orders'] as $order) {
+            Type::where('id', $order['id'])
+                ->where('company_id', auth()->user()->company_id)
+                ->update(['sort_order' => $order['sort_order']]);
         }
+
+        return response()->json(['message' => 'Order berhasil diupdate.']);
     }
 }

@@ -5,19 +5,45 @@ namespace App\Http\Controllers;
 use App\Models\Bank;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class BankController extends Controller
 {
     /**
-     * Display a listing of the banks
+     * Display a listing of banks (Company Scoped)
      */
-    public function index()
+    public function index(Request $request)
     {
-        $banks = Bank::withCount('bankStatements')
-            ->orderBy('name')
-            ->paginate(15);
+        $user = auth()->user();
+        
+        // Build query with company scope
+        $query = Bank::where('company_id', $user->company_id)
+            ->withCount('bankStatements');
 
-        return view('banks.index', compact('banks'));
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%");
+            });
+        }
+
+        // Status filter
+        if ($request->filled('status')) {
+            $isActive = $request->status === 'active';
+            $query->where('is_active', $isActive);
+        }
+
+        $banks = $query->orderBy('name')->paginate(20);
+
+        $stats = [
+            'total' => Bank::where('company_id', $user->company_id)->count(),
+            'active' => Bank::where('company_id', $user->company_id)->where('is_active', true)->count(),
+            'inactive' => Bank::where('company_id', $user->company_id)->where('is_active', false)->count(),
+        ];
+
+        return view('banks.index', compact('banks', 'stats'));
     }
 
     /**
@@ -33,33 +59,31 @@ class BankController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'code' => 'required|string|max:10|unique:banks,code',
             'name' => 'required|string|max:100',
+            'slug' => 'nullable|string|max:100|unique:banks,slug',
             'logo' => 'nullable|image|mimes:png,jpg,jpeg,svg|max:2048',
             'is_active' => 'boolean',
         ]);
 
-        try {
-            $data = $request->only(['code', 'name', 'is_active']);
-            
-            // Handle logo upload
-            if ($request->hasFile('logo')) {
-                $logoPath = $request->file('logo')->store('banks/logos', 'public');
-                $data['logo'] = $logoPath;
-            }
+        $bank = Bank::create([
+            'uuid' => Str::uuid(),
+            'company_id' => auth()->user()->company_id,
+            'code' => strtoupper($validated['code']),
+            'slug' => $validated['slug'] ?? Str::slug($validated['name']),
+            'name' => $validated['name'],
+            'is_active' => $validated['is_active'] ?? true,
+        ]);
 
-            Bank::create($data);
-
-            return redirect()
-                ->route('banks.index')
-                ->with('success', 'Bank created successfully.');
-
-        } catch (\Exception $e) {
-            return back()
-                ->with('error', 'Failed to create bank: ' . $e->getMessage())
-                ->withInput();
+        // Handle logo upload
+        if ($request->hasFile('logo')) {
+            $path = $request->file('logo')->store('public/logos/banks');
+            $bank->update(['logo' => str_replace('public/', 'storage/', $path)]);
         }
+
+        return redirect()->route('banks.index')
+            ->with('success', "Bank '{$bank->name}' berhasil ditambahkan.");
     }
 
     /**
@@ -67,26 +91,28 @@ class BankController extends Controller
      */
     public function show(Bank $bank)
     {
-        $bank->load(['bankStatements' => function($query) {
-            $query->latest('uploaded_at')->limit(10);
-        }]);
+        // Ensure same company
+        abort_unless($bank->company_id === auth()->user()->company_id, 403);
 
-        $stats = [
-            'total_statements' => $bank->bankStatements()->count(),
-            'pending' => $bank->bankStatements()->status('pending')->count(),
-            'processing' => $bank->bankStatements()->status('processing')->count(),
-            'completed' => $bank->bankStatements()->status('completed')->count(),
-            'failed' => $bank->bankStatements()->status('failed')->count(),
-        ];
+        $bank->loadCount(['bankStatements', 'transactions']);
 
-        return view('banks.show', compact('bank', 'stats'));
+        // Recent statements
+        $recentStatements = $bank->bankStatements()
+            ->with('user')
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        return view('banks.show', compact('bank', 'recentStatements'));
     }
 
     /**
-     * Show the form for editing the bank
+     * Show the form for editing the specified bank
      */
     public function edit(Bank $bank)
     {
+        abort_unless($bank->company_id === auth()->user()->company_id, 403);
+
         return view('banks.edit', compact('bank'));
     }
 
@@ -95,38 +121,36 @@ class BankController extends Controller
      */
     public function update(Request $request, Bank $bank)
     {
-        $request->validate([
+        abort_unless($bank->company_id === auth()->user()->company_id, 403);
+
+        $validated = $request->validate([
             'code' => 'required|string|max:10|unique:banks,code,' . $bank->id,
             'name' => 'required|string|max:100',
+            'slug' => 'nullable|string|max:100|unique:banks,slug,' . $bank->id,
             'logo' => 'nullable|image|mimes:png,jpg,jpeg,svg|max:2048',
             'is_active' => 'boolean',
         ]);
 
-        try {
-            $data = $request->only(['code', 'name', 'is_active']);
-            
-            // Handle logo upload
-            if ($request->hasFile('logo')) {
-                // Delete old logo
-                if ($bank->logo) {
-                    Storage::disk('public')->delete($bank->logo);
-                }
-                
-                $logoPath = $request->file('logo')->store('banks/logos', 'public');
-                $data['logo'] = $logoPath;
+        $bank->update([
+            'code' => strtoupper($validated['code']),
+            'slug' => $validated['slug'] ?? $bank->slug,
+            'name' => $validated['name'],
+            'is_active' => $validated['is_active'] ?? $bank->is_active,
+        ]);
+
+        // Handle logo upload
+        if ($request->hasFile('logo')) {
+            // Delete old logo
+            if ($bank->logo) {
+                Storage::delete(str_replace('storage/', 'public/', $bank->logo));
             }
 
-            $bank->update($data);
-
-            return redirect()
-                ->route('banks.index')
-                ->with('success', 'Bank updated successfully.');
-
-        } catch (\Exception $e) {
-            return back()
-                ->with('error', 'Failed to update bank: ' . $e->getMessage())
-                ->withInput();
+            $path = $request->file('logo')->store('public/logos/banks');
+            $bank->update(['logo' => str_replace('public/', 'storage/', $path)]);
         }
+
+        return redirect()->route('banks.show', $bank)
+            ->with('success', 'Bank berhasil diupdate.');
     }
 
     /**
@@ -134,26 +158,18 @@ class BankController extends Controller
      */
     public function destroy(Bank $bank)
     {
-        try {
-            // Check if bank has statements
-            if ($bank->bankStatements()->exists()) {
-                return back()->with('error', 'Cannot delete bank with existing statements.');
-            }
+        abort_unless($bank->company_id === auth()->user()->company_id, 403);
 
-            // Delete logo if exists
-            if ($bank->logo) {
-                Storage::disk('public')->delete($bank->logo);
-            }
-
-            $bank->delete();
-
-            return redirect()
-                ->route('banks.index')
-                ->with('success', 'Bank deleted successfully.');
-
-        } catch (\Exception $e) {
-            return back()->with('error', 'Failed to delete bank: ' . $e->getMessage());
+        // Check if bank has statements
+        if ($bank->bankStatements()->exists()) {
+            return back()->with('error', 'Tidak dapat menghapus bank yang memiliki bank statements.');
         }
+
+        $bankName = $bank->name;
+        $bank->delete();
+
+        return redirect()->route('banks.index')
+            ->with('success', "Bank '{$bankName}' berhasil dihapus.");
     }
 
     /**
@@ -161,15 +177,12 @@ class BankController extends Controller
      */
     public function toggleActive(Bank $bank)
     {
-        try {
-            $bank->update(['is_active' => !$bank->is_active]);
+        abort_unless($bank->company_id === auth()->user()->company_id, 403);
 
-            $status = $bank->is_active ? 'activated' : 'deactivated';
+        $bank->update(['is_active' => !$bank->is_active]);
 
-            return back()->with('success', "Bank {$status} successfully.");
+        $status = $bank->is_active ? 'diaktifkan' : 'dinonaktifkan';
 
-        } catch (\Exception $e) {
-            return back()->with('error', 'Failed to toggle bank status: ' . $e->getMessage());
-        }
+        return back()->with('success', "Bank '{$bank->name}' berhasil {$status}.");
     }
 }

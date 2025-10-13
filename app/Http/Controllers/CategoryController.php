@@ -5,27 +5,41 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Type;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
     /**
-     * Display a listing of the categories
+     * Display a listing of categories (Company Scoped)
      */
     public function index(Request $request)
     {
-        $query = Category::with('type')
-            ->withCount('subCategories');
+        $user = auth()->user();
+
+        $query = Category::where('company_id', $user->company_id)
+            ->with('type')
+            ->withCount(['subCategories', 'transactions']);
 
         // Filter by type
         if ($request->filled('type_id')) {
             $query->where('type_id', $request->type_id);
         }
 
-        $categories = $query->orderBy('sort_order')
-            ->orderBy('name')
-            ->paginate(15);
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
 
-        $types = Type::orderBy('name')->get();
+        $categories = $query->orderBy('sort_order')->paginate(20);
+
+        // Get types for filter
+        $types = Type::where('company_id', $user->company_id)
+            ->orderBy('sort_order')
+            ->get(['id', 'name']);
 
         return view('categories.index', compact('categories', 'types'));
     }
@@ -33,14 +47,13 @@ class CategoryController extends Controller
     /**
      * Show the form for creating a new category
      */
-    public function create(Request $request)
+    public function create()
     {
-        $types = Type::orderBy('name')->get();
-        
-        // Pre-select type if coming from type detail page
-        $selectedTypeId = $request->get('type_id');
-        
-        return view('categories.create', compact('types', 'selectedTypeId'));
+        $types = Type::where('company_id', auth()->user()->company_id)
+            ->orderBy('sort_order')
+            ->get(['id', 'name']);
+
+        return view('categories.create', compact('types'));
     }
 
     /**
@@ -48,85 +61,60 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'type_id' => 'required|exists:types,id',
             'name' => 'required|string|max:100',
-            'description' => 'nullable|string|max:1000',
-            'color' => 'nullable|string|regex:/^#[0-9A-F]{6}$/i',
+            'slug' => 'nullable|string|max:100',
+            'description' => 'nullable|string',
+            'color' => 'nullable|string|max:7',
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
-        try {
-            $data = $request->all();
-            
-            // Set default color if not provided
-            if (!isset($data['color'])) {
-                $data['color'] = '#3B82F6'; // Default blue
-            }
+        // Verify type belongs to user's company
+        $type = Type::where('id', $validated['type_id'])
+            ->where('company_id', auth()->user()->company_id)
+            ->firstOrFail();
 
-            Category::create($data);
+        $category = Category::create([
+            'uuid' => Str::uuid(),
+            'company_id' => auth()->user()->company_id,
+            'type_id' => $type->id,
+            'name' => $validated['name'],
+            'slug' => $validated['slug'] ?? Str::slug($validated['name']),
+            'description' => $validated['description'] ?? null,
+            'color' => $validated['color'] ?? '#3B82F6',
+            'sort_order' => $validated['sort_order'] ?? 0,
+        ]);
 
-            return redirect()
-                ->route('categories.index')
-                ->with('success', 'Category created successfully.');
-
-        } catch (\Exception $e) {
-            return back()
-                ->with('error', 'Failed to create category: ' . $e->getMessage())
-                ->withInput();
-        }
+        return redirect()->route('categories.index')
+            ->with('success', "Category '{$category->name}' berhasil ditambahkan.");
     }
 
     /**
-     * Display the specified category with detailed statistics
-     * 
-     * OPTIMIZED:
-     * - Using loadCount for efficient queries
-     * - Loading relationships properly
-     * - Avoiding N+1 query problems
+     * Display the specified category
      */
     public function show(Category $category)
     {
-        // Eager load relationships and counts efficiently
-        $category->load('type');
-        
-        $category->loadCount([
-            'subCategories',
-            'transactions',
-            'transactions as verified_transactions_count' => function ($query) {
-                $query->where('is_verified', true);
-            }
-        ]);
+        abort_unless($category->company_id === auth()->user()->company_id, 403);
 
-        // Load subcategories with their keywords count
-        $category->load(['subCategories' => function($query) {
-            $query->withCount('keywords')
-                  ->orderBy('priority', 'desc')
-                  ->orderBy('sort_order')
-                  ->orderBy('name');
+        $category->load(['type', 'subCategories' => function($q) {
+            $q->withCount(['keywords', 'transactions'])->orderBy('sort_order');
         }]);
 
-        // Calculate total keywords from all subcategories
-        $totalKeywords = $category->subCategories->sum('keywords_count');
-
-        // Prepare statistics using loaded counts
-        $stats = [
-            'total_subcategories' => $category->sub_categories_count,
-            'total_keywords' => $totalKeywords,
-            'total_transactions' => $category->transactions_count,
-            'verified_transactions' => $category->verified_transactions_count,
-        ];
-
-        return view('categories.show', compact('category', 'stats'));
+        return view('categories.show', compact('category'));
     }
 
     /**
-     * Show the form for editing the category
+     * Show the form for editing the specified category
      */
     public function edit(Category $category)
     {
-        $types = Type::orderBy('name')->get();
-        
+        abort_unless($category->company_id === auth()->user()->company_id, 403);
+
+        $types = Type::where('company_id', auth()->user()->company_id)
+            ->orderBy('sort_order')
+            ->get(['id', 'name']);
+
         return view('categories.edit', compact('category', 'types'));
     }
 
@@ -135,26 +123,33 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category)
     {
-        $request->validate([
+        abort_unless($category->company_id === auth()->user()->company_id, 403);
+
+        $validated = $request->validate([
             'type_id' => 'required|exists:types,id',
             'name' => 'required|string|max:100',
-            'description' => 'nullable|string|max:1000',
-            'color' => 'nullable|string|regex:/^#[0-9A-F]{6}$/i',
+            'slug' => 'nullable|string|max:100',
+            'description' => 'nullable|string',
+            'color' => 'nullable|string|max:7',
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
-        try {
-            $category->update($request->all());
+        // Verify type belongs to user's company
+        $type = Type::where('id', $validated['type_id'])
+            ->where('company_id', auth()->user()->company_id)
+            ->firstOrFail();
 
-            return redirect()
-                ->route('categories.index')
-                ->with('success', 'Category updated successfully.');
+        $category->update([
+            'type_id' => $type->id,
+            'name' => $validated['name'],
+            'slug' => $validated['slug'] ?? $category->slug,
+            'description' => $validated['description'],
+            'color' => $validated['color'],
+            'sort_order' => $validated['sort_order'],
+        ]);
 
-        } catch (\Exception $e) {
-            return back()
-                ->with('error', 'Failed to update category: ' . $e->getMessage())
-                ->withInput();
-        }
+        return redirect()->route('categories.show', $category)
+            ->with('success', 'Category berhasil diupdate.');
     }
 
     /**
@@ -162,75 +157,328 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
-        try {
-            // Check if category has sub categories
-            if ($category->subCategories()->exists()) {
-                return back()->with('error', 'Cannot delete category with existing sub categories.');
-            }
+        abort_unless($category->company_id === auth()->user()->company_id, 403);
 
-            $category->delete();
-
-            return redirect()
-                ->route('categories.index')
-                ->with('success', 'Category deleted successfully.');
-
-        } catch (\Exception $e) {
-            return back()->with('error', 'Failed to delete category: ' . $e->getMessage());
+        // Check if category has sub categories
+        if ($category->subCategories()->exists()) {
+            return back()->with('error', 'Tidak dapat menghapus category yang memiliki sub categories.');
         }
+
+        $categoryName = $category->name;
+        $category->delete();
+
+        return redirect()->route('categories.index')
+            ->with('success', "Category '{$categoryName}' berhasil dihapus.");
     }
 
     /**
      * Get categories by type (AJAX)
-     * Used for dynamic dropdowns in forms
      */
-    public function getByType($typeId)
+    public function getByType(Request $request, $typeId)
     {
-        try {
-            $categories = Category::where('type_id', $typeId)
-                ->orderBy('sort_order')
-                ->orderBy('name')
-                ->get(['id', 'name', 'color']);
+        $categories = Category::where('company_id', auth()->user()->company_id)
+            ->where('type_id', $typeId)
+            ->orderBy('sort_order')
+            ->get(['id', 'name', 'color']);
 
-            return response()->json([
-                'success' => true,
-                'data' => $categories
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
-        }
+        return response()->json($categories);
     }
 
     /**
-     * Reorder categories via drag and drop
+     * Reorder categories (AJAX)
      */
     public function reorder(Request $request)
     {
-        $request->validate([
-            'categories' => 'required|array',
-            'categories.*.id' => 'required|exists:categories,id',
-            'categories.*.sort_order' => 'required|integer|min:0',
+        $validated = $request->validate([
+            'orders' => 'required|array',
+            'orders.*.id' => 'required|exists:categories,id',
+            'orders.*.sort_order' => 'required|integer|min:0',
         ]);
 
-        try {
-            foreach ($request->categories as $categoryData) {
-                Category::where('id', $categoryData['id'])
-                    ->update(['sort_order' => $categoryData['sort_order']]);
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Categories reordered successfully.'
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to reorder categories: ' . $e->getMessage()
-            ], 500);
+        foreach ($validated['orders'] as $order) {
+            Category::where('id', $order['id'])
+                ->where('company_id', auth()->user()->company_id)
+                ->update(['sort_order' => $order['sort_order']]);
         }
+
+        return response()->json(['message' => 'Order berhasil diupdate.']);
+    }
+
+    /**
+     * API: Get categories by type (for dynamic dropdowns)
+     */
+    public function apiGetByType(Request $request, $typeId)
+    {
+        $categories = Category::where('company_id', auth()->user()->company_id)
+            ->where('type_id', $typeId)
+            ->orderBy('name')
+            ->get(['id', 'uuid', 'name', 'color']);
+
+        return response()->json($categories);
+    }
+}
+
+
+// ============================================================================
+// FILE: app/Http/Controllers/SubCategoryController.php
+// ============================================================================
+
+namespace App\Http\Controllers;
+
+use App\Models\SubCategory;
+use App\Models\Category;
+use App\Models\Type;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+
+class SubCategoryController extends Controller
+{
+    /**
+     * Display a listing of sub categories (Company Scoped)
+     */
+    public function index(Request $request)
+    {
+        $user = auth()->user();
+
+        $query = SubCategory::where('company_id', $user->company_id)
+            ->with('category.type')
+            ->withCount(['keywords', 'transactions']);
+
+        // Filter by category
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        // Filter by type
+        if ($request->filled('type_id')) {
+            $query->whereHas('category', function($q) use ($request) {
+                $q->where('type_id', $request->type_id);
+            });
+        }
+
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $subCategories = $query->orderBy('priority', 'desc')
+            ->orderBy('sort_order')
+            ->paginate(20);
+
+        // Get types and categories for filters
+        $types = Type::where('company_id', $user->company_id)
+            ->orderBy('sort_order')
+            ->get(['id', 'name']);
+
+        $categories = Category::where('company_id', $user->company_id)
+            ->with('type')
+            ->orderBy('sort_order')
+            ->get(['id', 'name', 'type_id']);
+
+        return view('sub-categories.index', compact('subCategories', 'types', 'categories'));
+    }
+
+    /**
+     * Show the form for creating a new sub category
+     */
+    public function create()
+    {
+        $types = Type::where('company_id', auth()->user()->company_id)
+            ->with(['categories' => fn($q) => $q->orderBy('sort_order')])
+            ->orderBy('sort_order')
+            ->get(['id', 'name']);
+
+        return view('sub-categories.create', compact('types'));
+    }
+
+    /**
+     * Store a newly created sub category
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'category_id' => 'required|exists:categories,id',
+            'name' => 'required|string|max:100',
+            'description' => 'nullable|string',
+            'priority' => 'required|integer|min:1|max:10',
+            'sort_order' => 'nullable|integer|min:0',
+        ]);
+
+        // Verify category belongs to user's company
+        $category = Category::where('id', $validated['category_id'])
+            ->where('company_id', auth()->user()->company_id)
+            ->firstOrFail();
+
+        $subCategory = SubCategory::create([
+            'uuid' => Str::uuid(),
+            'company_id' => auth()->user()->company_id,
+            'category_id' => $category->id,
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'priority' => $validated['priority'],
+            'sort_order' => $validated['sort_order'] ?? 0,
+        ]);
+
+        return redirect()->route('sub-categories.index')
+            ->with('success', "Sub Category '{$subCategory->name}' berhasil ditambahkan.");
+    }
+
+    /**
+     * Display the specified sub category
+     */
+    public function show(SubCategory $subCategory)
+    {
+        abort_unless($subCategory->company_id === auth()->user()->company_id, 403);
+
+        $subCategory->load([
+            'category.type',
+            'keywords' => fn($q) => $q->orderBy('priority', 'desc'),
+        ]);
+
+        // Get recent transactions
+        $recentTransactions = $subCategory->transactions()
+            ->with('bankStatement.bank')
+            ->latest('transaction_date')
+            ->limit(10)
+            ->get();
+
+        return view('sub-categories.show', compact('subCategory', 'recentTransactions'));
+    }
+
+    /**
+     * Show the form for editing the specified sub category
+     */
+    public function edit(SubCategory $subCategory)
+    {
+        abort_unless($subCategory->company_id === auth()->user()->company_id, 403);
+
+        $types = Type::where('company_id', auth()->user()->company_id)
+            ->with(['categories' => fn($q) => $q->orderBy('sort_order')])
+            ->orderBy('sort_order')
+            ->get(['id', 'name']);
+
+        return view('sub-categories.edit', compact('subCategory', 'types'));
+    }
+
+    /**
+     * Update the specified sub category
+     */
+    public function update(Request $request, SubCategory $subCategory)
+    {
+        abort_unless($subCategory->company_id === auth()->user()->company_id, 403);
+
+        $validated = $request->validate([
+            'category_id' => 'required|exists:categories,id',
+            'name' => 'required|string|max:100',
+            'description' => 'nullable|string',
+            'priority' => 'required|integer|min:1|max:10',
+            'sort_order' => 'nullable|integer|min:0',
+        ]);
+
+        // Verify category belongs to user's company
+        $category = Category::where('id', $validated['category_id'])
+            ->where('company_id', auth()->user()->company_id)
+            ->firstOrFail();
+
+        $subCategory->update([
+            'category_id' => $category->id,
+            'name' => $validated['name'],
+            'description' => $validated['description'],
+            'priority' => $validated['priority'],
+            'sort_order' => $validated['sort_order'],
+        ]);
+
+        return redirect()->route('sub-categories.show', $subCategory)
+            ->with('success', 'Sub Category berhasil diupdate.');
+    }
+
+    /**
+     * Remove the specified sub category
+     */
+    public function destroy(SubCategory $subCategory)
+    {
+        abort_unless($subCategory->company_id === auth()->user()->company_id, 403);
+
+        // Check if sub category has keywords
+        if ($subCategory->keywords()->exists()) {
+            return back()->with('error', 'Tidak dapat menghapus sub category yang memiliki keywords. Hapus keywords terlebih dahulu.');
+        }
+
+        $subCategoryName = $subCategory->name;
+        $subCategory->delete();
+
+        return redirect()->route('sub-categories.index')
+            ->with('success', "Sub Category '{$subCategoryName}' berhasil dihapus.");
+    }
+
+    /**
+     * Get sub categories by category (AJAX)
+     */
+    public function getByCategory(Request $request, $categoryId)
+    {
+        $subCategories = SubCategory::where('company_id', auth()->user()->company_id)
+            ->where('category_id', $categoryId)
+            ->orderBy('priority', 'desc')
+            ->orderBy('sort_order')
+            ->get(['id', 'name', 'priority']);
+
+        return response()->json($subCategories);
+    }
+
+    /**
+     * Reorder sub categories (AJAX)
+     */
+    public function reorder(Request $request)
+    {
+        $validated = $request->validate([
+            'orders' => 'required|array',
+            'orders.*.id' => 'required|exists:sub_categories,id',
+            'orders.*.sort_order' => 'required|integer|min:0',
+        ]);
+
+        foreach ($validated['orders'] as $order) {
+            SubCategory::where('id', $order['id'])
+                ->where('company_id', auth()->user()->company_id)
+                ->update(['sort_order' => $order['sort_order']]);
+        }
+
+        return response()->json(['message' => 'Order berhasil diupdate.']);
+    }
+
+    /**
+     * Bulk update priority (AJAX)
+     */
+    public function bulkUpdatePriority(Request $request)
+    {
+        $validated = $request->validate([
+            'priorities' => 'required|array',
+            'priorities.*.id' => 'required|exists:sub_categories,id',
+            'priorities.*.priority' => 'required|integer|min:1|max:10',
+        ]);
+
+        foreach ($validated['priorities'] as $item) {
+            SubCategory::where('id', $item['id'])
+                ->where('company_id', auth()->user()->company_id)
+                ->update(['priority' => $item['priority']]);
+        }
+
+        return response()->json(['message' => 'Priorities berhasil diupdate.']);
+    }
+
+    /**
+     * API: Get sub categories by category (for dynamic dropdowns)
+     */
+    public function apiGetByCategory(Request $request, $categoryId)
+    {
+        $subCategories = SubCategory::where('company_id', auth()->user()->company_id)
+            ->where('category_id', $categoryId)
+            ->orderBy('name')
+            ->get(['id', 'uuid', 'name', 'priority']);
+
+        return response()->json($subCategories);
     }
 }

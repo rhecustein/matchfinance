@@ -15,16 +15,23 @@ use Illuminate\Support\Str;
 class BankStatementController extends Controller
 {
     /**
-     * Display a listing of bank statements
+     * Display a listing of bank statements (COMPANY SCOPED)
      */
     public function index(Request $request)
     {
-        $query = BankStatement::with(['bank:id,name,code', 'user:id,name'])
+        $user = auth()->user();
+
+        // COMPANY SCOPED QUERY
+        $query = BankStatement::where('company_id', $user->company_id)
+            ->with(['bank:id,name,code', 'user:id,name'])
             ->latest('uploaded_at');
 
-        // Filter by bank
+        // Filter by bank (ensure bank belongs to company)
         if ($request->filled('bank_id')) {
-            $query->where('bank_id', $request->bank_id);
+            $query->where('bank_id', $request->bank_id)
+                  ->whereHas('bank', function($q) use ($user) {
+                      $q->where('company_id', $user->company_id);
+                  });
         }
 
         // Filter by OCR status
@@ -58,35 +65,49 @@ class BankStatementController extends Controller
 
         $statements = $query->paginate(20)->withQueryString();
 
-        // Get banks for filter
-        $banks = Bank::active()->orderBy('name')->get(['id', 'name', 'code']);
+        // Get banks for filter (COMPANY SCOPED)
+        $banks = Bank::where('company_id', $user->company_id)
+            ->active()
+            ->orderBy('name')
+            ->get(['id', 'name', 'code']);
 
         return view('bank-statements.index', compact('statements', 'banks'));
     }
 
     /**
-     * Show the form for creating a new bank statement (upload form)
+     * Show the form for creating a new bank statement (COMPANY SCOPED)
      */
     public function create()
     {
-        $banks = Bank::active()->orderBy('name')->get(['id', 'name', 'code']);
+        $user = auth()->user();
+
+        // COMPANY SCOPED BANKS
+        $banks = Bank::where('company_id', $user->company_id)
+            ->active()
+            ->orderBy('name')
+            ->get(['id', 'name', 'code']);
         
         return view('bank-statements.create', compact('banks'));
     }
 
     /**
-     * Store a newly created bank statement (from web form)
+     * Store a newly created bank statement (COMPANY SCOPED)
      * Updated: Replace duplicate files instead of skipping
      */
     public function store(Request $request)
     {
+        $user = auth()->user();
+
         $validated = $request->validate([
             'bank_id' => 'required|exists:banks,id',
             'files' => 'required|array|min:1|max:10',
             'files.*' => 'required|file|mimes:pdf|max:10240', // 10MB max
         ]);
 
-        $bank = Bank::findOrFail($request->bank_id);
+        // VERIFY BANK BELONGS TO USER'S COMPANY
+        $bank = Bank::where('id', $request->bank_id)
+            ->where('company_id', $user->company_id)
+            ->firstOrFail();
         
         $uploadedCount = 0;
         $replacedCount = 0;
@@ -102,8 +123,9 @@ class BankStatementController extends Controller
                     // Calculate file hash for duplicate detection
                     $fileHash = hash_file('sha256', $file->getRealPath());
 
-                    // Check for existing file (including soft deleted)
+                    // Check for existing file (COMPANY SCOPED - including soft deleted)
                     $existingStatement = BankStatement::withTrashed()
+                        ->where('company_id', $user->company_id)
                         ->where('file_hash', $fileHash)
                         ->where('bank_id', $bank->id)
                         ->first();
@@ -113,7 +135,7 @@ class BankStatementController extends Controller
 
                     // Store file - use private disk for security
                     $path = $file->storeAs(
-                        "bank-statements/{$bank->slug}/" . date('Y/m'),
+                        "companies/{$user->company_id}/bank-statements/{$bank->slug}/" . date('Y/m'),
                         $filename,
                         'local'
                     );
@@ -130,7 +152,8 @@ class BankStatementController extends Controller
 
                         Log::info('Bank statement REPLACED', [
                             'id' => $existingStatement->id,
-                            'user_id' => Auth::id(),
+                            'company_id' => $user->company_id,
+                            'user_id' => $user->id,
                             'filename' => $originalName,
                             'bank' => $bank->name,
                         ]);
@@ -141,7 +164,8 @@ class BankStatementController extends Controller
 
                         Log::info('Bank statement UPLOADED', [
                             'id' => $bankStatement->id,
-                            'user_id' => Auth::id(),
+                            'company_id' => $user->company_id,
+                            'user_id' => $user->id,
                             'filename' => $originalName,
                             'bank' => $bank->name,
                         ]);
@@ -149,6 +173,7 @@ class BankStatementController extends Controller
 
                 } catch (\Exception $e) {
                     Log::error('Failed to upload individual file', [
+                        'company_id' => $user->company_id,
                         'filename' => $originalName,
                         'error' => $e->getMessage(),
                     ]);
@@ -172,6 +197,7 @@ class BankStatementController extends Controller
             DB::rollBack();
             
             Log::error('Bank statement upload failed', [
+                'company_id' => $user->company_id,
                 'error' => $e->getMessage(),
             ]);
             
@@ -182,10 +208,13 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Display the specified bank statement
+     * Display the specified bank statement (COMPANY SCOPED)
      */
     public function show(BankStatement $bankStatement)
     {
+        // COMPANY OWNERSHIP CHECK
+        abort_unless($bankStatement->company_id === auth()->user()->company_id, 403);
+
         $bankStatement->load([
             'bank:id,name,code,logo',
             'user:id,name,email',
@@ -218,25 +247,41 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Show the form for editing the specified bank statement
+     * Show the form for editing the specified bank statement (COMPANY SCOPED)
      */
     public function edit(BankStatement $bankStatement)
     {
-        $banks = Bank::active()->orderBy('name')->get(['id', 'name', 'code']);
+        // COMPANY OWNERSHIP CHECK
+        abort_unless($bankStatement->company_id === auth()->user()->company_id, 403);
+
+        $user = auth()->user();
+
+        $banks = Bank::where('company_id', $user->company_id)
+            ->active()
+            ->orderBy('name')
+            ->get(['id', 'name', 'code']);
         
         return view('bank-statements.edit', compact('bankStatement', 'banks'));
     }
 
     /**
-     * Update the specified bank statement
+     * Update the specified bank statement (COMPANY SCOPED)
      */
     public function update(Request $request, BankStatement $bankStatement)
     {
+        // COMPANY OWNERSHIP CHECK
+        abort_unless($bankStatement->company_id === auth()->user()->company_id, 403);
+
         $validated = $request->validate([
             'bank_id' => 'required|exists:banks,id',
             'notes' => 'nullable|string|max:1000',
             'account_holder_name' => 'nullable|string|max:255',
         ]);
+
+        // VERIFY NEW BANK BELONGS TO USER'S COMPANY
+        $bank = Bank::where('id', $validated['bank_id'])
+            ->where('company_id', auth()->user()->company_id)
+            ->firstOrFail();
 
         $bankStatement->update($validated);
 
@@ -245,17 +290,21 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Remove the specified bank statement
+     * Remove the specified bank statement (COMPANY SCOPED)
      */
     public function destroy(BankStatement $bankStatement)
     {
+        // COMPANY OWNERSHIP CHECK
+        abort_unless($bankStatement->company_id === auth()->user()->company_id, 403);
+
         try {
             // Soft delete akan otomatis cascade ke transactions (karena SoftDeletes)
             $bankStatement->delete();
 
             Log::info('Bank statement deleted', [
                 'id' => $bankStatement->id,
-                'user_id' => Auth::id(),
+                'company_id' => auth()->user()->company_id,
+                'user_id' => auth()->id(),
             ]);
 
             return redirect()->route('bank-statements.index')
@@ -264,6 +313,7 @@ class BankStatementController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to delete bank statement', [
                 'id' => $bankStatement->id,
+                'company_id' => auth()->user()->company_id,
                 'error' => $e->getMessage()
             ]);
 
@@ -272,12 +322,17 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Permanently delete bank statement and its file
+     * Permanently delete bank statement and its file (COMPANY SCOPED)
      */
     public function forceDelete($id)
     {
+        $user = auth()->user();
+
         try {
-            $bankStatement = BankStatement::withTrashed()->findOrFail($id);
+            // COMPANY SCOPED
+            $bankStatement = BankStatement::withTrashed()
+                ->where('company_id', $user->company_id)
+                ->findOrFail($id);
 
             // Delete file from storage
             if ($bankStatement->file_path && Storage::disk('local')->exists($bankStatement->file_path)) {
@@ -289,7 +344,8 @@ class BankStatementController extends Controller
 
             Log::info('Bank statement permanently deleted', [
                 'id' => $bankStatement->id,
-                'user_id' => Auth::id(),
+                'company_id' => $user->company_id,
+                'user_id' => $user->id,
             ]);
 
             return redirect()->route('bank-statements.index')
@@ -298,6 +354,7 @@ class BankStatementController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to force delete bank statement', [
                 'id' => $id,
+                'company_id' => $user->company_id,
                 'error' => $e->getMessage()
             ]);
 
@@ -306,17 +363,24 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Restore soft deleted bank statement
+     * Restore soft deleted bank statement (COMPANY SCOPED)
      */
     public function restore($id)
     {
+        $user = auth()->user();
+
         try {
-            $bankStatement = BankStatement::withTrashed()->findOrFail($id);
+            // COMPANY SCOPED
+            $bankStatement = BankStatement::withTrashed()
+                ->where('company_id', $user->company_id)
+                ->findOrFail($id);
+
             $bankStatement->restore();
 
             Log::info('Bank statement restored', [
                 'id' => $bankStatement->id,
-                'user_id' => Auth::id(),
+                'company_id' => $user->company_id,
+                'user_id' => $user->id,
             ]);
 
             return redirect()->route('bank-statements.show', $bankStatement)
@@ -325,6 +389,7 @@ class BankStatementController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to restore bank statement', [
                 'id' => $id,
+                'company_id' => $user->company_id,
                 'error' => $e->getMessage()
             ]);
 
@@ -333,10 +398,13 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Download bank statement PDF
+     * Download bank statement PDF (COMPANY SCOPED)
      */
     public function download(BankStatement $bankStatement)
     {
+        // COMPANY OWNERSHIP CHECK
+        abort_unless($bankStatement->company_id === auth()->user()->company_id, 403);
+
         if (!Storage::disk('local')->exists($bankStatement->file_path)) {
             abort(404, 'File not found.');
         }
@@ -348,10 +416,13 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Reprocess OCR for a statement
+     * Reprocess OCR for a statement (COMPANY SCOPED)
      */
     public function reprocess(BankStatement $bankStatement)
     {
+        // COMPANY OWNERSHIP CHECK
+        abort_unless($bankStatement->company_id === auth()->user()->company_id, 403);
+
         // Reset OCR status
         $bankStatement->update([
             'ocr_status' => 'pending',
@@ -379,17 +450,21 @@ class BankStatementController extends Controller
 
         Log::info('OCR reprocessing queued', [
             'statement_id' => $bankStatement->id,
-            'user_id' => Auth::id(),
+            'company_id' => auth()->user()->company_id,
+            'user_id' => auth()->id(),
         ]);
 
         return back()->with('success', 'OCR processing has been queued again.');
     }
 
     /**
-     * Match transactions for a statement
+     * Match transactions for a statement (COMPANY SCOPED)
      */
     public function matchTransactions(BankStatement $bankStatement)
     {
+        // COMPANY OWNERSHIP CHECK
+        abort_unless($bankStatement->company_id === auth()->user()->company_id, 403);
+
         \App\Jobs\ProcessTransactionMatching::dispatch($bankStatement)
             ->onQueue('matching');
 
@@ -397,10 +472,13 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Rematch all transactions (reset and match again)
+     * Rematch all transactions (COMPANY SCOPED)
      */
     public function rematchAll(BankStatement $bankStatement)
     {
+        // COMPANY OWNERSHIP CHECK
+        abort_unless($bankStatement->company_id === auth()->user()->company_id, 403);
+
         // Reset category matching data
         $bankStatement->transactions()->update([
             'matched_keyword_id' => null,
@@ -428,17 +506,21 @@ class BankStatementController extends Controller
 
         Log::info('All transactions rematching queued', [
             'statement_id' => $bankStatement->id,
-            'user_id' => Auth::id(),
+            'company_id' => auth()->user()->company_id,
+            'user_id' => auth()->id(),
         ]);
 
         return back()->with('success', 'All transactions will be re-matched.');
     }
 
     /**
-     * Match accounts for all transactions
+     * Match accounts for all transactions (COMPANY SCOPED)
      */
     public function matchAccounts(BankStatement $bankStatement)
     {
+        // COMPANY OWNERSHIP CHECK
+        abort_unless($bankStatement->company_id === auth()->user()->company_id, 403);
+
         \App\Jobs\ProcessAccountMatching::dispatch($bankStatement)
             ->onQueue('matching');
 
@@ -446,16 +528,19 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Verify all matched transactions
+     * Verify all matched transactions (COMPANY SCOPED)
      */
     public function verifyAllMatched(BankStatement $bankStatement)
     {
+        // COMPANY OWNERSHIP CHECK
+        abort_unless($bankStatement->company_id === auth()->user()->company_id, 403);
+
         $updated = $bankStatement->transactions()
             ->categorized()
             ->unverified()
             ->update([
                 'is_verified' => true,
-                'verified_by' => Auth::id(),
+                'verified_by' => auth()->id(),
                 'verified_at' => now(),
             ]);
 
@@ -464,18 +549,22 @@ class BankStatementController extends Controller
 
         Log::info('Bulk verification performed', [
             'statement_id' => $bankStatement->id,
+            'company_id' => auth()->user()->company_id,
             'count' => $updated,
-            'user_id' => Auth::id(),
+            'user_id' => auth()->id(),
         ]);
 
         return back()->with('success', "{$updated} transaction(s) verified.");
     }
 
     /**
-     * Verify high confidence transactions only
+     * Verify high confidence transactions only (COMPANY SCOPED)
      */
     public function verifyHighConfidence(BankStatement $bankStatement, Request $request)
     {
+        // COMPANY OWNERSHIP CHECK
+        abort_unless($bankStatement->company_id === auth()->user()->company_id, 403);
+
         $threshold = $request->input('threshold', 80);
 
         $updated = $bankStatement->transactions()
@@ -483,7 +572,7 @@ class BankStatementController extends Controller
             ->unverified()
             ->update([
                 'is_verified' => true,
-                'verified_by' => Auth::id(),
+                'verified_by' => auth()->id(),
                 'verified_at' => now(),
             ]);
 
@@ -494,10 +583,13 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Reconcile bank statement
+     * Reconcile bank statement (COMPANY SCOPED)
      */
     public function reconcile(BankStatement $bankStatement)
     {
+        // COMPANY OWNERSHIP CHECK
+        abort_unless($bankStatement->company_id === auth()->user()->company_id, 403);
+
         if (!$bankStatement->is_fully_verified) {
             return back()->with('error', 'All transactions must be verified before reconciliation.');
         }
@@ -506,40 +598,47 @@ class BankStatementController extends Controller
 
         Log::info('Bank statement reconciled', [
             'statement_id' => $bankStatement->id,
-            'user_id' => Auth::id(),
+            'company_id' => auth()->user()->company_id,
+            'user_id' => auth()->id(),
         ]);
 
         return back()->with('success', 'Bank statement reconciled successfully.');
     }
 
     /**
-     * Unreconcile bank statement
+     * Unreconcile bank statement (COMPANY SCOPED)
      */
     public function unreconcile(BankStatement $bankStatement)
     {
+        // COMPANY OWNERSHIP CHECK
+        abort_unless($bankStatement->company_id === auth()->user()->company_id, 403);
+
         $bankStatement->unmarkReconciliation();
 
         Log::info('Bank statement unreconciled', [
             'statement_id' => $bankStatement->id,
-            'user_id' => Auth::id(),
+            'company_id' => auth()->user()->company_id,
+            'user_id' => auth()->id(),
         ]);
 
         return back()->with('success', 'Bank statement unreconciled.');
     }
 
     /**
-     * Get statistics
+     * Get statistics (COMPANY SCOPED)
      */
     public function statistics()
     {
+        $user = auth()->user();
+
         $stats = [
-            'total' => BankStatement::count(),
-            'pending' => BankStatement::pending()->count(),
-            'processing' => BankStatement::processing()->count(),
-            'completed' => BankStatement::completed()->count(),
-            'failed' => BankStatement::failed()->count(),
-            'reconciled' => BankStatement::reconciled()->count(),
-            'unreconciled' => BankStatement::unreconciled()->count(),
+            'total' => BankStatement::where('company_id', $user->company_id)->count(),
+            'pending' => BankStatement::where('company_id', $user->company_id)->pending()->count(),
+            'processing' => BankStatement::where('company_id', $user->company_id)->processing()->count(),
+            'completed' => BankStatement::where('company_id', $user->company_id)->completed()->count(),
+            'failed' => BankStatement::where('company_id', $user->company_id)->failed()->count(),
+            'reconciled' => BankStatement::where('company_id', $user->company_id)->reconciled()->count(),
+            'unreconciled' => BankStatement::where('company_id', $user->company_id)->unreconciled()->count(),
         ];
 
         return response()->json([
@@ -549,11 +648,11 @@ class BankStatementController extends Controller
     }
 
     // ========================================
-    // API Methods for Multi-Bank Upload
+    // API Methods for Multi-Bank Upload (COMPANY SCOPED)
     // ========================================
 
     /**
-     * Upload Bank Statement - Mandiri (API)
+     * Upload Bank Statement - Mandiri (API - COMPANY SCOPED)
      */
     public function uploadMandiri(Request $request)
     {
@@ -561,7 +660,7 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Upload Bank Statement - BCA (API)
+     * Upload Bank Statement - BCA (API - COMPANY SCOPED)
      */
     public function uploadBCA(Request $request)
     {
@@ -569,7 +668,7 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Upload Bank Statement - BNI (API)
+     * Upload Bank Statement - BNI (API - COMPANY SCOPED)
      */
     public function uploadBNI(Request $request)
     {
@@ -577,7 +676,7 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Upload Bank Statement - BRI (API)
+     * Upload Bank Statement - BRI (API - COMPANY SCOPED)
      */
     public function uploadBRI(Request $request)
     {
@@ -585,7 +684,7 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Upload Bank Statement - BTN (API)
+     * Upload Bank Statement - BTN (API - COMPANY SCOPED)
      */
     public function uploadBTN(Request $request)
     {
@@ -593,7 +692,7 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Upload Bank Statement - CIMB (API)
+     * Upload Bank Statement - CIMB (API - COMPANY SCOPED)
      */
     public function uploadCIMB(Request $request)
     {
@@ -601,17 +700,22 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Core upload method for all banks with multi-file support (API)
+     * Core upload method for all banks with multi-file support (API - COMPANY SCOPED)
      */
     private function uploadBankStatement(Request $request, string $bankSlug)
     {
+        $user = auth()->user();
+
         try {
             $validated = $request->validate([
                 'files' => 'required|array|min:1|max:10',
                 'files.*' => 'required|file|mimes:pdf|max:10240',
             ]);
 
-            $bank = Bank::where('slug', $bankSlug)->firstOrFail();
+            // VERIFY BANK BELONGS TO USER'S COMPANY
+            $bank = Bank::where('slug', $bankSlug)
+                ->where('company_id', $user->company_id)
+                ->firstOrFail();
 
             $uploadedStatements = [];
             $replacedStatements = [];
@@ -625,15 +729,18 @@ class BankStatementController extends Controller
                 try {
                     $fileHash = hash_file('sha256', $file->getRealPath());
 
+                    // COMPANY SCOPED DUPLICATE CHECK
                     $existingStatement = BankStatement::withTrashed()
+                        ->where('company_id', $user->company_id)
                         ->where('file_hash', $fileHash)
                         ->where('bank_id', $bank->id)
                         ->first();
 
                     $filename = $this->generateUniqueFilename($originalName);
 
+                    // COMPANY-SPECIFIC STORAGE PATH
                     $path = $file->storeAs(
-                        "bank-statements/{$bankSlug}/" . date('Y/m'),
+                        "companies/{$user->company_id}/bank-statements/{$bankSlug}/" . date('Y/m'),
                         $filename,
                         'local'
                     );
@@ -664,6 +771,7 @@ class BankStatementController extends Controller
 
                 } catch (\Exception $e) {
                     Log::error("Failed to upload file via API", [
+                        'company_id' => $user->company_id,
                         'filename' => $originalName,
                         'error' => $e->getMessage(),
                     ]);
@@ -714,10 +822,17 @@ class BankStatementController extends Controller
                 'errors' => $e->errors(),
             ], 422);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => "Bank '{$bankSlug}' not found or not available for your company.",
+            ], 404);
+
         } catch (\Exception $e) {
             DB::rollBack();
 
             Log::error("Bank statement upload failed via API", [
+                'company_id' => $user->company_id,
                 'bank' => $bankSlug,
                 'error' => $e->getMessage(),
             ]);
@@ -730,10 +845,13 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Get upload status for a bank statement (API)
+     * Get upload status for a bank statement (API - COMPANY SCOPED)
      */
     public function getStatus(BankStatement $bankStatement)
     {
+        // COMPANY OWNERSHIP CHECK
+        abort_unless($bankStatement->company_id === auth()->user()->company_id, 403);
+
         return response()->json([
             'success' => true,
             'data' => $bankStatement->getSummary(),
@@ -741,10 +859,13 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Retry failed OCR processing (API)
+     * Retry failed OCR processing (API - COMPANY SCOPED)
      */
     public function retryOCR(BankStatement $bankStatement)
     {
+        // COMPANY OWNERSHIP CHECK
+        abort_unless($bankStatement->company_id === auth()->user()->company_id, 403);
+
         if ($bankStatement->ocr_status !== 'failed') {
             return response()->json([
                 'success' => false,
@@ -819,7 +940,7 @@ class BankStatementController extends Controller
 
         // Update existing record - reset all data
         $existingStatement->update([
-            'user_id' => Auth::id(),
+            'user_id' => auth()->id(),
             'file_path' => $path,
             'file_hash' => $fileHash,
             'original_filename' => $originalName,
@@ -873,8 +994,9 @@ class BankStatementController extends Controller
         string $originalName
     ): BankStatement {
         $bankStatement = BankStatement::create([
+            'company_id' => auth()->user()->company_id, // AUTO ASSIGN COMPANY_ID
             'bank_id' => $bank->id,
-            'user_id' => Auth::id(),
+            'user_id' => auth()->id(),
             'file_path' => $path,
             'file_hash' => $fileHash,
             'original_filename' => $originalName,
