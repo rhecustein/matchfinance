@@ -40,15 +40,9 @@ class BankStatementController extends Controller
                 ->latest('uploaded_at');
         }
 
-        // Filter by bank (ensure bank belongs to company)
+        // Filter by bank (global banks - no company check needed)
         if ($request->filled('bank_id')) {
             $query->where('bank_id', $request->bank_id);
-            
-            if (!$user->isSuperAdmin()) {
-                $query->whereHas('bank', function($q) use ($user) {
-                    $q->where('company_id', $user->company_id);
-                });
-            }
         }
 
         // Filter by OCR status
@@ -82,31 +76,15 @@ class BankStatementController extends Controller
 
         $statements = $query->paginate(20)->withQueryString();
 
-        // Get banks for filter
-        if ($user->isSuperAdmin()) {
-            // Super admin: get banks based on company filter
-            if ($request->filled('company_id')) {
-                $banks = Bank::where('company_id', $request->company_id)
-                    ->active()
-                    ->orderBy('name')
-                    ->get(['id', 'name', 'code']);
-            } else {
-                $banks = Bank::active()
-                    ->orderBy('name')
-                    ->get(['id', 'name', 'code']);
-            }
-            
-            // Get companies for filter
-            $companies = Company::orderBy('name')->get(['id', 'name']);
-        } else {
-            // Regular users: COMPANY SCOPED
-            $banks = Bank::where('company_id', $user->company_id)
-                ->active()
-                ->orderBy('name')
-                ->get(['id', 'name', 'code']);
-            
-            $companies = null;
-        }
+        // Get global banks for filter (no company restriction)
+        $banks = Bank::active()
+            ->orderBy('name')
+            ->get(['id', 'name', 'code']);
+        
+        // Get companies for filter (Super Admin only)
+        $companies = $user->isSuperAdmin() 
+            ? Company::orderBy('name')->get(['id', 'name'])
+            : null;
 
         return view('bank-statements.index', compact('statements', 'banks', 'companies'));
     }
@@ -121,11 +99,8 @@ class BankStatementController extends Controller
         // Only super admin can access
         abort_unless($user->isSuperAdmin(), 403);
         
-        // Get all companies with bank count
-        $companies = Company::withCount(['banks' => function($query) {
-                $query->where('is_active', true);
-            }])
-            ->where('status', 'active')
+        // Get all companies (banks are now global, so no need to check bank count per company)
+        $companies = Company::where('status', 'active')
             ->orderBy('name')
             ->get();
         
@@ -155,17 +130,15 @@ class BankStatementController extends Controller
             // Verify company exists
             $company = Company::findOrFail($companyId);
             
-            // Get banks for selected company (bypass global scope)
-            $banks = Bank::withoutGlobalScope('company')
-                ->where('company_id', $companyId)
-                ->active()
+            // Get global banks (shared across all companies)
+            $banks = Bank::active()
                 ->orderBy('name')
-                ->get(['id', 'name', 'code']);
+                ->get(['id', 'name', 'code', 'logo']);
             
-            // Check if company has banks
+            // Check if any banks exist in system
             if ($banks->isEmpty()) {
                 return redirect()->route('bank-statements.select-company')
-                    ->with('error', "Company '{$company->name}' has no active banks. Please add banks first.");
+                    ->with('error', 'No active banks available in the system. Please add banks first.');
             }
             
             return view('bank-statements.create', compact('banks', 'company'));
@@ -178,15 +151,15 @@ class BankStatementController extends Controller
                 ->with('error', 'You are not assigned to any company. Please contact administrator.');
         }
         
-        // Get banks for user's company (auto-scoped by trait)
+        // Get global banks (shared across all companies)
         $banks = Bank::active()
             ->orderBy('name')
-            ->get(['id', 'name', 'code']);
+            ->get(['id', 'name', 'code', 'logo']);
         
-        // If no banks available
+        // If no banks available in system
         if ($banks->isEmpty()) {
             return redirect()->route('bank-statements.index')
-                ->with('error', 'No banks available. Please add a bank first.');
+                ->with('error', 'No banks available in the system. Please contact administrator.');
         }
         
         return view('bank-statements.create', compact('banks'));
@@ -203,7 +176,7 @@ class BankStatementController extends Controller
 
         // Validation
         $rules = [
-            'bank_id' => 'required|exists:banks,id',
+            'bank_id' => 'required|exists:banks,id', // Bank is global, no company check
             'files' => 'required|array|min:1|max:10',
             'files.*' => 'required|file|mimes:pdf|max:10240', // 10MB max
         ];
@@ -227,11 +200,8 @@ class BankStatementController extends Controller
                 ->withInput();
         }
 
-        // VERIFY BANK BELONGS TO COMPANY
-        $bank = Bank::withoutGlobalScope('company')
-            ->where('id', $request->bank_id)
-            ->where('company_id', $companyId)
-            ->firstOrFail();
+        // Get bank (global - no company check needed)
+        $bank = Bank::findOrFail($request->bank_id);
         
         $uploadedCount = 0;
         $replacedCount = 0;
@@ -248,8 +218,7 @@ class BankStatementController extends Controller
                     $fileHash = hash_file('sha256', $file->getRealPath());
 
                     // Check for existing file (COMPANY SCOPED - including soft deleted)
-                    $existingStatement = BankStatement::withoutGlobalScope('company')
-                        ->withTrashed()
+                    $existingStatement = BankStatement::withTrashed()
                         ->where('company_id', $companyId)
                         ->where('file_hash', $fileHash)
                         ->where('bank_id', $bank->id)
@@ -332,6 +301,7 @@ class BankStatementController extends Controller
                 ->withInput();
         }
     }
+
     /**
      * Display the specified bank statement with complete filters
      * Supports: Super Admin & Regular Users with advanced filtering
@@ -506,10 +476,8 @@ class BankStatementController extends Controller
             403
         );
 
-        $user = auth()->user();
-
-        $banks = Bank::where('company_id', $bankStatement->company_id)
-            ->active()
+        // Get global banks (no company restriction)
+        $banks = Bank::active()
             ->orderBy('name')
             ->get(['id', 'name', 'code']);
         
@@ -528,16 +496,12 @@ class BankStatementController extends Controller
         );
 
         $validated = $request->validate([
-            'bank_id' => 'required|exists:banks,id',
+            'bank_id' => 'required|exists:banks,id', // Global bank, no company check
             'notes' => 'nullable|string|max:1000',
             'account_holder_name' => 'nullable|string|max:255',
         ]);
 
-        // VERIFY NEW BANK BELONGS TO STATEMENT'S COMPANY
-        $bank = Bank::where('id', $validated['bank_id'])
-            ->where('company_id', $bankStatement->company_id)
-            ->firstOrFail();
-
+        // Update bank statement
         $bankStatement->update($validated);
 
         return redirect()->route('bank-statements.show', $bankStatement)
@@ -1011,7 +975,7 @@ class BankStatementController extends Controller
      */
     public function uploadCIMB(Request $request)
     {
-        return $this->uploadBankStatement($request, 'cimb');
+        return $this->uploadBankStatement($request, 'cimb-niaga');
     }
 
     /**
@@ -1033,9 +997,9 @@ class BankStatementController extends Controller
                 ? $validated['company_id'] 
                 : $user->company_id;
 
-            // VERIFY BANK BELONGS TO COMPANY
+            // Get bank by slug (global bank - no company check)
             $bank = Bank::where('slug', $bankSlug)
-                ->where('company_id', $companyId)
+                ->where('is_active', true)
                 ->firstOrFail();
 
             $uploadedStatements = [];
@@ -1146,7 +1110,7 @@ class BankStatementController extends Controller
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'success' => false,
-                'message' => "Bank '{$bankSlug}' not found or not available for your company.",
+                'message' => "Bank '{$bankSlug}' not found or not active.",
             ], 404);
 
         } catch (\Exception $e) {

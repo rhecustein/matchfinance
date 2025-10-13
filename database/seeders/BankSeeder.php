@@ -12,24 +12,16 @@ class BankSeeder extends Seeder
     /**
      * Run the database seeds.
      * 
-     * Note: Seeder ini membutuhkan:
-     * - Companies table sudah terisi (CompanySeeder)
+     * Seeder untuk master data bank Indonesia
+     * Banks bersifat global/shared (tidak per company)
      */
     public function run(): void
     {
-        // Ambil companies
-        $companies = DB::table('companies')->get();
-        
-        if ($companies->isEmpty()) {
-            $this->command->warn('⚠️  No companies found! Please run CompanySeeder first.');
-            return;
-        }
-
         $banks = [];
         $now = Carbon::now();
 
         // ============================================
-        // MAJOR INDONESIAN BANKS ONLY
+        // MAJOR INDONESIAN BANKS
         // 6 bank utama yang paling umum digunakan
         // ============================================
         
@@ -67,47 +59,48 @@ class BankSeeder extends Seeder
             [
                 'code' => '022',
                 'name' => 'Bank CIMB Niaga',
-                'slug' => 'cimb',
+                'slug' => 'cimb-niaga',
                 'logo' => 'banks/cimb.png',
             ],
         ];
 
-        // Generate banks untuk setiap company
-        foreach ($companies as $company) {
-            foreach ($standardBanks as $bank) {
-                $banks[] = [
-                    'uuid' => Str::uuid(),
-                    'company_id' => $company->id,
-                    'code' => $bank['code'] . '-' . $company->id, // ✅ TAMBAH company_id
-                    'slug' => $bank['slug'] . '-c' . $company->id, // ✅ TAMBAH company_id
-                    'name' => $bank['name'],
-                    'logo' => $bank['logo'],
-                    'is_active' => true,
-                    'created_at' => $now->copy()->subDays(rand(30, 180)),
-                    'updated_at' => $now,
-                    'deleted_at' => null,
-                ];
-            }
+        // Buat data untuk setiap bank
+        foreach ($standardBanks as $bank) {
+            $banks[] = [
+                'uuid' => Str::uuid()->toString(),
+                'code' => $bank['code'],
+                'slug' => $bank['slug'],
+                'name' => $bank['name'],
+                'logo' => $bank['logo'],
+                'is_active' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
+                'deleted_at' => null,
+            ];
         }
 
+        // Insert ke database
         if (!empty($banks)) {
+            // Cek apakah sudah ada data
+            $existingCount = DB::table('banks')->count();
+            
+            if ($existingCount > 0) {
+                $this->command->warn('⚠️  Banks table already has data. Skipping seed.');
+                $this->command->info("   Existing banks: {$existingCount}");
+                return;
+            }
+
             DB::table('banks')->insert($banks);
             
             $this->command->info('✅ Banks seeded successfully!');
-            $this->command->info("   Total banks: " . count($banks));
-            $this->command->info("   Companies: " . $companies->count());
-            $this->command->info("   Banks per company: " . count($standardBanks));
+            $this->command->info("   Total banks created: " . count($banks));
             
             $this->command->newLine();
-            $this->command->info('🏦 Major Banks:');
-            $this->command->info('   1. Bank Mandiri (008)');
-            $this->command->info('   2. Bank BCA (014)');
-            $this->command->info('   3. Bank BRI (002)');
-            $this->command->info('   4. Bank BNI (009)');
-            $this->command->info('   5. Bank BTN (200)');
-            $this->command->info('   6. Bank CIMB Niaga (022)');
-        } else {
-            $this->command->warn('⚠️  No banks created. Check if companies exist.');
+            $this->command->info('🏦 Major Indonesian Banks:');
+            foreach ($standardBanks as $index => $bank) {
+                $num = $index + 1;
+                $this->command->info("   {$num}. {$bank['name']} ({$bank['code']})");
+            }
         }
     }
 }

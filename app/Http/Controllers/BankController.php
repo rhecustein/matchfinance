@@ -10,15 +10,22 @@ use Illuminate\Support\Str;
 class BankController extends Controller
 {
     /**
-     * Display a listing of banks (Company Scoped)
+     * Constructor - Only Super Admin can manage banks
+     */
+    public function __construct()
+    {
+        // Hanya Super Admin yang bisa akses management banks
+        // Karena banks adalah master data global
+        $this->middleware('super_admin');
+    }
+
+    /**
+     * Display a listing of banks (Global - No Company Scope)
      */
     public function index(Request $request)
     {
-        $user = auth()->user();
-        
-        // Build query with company scope
-        $query = Bank::where('company_id', $user->company_id)
-            ->withCount('bankStatements');
+        // Build query without company scope
+        $query = Bank::withCount('bankStatements');
 
         // Search filter
         if ($request->filled('search')) {
@@ -38,9 +45,9 @@ class BankController extends Controller
         $banks = $query->orderBy('name')->paginate(20);
 
         $stats = [
-            'total' => Bank::where('company_id', $user->company_id)->count(),
-            'active' => Bank::where('company_id', $user->company_id)->where('is_active', true)->count(),
-            'inactive' => Bank::where('company_id', $user->company_id)->where('is_active', false)->count(),
+            'total' => Bank::count(),
+            'active' => Bank::where('is_active', true)->count(),
+            'inactive' => Bank::where('is_active', false)->count(),
         ];
 
         return view('banks.index', compact('banks', 'stats'));
@@ -69,7 +76,6 @@ class BankController extends Controller
 
         $bank = Bank::create([
             'uuid' => Str::uuid(),
-            'company_id' => auth()->user()->company_id,
             'code' => strtoupper($validated['code']),
             'slug' => $validated['slug'] ?? Str::slug($validated['name']),
             'name' => $validated['name'],
@@ -91,19 +97,24 @@ class BankController extends Controller
      */
     public function show(Bank $bank)
     {
-        // Ensure same company
-        abort_unless($bank->company_id === auth()->user()->company_id, 403);
-
+        // Load relationships
         $bank->loadCount(['bankStatements', 'transactions']);
 
-        // Recent statements
+        // Recent statements across all companies
         $recentStatements = $bank->bankStatements()
-            ->with('user')
+            ->with(['user', 'company'])
             ->latest()
             ->limit(10)
             ->get();
 
-        return view('banks.show', compact('bank', 'recentStatements'));
+        // Statistics per company (if needed)
+        $companyStats = $bank->bankStatements()
+            ->selectRaw('company_id, COUNT(*) as statement_count')
+            ->groupBy('company_id')
+            ->with('company:id,name')
+            ->get();
+
+        return view('banks.show', compact('bank', 'recentStatements', 'companyStats'));
     }
 
     /**
@@ -111,8 +122,6 @@ class BankController extends Controller
      */
     public function edit(Bank $bank)
     {
-        abort_unless($bank->company_id === auth()->user()->company_id, 403);
-
         return view('banks.edit', compact('bank'));
     }
 
@@ -121,8 +130,6 @@ class BankController extends Controller
      */
     public function update(Request $request, Bank $bank)
     {
-        abort_unless($bank->company_id === auth()->user()->company_id, 403);
-
         $validated = $request->validate([
             'code' => 'required|string|max:10|unique:banks,code,' . $bank->id,
             'name' => 'required|string|max:100',
@@ -154,19 +161,19 @@ class BankController extends Controller
     }
 
     /**
-     * Remove the specified bank
+     * Remove the specified bank (Soft Delete)
      */
     public function destroy(Bank $bank)
     {
-        abort_unless($bank->company_id === auth()->user()->company_id, 403);
-
-        // Check if bank has statements
-        if ($bank->bankStatements()->exists()) {
-            return back()->with('error', 'Tidak dapat menghapus bank yang memiliki bank statements.');
+        // Check if bank has statements across all companies
+        $statementsCount = $bank->bankStatements()->count();
+        
+        if ($statementsCount > 0) {
+            return back()->with('error', "Tidak dapat menghapus bank yang memiliki {$statementsCount} bank statements. Nonaktifkan saja jika diperlukan.");
         }
 
         $bankName = $bank->name;
-        $bank->delete();
+        $bank->delete(); // Soft delete
 
         return redirect()->route('banks.index')
             ->with('success', "Bank '{$bankName}' berhasil dihapus.");
@@ -177,12 +184,65 @@ class BankController extends Controller
      */
     public function toggleActive(Bank $bank)
     {
-        abort_unless($bank->company_id === auth()->user()->company_id, 403);
-
         $bank->update(['is_active' => !$bank->is_active]);
 
         $status = $bank->is_active ? 'diaktifkan' : 'dinonaktifkan';
 
         return back()->with('success', "Bank '{$bank->name}' berhasil {$status}.");
+    }
+
+    /**
+     * Restore soft deleted bank
+     */
+    public function restore($id)
+    {
+        $bank = Bank::withTrashed()->findOrFail($id);
+        $bank->restore();
+
+        return back()->with('success', "Bank '{$bank->name}' berhasil direstore.");
+    }
+
+    /**
+     * View trashed banks
+     */
+    public function trashed(Request $request)
+    {
+        $query = Bank::onlyTrashed()->withCount('bankStatements');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%");
+            });
+        }
+
+        $banks = $query->orderBy('deleted_at', 'desc')->paginate(20);
+
+        return view('banks.trashed', compact('banks'));
+    }
+
+    /**
+     * Force delete permanently
+     */
+    public function forceDelete($id)
+    {
+        $bank = Bank::withTrashed()->findOrFail($id);
+        
+        // Check statements one more time
+        if ($bank->bankStatements()->count() > 0) {
+            return back()->with('error', 'Tidak dapat menghapus permanent bank yang memiliki statements.');
+        }
+
+        $bankName = $bank->name;
+        
+        // Delete logo if exists
+        if ($bank->logo) {
+            Storage::delete(str_replace('storage/', 'public/', $bank->logo));
+        }
+        
+        $bank->forceDelete();
+
+        return back()->with('success', "Bank '{$bankName}' berhasil dihapus permanent.");
     }
 }
