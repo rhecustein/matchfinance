@@ -28,7 +28,45 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // Get authenticated user
+        $user = Auth::user();
+
+        // Set current tenant if user has company
+        if ($user->company_id) {
+            setCurrentTenant($user->company_id);
+        }
+
+        // Redirect based on user role
+        return $this->redirectBasedOnRole($user);
+    }
+
+    /**
+     * Redirect user based on their role
+     */
+    protected function redirectBasedOnRole($user): RedirectResponse
+    {
+        // Super Admin - redirect to admin dashboard
+        if ($user->isSuperAdmin()) {
+            return redirect()->intended(route('admin.dashboard'));
+        }
+
+        // Company Owner - redirect to company dashboard
+        if ($user->isOwner()) {
+            return redirect()->intended(route('dashboard'));
+        }
+
+        // Admin - redirect to dashboard
+        if ($user->isAdmin()) {
+            return redirect()->intended(route('dashboard'));
+        }
+
+        // Manager - redirect to dashboard
+        if ($user->isManager()) {
+            return redirect()->intended(route('dashboard'));
+        }
+
+        // Staff or default - redirect to dashboard
+        return redirect()->intended(route('dashboard'));
     }
 
     /**
@@ -41,6 +79,9 @@ class AuthenticatedSessionController extends Controller
         $request->session()->invalidate();
 
         $request->session()->regenerateToken();
+
+        // Clear tenant data
+        clearCurrentTenant();
 
         return redirect('/');
     }
