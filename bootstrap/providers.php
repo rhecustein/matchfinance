@@ -3,5 +3,6 @@
 return [
     App\Providers\AppServiceProvider::class,
     App\Providers\BankParserServiceProvider::class,
+    App\Providers\TelescopeServiceProvider::class,
     App\Providers\TenantServiceProvider::class,
 ];

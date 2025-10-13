@@ -23,13 +23,6 @@ return new class extends Migration
             
             $table->index('type_id');
             $table->unique(['company_id', 'slug']);
-
-            Schema::create('category_product', function (Blueprint $table) {
-                $table->foreignId('product_id')->constrained()->onDelete('cascade');
-                $table->foreignId('category_id')->constrained()->onDelete('cascade');
-                
-                $table->primary(['product_id', 'category_id']);
-            });
         });
     }
 

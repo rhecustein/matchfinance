@@ -22,7 +22,11 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             SubCategorySeeder::class,
             KeywordSeeder::class,
-            UserSeeder::class
+            CompanySeeder::class,
+            UserSeeder::class,
+            PlanSeeder::class,
+            CompanyInvitationSeeder::class,
+            CompanySubscriptionSeeder::class,
         ]);
 
         $this->command->newLine();

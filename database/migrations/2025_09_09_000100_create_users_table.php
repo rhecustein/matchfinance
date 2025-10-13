@@ -14,7 +14,15 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->uuid('uuid')->unique()->index();
-            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            
+            // PERBAIKAN: company_id nullable untuk Super Admin
+            // Super Admin: company_id = NULL (akses ke semua companies)
+            // Regular Users: company_id = ID company tertentu
+            $table->foreignId('company_id')
+                ->nullable()
+                ->constrained()
+                ->onDelete('cascade')
+                ->comment('NULL for super admins, specific ID for company users');
             
             // Basic Info
             $table->string('name');
@@ -40,7 +48,10 @@ return new class extends Migration
             $table->string('locale', 10)->default('id');
             
             // Role & Permissions
-            $table->enum('role', ['owner', 'admin', 'manager', 'staff', 'user'])->default('user');
+            // PERBAIKAN: Tambahkan 'super_admin' ke enum role
+            $table->enum('role', ['super_admin', 'owner', 'admin', 'manager', 'staff', 'user'])
+                ->default('user')
+                ->comment('super_admin = system-wide access, others = company-specific');
             $table->json('permissions')->nullable()->comment('Custom permissions per user');
             
             // Account Status
@@ -81,6 +92,9 @@ return new class extends Migration
             $table->index(['email', 'company_id']);
             $table->index(['provider', 'provider_id']);
             $table->index('last_login_at');
+            $table->index('role'); // Index untuk filtering by role
+            
+            // Unique constraint untuk OAuth
             $table->unique(['provider', 'provider_id'], 'unique_provider_user');
         });
 
