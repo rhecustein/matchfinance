@@ -21,7 +21,7 @@
                     <!-- Bank Statements -->
                     <x-nav-link :href="route('bank-statements.index')" :active="request()->routeIs('bank-statements.*')">
                         <i class="fas fa-file-invoice mr-2"></i>
-                        {{ __('Bank Statements') }}
+                        {{ __('Statements') }}
                     </x-nav-link>
 
                     <!-- Transactions -->
@@ -30,12 +30,24 @@
                         {{ __('Transactions') }}
                     </x-nav-link>
 
+                    <!-- AI Chat -->
+                    <x-nav-link :href="route('chat-sessions.index')" :active="request()->routeIs('chat-sessions.*')">
+                        <i class="fas fa-comments mr-2"></i>
+                        {{ __('AI Chat') }}
+                    </x-nav-link>
+
+                    <!-- Document Collections -->
+                    <x-nav-link :href="route('document-collections.index')" :active="request()->routeIs('document-collections.*')">
+                        <i class="fas fa-folder-tree mr-2"></i>
+                        {{ __('Collections') }}
+                    </x-nav-link>
+
                     @if(auth()->user()->isAdmin())
                         <!-- Master Data Dropdown (Admin Only) -->
                         <div class="hidden sm:flex sm:items-center" x-data="{ masterOpen: false }" @click.away="masterOpen = false">
                             <button @click="masterOpen = !masterOpen" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out">
                                 <i class="fas fa-database mr-2"></i>
-                                {{ __('Master Data') }}
+                                {{ __('Master') }}
                                 <svg class="ml-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                                 </svg>
@@ -51,24 +63,32 @@
                                  class="absolute z-50 mt-2 w-56 rounded-md shadow-lg origin-top-right bg-white ring-1 ring-black ring-opacity-5"
                                  style="display: none; top: 4rem;">
                                 <div class="rounded-md bg-white shadow-xs">
+                                    <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase border-b">
+                                        Category Hierarchy
+                                    </div>
                                     <a href="{{ route('banks.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        <i class="fas fa-university mr-2"></i>{{ __('Banks') }}
+                                        <i class="fas fa-university mr-2 text-blue-600"></i>{{ __('Banks') }}
                                     </a>
                                     <a href="{{ route('types.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        <i class="fas fa-tag mr-2"></i>{{ __('Types') }}
+                                        <i class="fas fa-tag mr-2 text-purple-600"></i>{{ __('Types') }}
                                     </a>
                                     <a href="{{ route('categories.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        <i class="fas fa-folder mr-2"></i>{{ __('Categories') }}
+                                        <i class="fas fa-folder mr-2 text-yellow-600"></i>{{ __('Categories') }}
                                     </a>
                                     <a href="{{ route('sub-categories.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        <i class="fas fa-folder-open mr-2"></i>{{ __('Sub Categories') }}
+                                        <i class="fas fa-folder-open mr-2 text-orange-600"></i>{{ __('Sub Categories') }}
                                     </a>
                                     <a href="{{ route('keywords.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        <i class="fas fa-key mr-2"></i>{{ __('Keywords') }}
+                                        <i class="fas fa-key mr-2 text-green-600"></i>{{ __('Keywords') }}
                                     </a>
+                                    
                                     <div class="border-t border-gray-100"></div>
+                                    
+                                    <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">
+                                        Accounting
+                                    </div>
                                     <a href="{{ route('accounts.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        <i class="fas fa-wallet mr-2"></i>{{ __('Accounts') }}
+                                        <i class="fas fa-wallet mr-2 text-indigo-600"></i>{{ __('Accounts') }}
                                     </a>
                                 </div>
                             </div>
@@ -81,18 +101,70 @@
                         </x-nav-link>
 
                         <!-- Admin Menu -->
-                        <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.*')">
-                            <i class="fas fa-users-cog mr-2"></i>
-                            {{ __('Admin') }}
-                        </x-nav-link>
+                        <div class="hidden sm:flex sm:items-center" x-data="{ adminOpen: false }" @click.away="adminOpen = false">
+                            <button @click="adminOpen = !adminOpen" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out">
+                                <i class="fas fa-cog mr-2"></i>
+                                {{ __('Admin') }}
+                                <svg class="ml-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+
+                            <div x-show="adminOpen" 
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="transform opacity-0 scale-95"
+                                 x-transition:enter-end="transform opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-75"
+                                 x-transition:leave-start="transform opacity-100 scale-100"
+                                 x-transition:leave-end="transform opacity-0 scale-95"
+                                 class="absolute z-50 mt-2 w-56 rounded-md shadow-lg origin-top-right bg-white ring-1 ring-black ring-opacity-5"
+                                 style="display: none; top: 4rem;">
+                                <div class="rounded-md bg-white shadow-xs">
+                                    <a href="{{ route('users.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-users mr-2 text-blue-600"></i>{{ __('User Management') }}
+                                    </a>
+                                    <a href="{{ route('settings.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-sliders-h mr-2 text-gray-600"></i>{{ __('Settings') }}
+                                    </a>
+                                    
+                                    <div class="border-t border-gray-100"></div>
+                                    
+                                    <form method="POST" action="{{ route('dashboard.clear-cache') }}">
+                                        @csrf
+                                        <button type="submit" class="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                            <i class="fas fa-trash mr-2 text-red-600"></i>{{ __('Clear Cache') }}
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     @endif
                 </div>
             </div>
 
-            <!-- Settings Dropdown -->
+            <!-- Right Side: Notifications & User Menu -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
-                <!-- Notifications (Optional) -->
-                <div class="relative mr-3">
+                <!-- Quick Actions (Optional) -->
+                <div class="flex items-center space-x-2 mr-4">
+                    <!-- Upload Statement Button -->
+                    <a href="{{ route('bank-statements.create') }}" 
+                       class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none transition ease-in-out duration-150"
+                       title="Upload New Statement">
+                        <i class="fas fa-cloud-upload-alt mr-2"></i>
+                        <span class="hidden lg:inline">Upload</span>
+                    </a>
+                    
+                    <!-- New Chat Button -->
+                    <a href="{{ route('chat-sessions.create') }}" 
+                       class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none transition ease-in-out duration-150"
+                       title="Start New Chat">
+                        <i class="fas fa-comment-medical mr-2"></i>
+                        <span class="hidden lg:inline">New Chat</span>
+                    </a>
+                </div>
+
+                <!-- Notifications -->
+                <div class="relative mr-4">
                     <button class="relative text-gray-500 hover:text-gray-700 focus:outline-none">
                         <i class="fas fa-bell text-xl"></i>
                         @if(auth()->user()->unreadNotifications->count() > 0)
@@ -113,8 +185,12 @@
                                 </div>
                                 <div class="text-left">
                                     <div class="font-medium text-sm">{{ Auth::user()->name }}</div>
-                                    @if(auth()->user()->isAdmin())
+                                    @if(auth()->user()->isSuperAdmin())
+                                        <div class="text-xs text-red-600 font-semibold">Super Admin</div>
+                                    @elseif(auth()->user()->isAdmin())
                                         <div class="text-xs text-blue-600 font-semibold">Admin</div>
+                                    @else
+                                        <div class="text-xs text-gray-500">User</div>
                                     @endif
                                 </div>
                             </div>
@@ -128,17 +204,75 @@
                     </x-slot>
 
                     <x-slot name="content">
+                        <!-- Company Info (if needed) -->
+                        @if(auth()->user()->company)
+                            <div class="px-4 py-3 border-b border-gray-100">
+                                <div class="text-xs font-semibold text-gray-500 uppercase">Company</div>
+                                <div class="text-sm font-medium text-gray-800">{{ auth()->user()->company->name }}</div>
+                            </div>
+                        @endif
+
                         <!-- Profile -->
                         <x-dropdown-link :href="route('profile.edit')">
                             <i class="fas fa-user mr-2"></i>
                             {{ __('Profile') }}
                         </x-dropdown-link>
 
-                        <!-- Settings (if needed) -->
+                        <!-- My Chats -->
+                        <x-dropdown-link :href="route('chat-sessions.index')">
+                            <i class="fas fa-comments mr-2"></i>
+                            {{ __('My AI Chats') }}
+                        </x-dropdown-link>
+
+                        <!-- My Collections -->
+                        <x-dropdown-link :href="route('document-collections.index')">
+                            <i class="fas fa-folder-tree mr-2"></i>
+                            {{ __('My Collections') }}
+                        </x-dropdown-link>
+
+                        <!-- Super Admin Section -->
+                        @if(auth()->user()->isSuperAdmin())
+                            <div class="border-t border-gray-100"></div>
+                            <div class="px-4 py-2 text-xs font-semibold text-red-600 uppercase">
+                                Super Admin
+                            </div>
+                            
+                            <x-dropdown-link :href="route('admin.dashboard')">
+                                <i class="fas fa-tachometer-alt mr-2"></i>
+                                {{ __('Admin Dashboard') }}
+                            </x-dropdown-link>
+
+                            <x-dropdown-link :href="route('admin.companies.index')">
+                                <i class="fas fa-building mr-2"></i>
+                                {{ __('Companies') }}
+                            </x-dropdown-link>
+
+                            <x-dropdown-link :href="route('admin.plans.index')">
+                                <i class="fas fa-box mr-2"></i>
+                                {{ __('Plans') }}
+                            </x-dropdown-link>
+
+                            <x-dropdown-link :href="route('admin.subscriptions.index')">
+                                <i class="fas fa-credit-card mr-2"></i>
+                                {{ __('Subscriptions') }}
+                            </x-dropdown-link>
+
+                            <x-dropdown-link :href="route('admin.system-users.index')">
+                                <i class="fas fa-users-cog mr-2"></i>
+                                {{ __('System Users') }}
+                            </x-dropdown-link>
+
+                            <x-dropdown-link :href="route('admin.settings.index')">
+                                <i class="fas fa-server mr-2"></i>
+                                {{ __('System Settings') }}
+                            </x-dropdown-link>
+                        @endif
+
+                        <!-- Company Admin Section -->
                         @if(auth()->user()->isAdmin())
                             <div class="border-t border-gray-100"></div>
                             
-                            <x-dropdown-link :href="route('admin.users.index')">
+                            <x-dropdown-link :href="route('users.index')">
                                 <i class="fas fa-users mr-2"></i>
                                 {{ __('User Management') }}
                             </x-dropdown-link>
@@ -148,15 +282,10 @@
                                 {{ __('Manage Banks') }}
                             </x-dropdown-link>
 
-                            <form method="POST" action="{{ route('dashboard.clear-cache') }}">
-                                @csrf
-                                <x-dropdown-link :href="route('dashboard.clear-cache')"
-                                        onclick="event.preventDefault();
-                                                    this.closest('form').submit();">
-                                    <i class="fas fa-trash mr-2"></i>
-                                    {{ __('Clear Cache') }}
-                                </x-dropdown-link>
-                            </form>
+                            <x-dropdown-link :href="route('settings.index')">
+                                <i class="fas fa-cog mr-2"></i>
+                                {{ __('Company Settings') }}
+                            </x-dropdown-link>
                         @endif
 
                         <div class="border-t border-gray-100"></div>
@@ -209,9 +338,21 @@
                 {{ __('Transactions') }}
             </x-responsive-nav-link>
 
+            <!-- AI Chat -->
+            <x-responsive-nav-link :href="route('chat-sessions.index')" :active="request()->routeIs('chat-sessions.*')">
+                <i class="fas fa-comments mr-2"></i>
+                {{ __('AI Chat') }}
+            </x-responsive-nav-link>
+
+            <!-- Document Collections -->
+            <x-responsive-nav-link :href="route('document-collections.index')" :active="request()->routeIs('document-collections.*')">
+                <i class="fas fa-folder-tree mr-2"></i>
+                {{ __('Collections') }}
+            </x-responsive-nav-link>
+
             @if(auth()->user()->isAdmin())
                 <!-- Master Data Section -->
-                <div class="border-t border-gray-200 pt-2">
+                <div class="border-t border-gray-200 pt-2 mt-2">
                     <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">
                         Master Data
                     </div>
@@ -253,11 +394,51 @@
                     {{ __('Reports') }}
                 </x-responsive-nav-link>
 
-                <!-- Admin -->
-                <x-responsive-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.*')">
-                    <i class="fas fa-users-cog mr-2"></i>
-                    {{ __('Admin Panel') }}
-                </x-responsive-nav-link>
+                <!-- Admin Section -->
+                <div class="border-t border-gray-200 pt-2 mt-2">
+                    <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">
+                        Administration
+                    </div>
+
+                    <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                        <i class="fas fa-users mr-2"></i>
+                        {{ __('Users') }}
+                    </x-responsive-nav-link>
+
+                    <x-responsive-nav-link :href="route('settings.index')" :active="request()->routeIs('settings.*')">
+                        <i class="fas fa-cog mr-2"></i>
+                        {{ __('Settings') }}
+                    </x-responsive-nav-link>
+                </div>
+            @endif
+
+            @if(auth()->user()->isSuperAdmin())
+                <!-- Super Admin Section -->
+                <div class="border-t border-gray-200 pt-2 mt-2">
+                    <div class="px-4 py-2 text-xs font-semibold text-red-500 uppercase">
+                        Super Admin
+                    </div>
+
+                    <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
+                        <i class="fas fa-tachometer-alt mr-2"></i>
+                        {{ __('Admin Dashboard') }}
+                    </x-responsive-nav-link>
+
+                    <x-responsive-nav-link :href="route('admin.companies.index')" :active="request()->routeIs('admin.companies.*')">
+                        <i class="fas fa-building mr-2"></i>
+                        {{ __('Companies') }}
+                    </x-responsive-nav-link>
+
+                    <x-responsive-nav-link :href="route('admin.plans.index')" :active="request()->routeIs('admin.plans.*')">
+                        <i class="fas fa-box mr-2"></i>
+                        {{ __('Plans') }}
+                    </x-responsive-nav-link>
+
+                    <x-responsive-nav-link :href="route('admin.subscriptions.index')" :active="request()->routeIs('admin.subscriptions.*')">
+                        <i class="fas fa-credit-card mr-2"></i>
+                        {{ __('Subscriptions') }}
+                    </x-responsive-nav-link>
+                </div>
             @endif
         </div>
 
@@ -271,7 +452,9 @@
                     <div>
                         <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
                         <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
-                        @if(auth()->user()->isAdmin())
+                        @if(auth()->user()->isSuperAdmin())
+                            <div class="text-xs text-red-600 font-semibold">Super Administrator</div>
+                        @elseif(auth()->user()->isAdmin())
                             <div class="text-xs text-blue-600 font-semibold">Administrator</div>
                         @endif
                     </div>
@@ -283,6 +466,17 @@
                 <x-responsive-nav-link :href="route('profile.edit')">
                     <i class="fas fa-user mr-2"></i>
                     {{ __('Profile') }}
+                </x-responsive-nav-link>
+
+                <!-- Quick Actions -->
+                <x-responsive-nav-link :href="route('bank-statements.create')">
+                    <i class="fas fa-cloud-upload-alt mr-2"></i>
+                    {{ __('Upload Statement') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('chat-sessions.create')">
+                    <i class="fas fa-comment-medical mr-2"></i>
+                    {{ __('New Chat') }}
                 </x-responsive-nav-link>
 
                 @if(auth()->user()->isAdmin())

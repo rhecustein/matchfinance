@@ -112,7 +112,7 @@
                         <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110">
                             <i class="fas fa-chart-line text-white text-lg"></i>
                         </div>
-                        <span class="text-xl font-bold text-white hidden sm:block"></span>
+                        <span class="text-xl font-bold text-white hidden sm:block">MatchFinance</span>
                     </a>
 
                     <!-- Desktop Nav -->
@@ -121,10 +121,26 @@
                             <i class="fas fa-home mr-2"></i>Dashboard
                         </a>
 
+                        <a href="{{ route('bank-statements.index') }}" class="nav-link {{ request()->routeIs('bank-statements.*') ? 'active' : '' }} px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition">
+                            <i class="fas fa-file-invoice mr-2"></i>Statements
+                        </a>
+
+                        <a href="{{ route('transactions.index') }}" class="nav-link {{ request()->routeIs('transactions.*') ? 'active' : '' }} px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition">
+                            <i class="fas fa-exchange-alt mr-2"></i>Transactions
+                        </a>
+
+                        <a href="{{ route('chat-sessions.index') }}" class="nav-link {{ request()->routeIs('chat-sessions.*') ? 'active' : '' }} px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition">
+                            <i class="fas fa-comments mr-2"></i>AI Chat
+                        </a>
+
+                        <a href="{{ route('document-collections.index') }}" class="nav-link {{ request()->routeIs('document-collections.*') ? 'active' : '' }} px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition">
+                            <i class="fas fa-folder-tree mr-2"></i>Collections
+                        </a>
+
                         @if(auth()->user()->isAdmin())
                             <div class="relative" x-data="{ open: false }">
                                 <button @click="open = !open" class="nav-link px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition flex items-center">
-                                    <i class="fas fa-database mr-2"></i>Master Data
+                                    <i class="fas fa-database mr-2"></i>Master
                                     <i class="fas fa-chevron-down ml-1 text-xs transition-transform" :class="{ 'rotate-180': open }"></i>
                                 </button>
                                 
@@ -137,6 +153,9 @@
                                      x-transition:leave-start="opacity-100 transform scale-100"
                                      x-transition:leave-end="opacity-0 transform scale-95"
                                      class="dropdown-menu absolute left-0 mt-2 w-56 bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden">
+                                    <div class="px-4 py-2 bg-slate-900/50 border-b border-slate-700">
+                                        <p class="text-xs font-semibold text-gray-400 uppercase">Category Hierarchy</p>
+                                    </div>
                                     <a href="{{ route('banks.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
                                         <i class="fas fa-university mr-2 text-blue-500 w-5"></i>Banks
                                     </a>
@@ -152,21 +171,51 @@
                                     <a href="{{ route('keywords.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
                                         <i class="fas fa-key mr-2 text-yellow-500 w-5"></i>Keywords
                                     </a>
+                                    <div class="border-t border-slate-700"></div>
+                                    <div class="px-4 py-2 bg-slate-900/50">
+                                        <p class="text-xs font-semibold text-gray-400 uppercase">Accounting</p>
+                                    </div>
+                                    <a href="{{ route('accounts.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
+                                        <i class="fas fa-wallet mr-2 text-indigo-500 w-5"></i>Accounts
+                                    </a>
                                 </div>
                             </div>
 
-                            <a href="{{ route('bank-statements.index') }}" class="nav-link {{ request()->routeIs('bank-statements.*') ? 'active' : '' }} px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition">
-                                <i class="fas fa-file-invoice mr-2"></i>Statements
+                            <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }} px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition">
+                                <i class="fas fa-chart-bar mr-2"></i>Reports
                             </a>
+
+                            <div class="relative" x-data="{ open: false }">
+                                <button @click="open = !open" class="nav-link px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition flex items-center">
+                                    <i class="fas fa-cog mr-2"></i>Admin
+                                    <i class="fas fa-chevron-down ml-1 text-xs transition-transform" :class="{ 'rotate-180': open }"></i>
+                                </button>
+                                
+                                <div x-show="open" 
+                                     @click.away="open = false" 
+                                     x-transition:enter="transition ease-out duration-200"
+                                     x-transition:enter-start="opacity-0 transform scale-95"
+                                     x-transition:enter-end="opacity-100 transform scale-100"
+                                     x-transition:leave="transition ease-in duration-150"
+                                     x-transition:leave-start="opacity-100 transform scale-100"
+                                     x-transition:leave-end="opacity-0 transform scale-95"
+                                     class="dropdown-menu absolute left-0 mt-2 w-56 bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden">
+                                    <a href="{{ route('users.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
+                                        <i class="fas fa-users mr-2 text-blue-500 w-5"></i>Users
+                                    </a>
+                                    <a href="{{ route('settings.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
+                                        <i class="fas fa-sliders-h mr-2 text-gray-500 w-5"></i>Settings
+                                    </a>
+                                    <div class="border-t border-slate-700"></div>
+                                    <form method="POST" action="{{ route('dashboard.clear-cache') }}">
+                                        @csrf
+                                        <button type="submit" class="w-full text-left block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
+                                            <i class="fas fa-trash mr-2 text-red-500 w-5"></i>Clear Cache
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
                         @endif
-
-                        <a href="{{ route('transactions.index') }}" class="nav-link {{ request()->routeIs('transactions.*') ? 'active' : '' }} px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition">
-                            <i class="fas fa-exchange-alt mr-2"></i>Transactions
-                        </a>
-
-                        <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }} px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition">
-                            <i class="fas fa-chart-line mr-2"></i>Reports
-                        </a>
                     </div>
                 </div>
 
@@ -176,7 +225,12 @@
                     @if(auth()->user()->isAdmin())
                         <a href="{{ route('bank-statements.create') }}" class="hidden md:flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-lg hover:shadow-xl transform hover:scale-105">
                             <i class="fas fa-upload"></i>
-                            <span>Upload Statement</span>
+                            <span>Upload</span>
+                        </a>
+
+                        <a href="{{ route('chat-sessions.create') }}" class="hidden lg:flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-lg hover:shadow-xl transform hover:scale-105">
+                            <i class="fas fa-comment-medical"></i>
+                            <span>New Chat</span>
                         </a>
                     @endif
 
@@ -188,7 +242,15 @@
                             </div>
                             <div class="hidden lg:block text-left">
                                 <p class="text-sm font-semibold text-white">{{ auth()->user()->name }}</p>
-                                <p class="text-xs text-gray-400">{{ ucfirst(auth()->user()->role) }}</p>
+                                <p class="text-xs text-gray-400">
+                                    @if(auth()->user()->isSuperAdmin())
+                                        Super Admin
+                                    @elseif(auth()->user()->isAdmin())
+                                        Admin
+                                    @else
+                                        {{ ucfirst(auth()->user()->role) }}
+                                    @endif
+                                </p>
                             </div>
                             <i class="fas fa-chevron-down text-gray-400 text-xs hidden lg:block transition-transform" :class="{ 'rotate-180': open }"></i>
                         </button>
@@ -205,16 +267,50 @@
                             <div class="px-4 py-3 border-b border-slate-700 bg-slate-900/50">
                                 <p class="text-sm font-semibold text-white">{{ auth()->user()->name }}</p>
                                 <p class="text-xs text-gray-400 mt-0.5">{{ auth()->user()->email }}</p>
+                                @if(auth()->user()->company)
+                                    <p class="text-xs text-purple-400 mt-1 font-medium">{{ auth()->user()->company->name }}</p>
+                                @endif
                             </div>
                             
                             <div class="py-1">
                                 <a href="{{ route('profile.edit') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
-                                    <i class="fas fa-user mr-3 text-blue-500 w-5"></i>Profile Settings
+                                    <i class="fas fa-user mr-3 text-blue-500 w-5"></i>Profile
                                 </a>
                                 
+                                <a href="{{ route('chat-sessions.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
+                                    <i class="fas fa-comments mr-3 text-purple-500 w-5"></i>My AI Chats
+                                </a>
+
+                                <a href="{{ route('document-collections.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
+                                    <i class="fas fa-folder-tree mr-3 text-teal-500 w-5"></i>My Collections
+                                </a>
+                                
+                                @if(auth()->user()->isSuperAdmin())
+                                    <div class="border-t border-slate-700 mt-1"></div>
+                                    <div class="px-4 py-2 bg-slate-900/50">
+                                        <p class="text-xs font-semibold text-red-400 uppercase">Super Admin</p>
+                                    </div>
+                                    <a href="{{ route('admin.dashboard') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
+                                        <i class="fas fa-tachometer-alt mr-3 text-red-500 w-5"></i>Admin Dashboard
+                                    </a>
+                                    <a href="{{ route('admin.companies.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
+                                        <i class="fas fa-building mr-3 text-orange-500 w-5"></i>Companies
+                                    </a>
+                                    <a href="{{ route('admin.plans.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
+                                        <i class="fas fa-box mr-3 text-yellow-500 w-5"></i>Plans
+                                    </a>
+                                    <a href="{{ route('admin.subscriptions.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
+                                        <i class="fas fa-credit-card mr-3 text-green-500 w-5"></i>Subscriptions
+                                    </a>
+                                @endif
+
                                 @if(auth()->user()->isAdmin())
-                                    <a href="{{ route('admin.users.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
-                                        <i class="fas fa-users-cog mr-3 text-purple-500 w-5"></i>User Management
+                                    <div class="border-t border-slate-700 mt-1"></div>
+                                    <a href="{{ route('users.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
+                                        <i class="fas fa-users-cog mr-3 text-blue-500 w-5"></i>User Management
+                                    </a>
+                                    <a href="{{ route('settings.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
+                                        <i class="fas fa-cog mr-3 text-gray-500 w-5"></i>Settings
                                     </a>
                                 @endif
                             </div>
@@ -251,6 +347,22 @@
                 <a href="{{ route('dashboard') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-800 hover:text-white rounded-lg transition {{ request()->routeIs('dashboard') ? 'bg-slate-800 text-white' : '' }}">
                     <i class="fas fa-home mr-2 w-5"></i>Dashboard
                 </a>
+
+                <a href="{{ route('bank-statements.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-800 hover:text-white rounded-lg transition {{ request()->routeIs('bank-statements.*') ? 'bg-slate-800 text-white' : '' }}">
+                    <i class="fas fa-file-invoice mr-2 text-green-500 w-5"></i>Statements
+                </a>
+                
+                <a href="{{ route('transactions.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-800 hover:text-white rounded-lg transition {{ request()->routeIs('transactions.*') ? 'bg-slate-800 text-white' : '' }}">
+                    <i class="fas fa-exchange-alt mr-2 text-orange-500 w-5"></i>Transactions
+                </a>
+
+                <a href="{{ route('chat-sessions.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-800 hover:text-white rounded-lg transition {{ request()->routeIs('chat-sessions.*') ? 'bg-slate-800 text-white' : '' }}">
+                    <i class="fas fa-comments mr-2 text-purple-500 w-5"></i>AI Chat
+                </a>
+
+                <a href="{{ route('document-collections.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-800 hover:text-white rounded-lg transition {{ request()->routeIs('document-collections.*') ? 'bg-slate-800 text-white' : '' }}">
+                    <i class="fas fa-folder-tree mr-2 text-teal-500 w-5"></i>Collections
+                </a>
                 
                 @if(auth()->user()->isAdmin())
                     <div class="pt-4 pb-2 px-4">
@@ -271,27 +383,48 @@
                     <a href="{{ route('keywords.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-800 hover:text-white rounded-lg transition">
                         <i class="fas fa-key mr-2 text-yellow-500 w-5"></i>Keywords
                     </a>
-                    
+                    <a href="{{ route('accounts.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-800 hover:text-white rounded-lg transition">
+                        <i class="fas fa-wallet mr-2 text-indigo-500 w-5"></i>Accounts
+                    </a>
+
                     <div class="pt-4 pb-2 px-4">
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Transactions</p>
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Administration</p>
                     </div>
-                    <a href="{{ route('bank-statements.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-800 hover:text-white rounded-lg transition">
-                        <i class="fas fa-file-invoice mr-2 text-green-500 w-5"></i>Statements
+                    <a href="{{ route('reports.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-800 hover:text-white rounded-lg transition {{ request()->routeIs('reports.*') ? 'bg-slate-800 text-white' : '' }}">
+                        <i class="fas fa-chart-bar mr-2 text-indigo-500 w-5"></i>Reports
+                    </a>
+                    <a href="{{ route('users.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-800 hover:text-white rounded-lg transition">
+                        <i class="fas fa-users mr-2 text-blue-500 w-5"></i>Users
+                    </a>
+                    <a href="{{ route('settings.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-800 hover:text-white rounded-lg transition">
+                        <i class="fas fa-cog mr-2 text-gray-500 w-5"></i>Settings
                     </a>
                 @endif
-                
-                <a href="{{ route('transactions.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-800 hover:text-white rounded-lg transition {{ request()->routeIs('transactions.*') ? 'bg-slate-800 text-white' : '' }}">
-                    <i class="fas fa-exchange-alt mr-2 text-orange-500 w-5"></i>Transactions
-                </a>
 
-                <a href="{{ route('reports.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-800 hover:text-white rounded-lg transition {{ request()->routeIs('reports.*') ? 'bg-slate-800 text-white' : '' }}">
-                    <i class="fas fa-chart-line mr-2 text-indigo-500 w-5"></i>Reports
-                </a>
+                @if(auth()->user()->isSuperAdmin())
+                    <div class="pt-4 pb-2 px-4">
+                        <p class="text-xs font-semibold text-red-500 uppercase tracking-wider">Super Admin</p>
+                    </div>
+                    <a href="{{ route('admin.dashboard') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-800 hover:text-white rounded-lg transition">
+                        <i class="fas fa-tachometer-alt mr-2 text-red-500 w-5"></i>Admin Dashboard
+                    </a>
+                    <a href="{{ route('admin.companies.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-800 hover:text-white rounded-lg transition">
+                        <i class="fas fa-building mr-2 text-orange-500 w-5"></i>Companies
+                    </a>
+                    <a href="{{ route('admin.plans.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-800 hover:text-white rounded-lg transition">
+                        <i class="fas fa-box mr-2 text-yellow-500 w-5"></i>Plans
+                    </a>
+                @endif
 
                 @if(auth()->user()->isAdmin())
                     <div class="pt-4">
                         <a href="{{ route('bank-statements.create') }}" class="block px-4 py-3 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition font-semibold text-center">
                             <i class="fas fa-upload mr-2"></i>Upload Statement
+                        </a>
+                    </div>
+                    <div class="pt-2">
+                        <a href="{{ route('chat-sessions.create') }}" class="block px-4 py-3 text-sm text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition font-semibold text-center">
+                            <i class="fas fa-comment-medical mr-2"></i>New Chat
                         </a>
                     </div>
                 @endif
