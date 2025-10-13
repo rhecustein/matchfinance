@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Jobs\ProcessAccountMatching;
+use App\Jobs\ProcessTransactionMatching;
 
 class BankStatementController extends Controller
 {
@@ -802,7 +804,7 @@ class BankStatementController extends Controller
             403
         );
 
-        \App\Jobs\ProcessAccountMatching::dispatch($bankStatement)
+        ProcessAccountMatching::dispatch($bankStatement)
             ->onQueue('matching');
 
         return back()->with('success', 'Account matching has been queued.');
