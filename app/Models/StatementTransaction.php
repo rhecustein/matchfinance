@@ -132,6 +132,16 @@ class StatementTransaction extends Model
     |--------------------------------------------------------------------------
     */
 
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function categories(): HasMany
+    {
+        return $this->hasMany(TransactionCategory::class);
+    }
+
     /**
      * Get the matched keyword (primary)
      */
