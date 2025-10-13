@@ -6,18 +6,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Str;
-use App\Traits\BelongsToTenant;
 
 class Bank extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToTenant;
+    use HasFactory, SoftDeletes;
+    // ❌ HAPUS: BelongsToTenant (Bank adalah GLOBAL, bukan per-tenant)
 
     protected $fillable = [
         'uuid',
-        'company_id',
+        // ❌ HAPUS: 'company_id' (Bank tidak punya company_id)
         'code',
         'slug',
         'name',
@@ -61,31 +60,71 @@ class Bank extends Model
     |--------------------------------------------------------------------------
     */
 
-    public function company(): BelongsTo
-    {
-        return $this->belongsTo(Company::class);
-    }
+    /**
+     * ❌ HAPUS: company() relationship
+     * Bank tidak belongs to company, bank adalah GLOBAL
+     */
+    // public function company(): BelongsTo
+    // {
+    //     return $this->belongsTo(Company::class);
+    // }
 
+    /**
+     * ✅ Bank Statements (dari berbagai companies)
+     */
     public function bankStatements(): HasMany
     {
         return $this->hasMany(BankStatement::class);
     }
 
+    /**
+     * ✅ Get statements untuk company tertentu
+     */
+    public function bankStatementsForCompany($companyId): HasMany
+    {
+        return $this->hasMany(BankStatement::class)->where('company_id', $companyId);
+    }
+
+    /**
+     * ✅ Active statements
+     */
     public function activeBankStatements(): HasMany
     {
         return $this->hasMany(BankStatement::class)
-                    ->whereNotNull('period_start')
-                    ->whereNotNull('period_end');
+                    ->whereNotNull('period_from')
+                    ->whereNotNull('period_to');
     }
 
+    /**
+     * ✅ Transactions through bank statements
+     */
     public function transactions(): HasMany
     {
-        return $this->hasMany(StatementTransaction::class)
-            ->whereHas('bankStatement', function ($query) {
-                $query->whereNotNull('period_start')
-                    ->whereNotNull('period_end');
-            });
+        return $this->hasManyThrough(
+            StatementTransaction::class,
+            BankStatement::class,
+            'bank_id', // Foreign key on bank_statements table
+            'bank_statement_id', // Foreign key on statement_transactions table
+            'id', // Local key on banks table
+            'id' // Local key on bank_statements table
+        );
     }
+
+    /**
+     * ✅ Get transactions untuk company tertentu
+     */
+    public function transactionsForCompany($companyId)
+    {
+        return $this->hasManyThrough(
+            StatementTransaction::class,
+            BankStatement::class,
+            'bank_id',
+            'bank_statement_id',
+            'id',
+            'id'
+        )->where('bank_statements.company_id', $companyId);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Query Scopes
@@ -136,6 +175,16 @@ class Bank extends Model
                      ->orderBy('bank_statements_count', 'desc');
     }
 
+    /**
+     * ✅ Scope untuk company tertentu
+     */
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->whereHas('bankStatements', function($q) use ($companyId) {
+            $q->where('company_id', $companyId);
+        });
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Status Methods
@@ -164,23 +213,46 @@ class Bank extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Statistics Methods
+    | Statistics Methods (Updated untuk multi-tenant)
     |--------------------------------------------------------------------------
     */
 
+    /**
+     * ✅ Get total statements (all companies)
+     */
     public function getTotalStatements(): int
     {
         return $this->bankStatements()->count();
     }
 
+    /**
+     * ✅ Get total statements untuk company tertentu
+     */
+    public function getTotalStatementsForCompany($companyId): int
+    {
+        return $this->bankStatements()->where('company_id', $companyId)->count();
+    }
+
+    /**
+     * ✅ Get total transactions (all companies)
+     */
     public function getTotalTransactions(): int
     {
         return $this->transactions()->count();
     }
 
+    /**
+     * ✅ Get total transactions untuk company tertentu
+     */
+    public function getTotalTransactionsForCompany($companyId): int
+    {
+        return $this->transactionsForCompany($companyId)->count();
+    }
+
     public function getTotalAmount()
     {
-        return $this->transactions()->sum('amount');
+        return $this->transactions()
+            ->sum(DB::raw('COALESCE(debit_amount, 0) + COALESCE(credit_amount, 0)'));
     }
 
     public function getTotalDebit()
@@ -226,8 +298,8 @@ class Bank extends Model
     public function getTransactionsThisMonth(): int
     {
         return $this->transactions()
-                    ->whereMonth('created_at', now()->month)
-                    ->whereYear('created_at', now()->year)
+                    ->whereMonth('transaction_date', now()->month)
+                    ->whereYear('transaction_date', now()->year)
                     ->count();
     }
 
@@ -240,8 +312,10 @@ class Bank extends Model
     public function getStatementsByPeriod($startDate, $endDate)
     {
         return $this->bankStatements()
-                    ->whereBetween('period_start', [$startDate, $endDate])
-                    ->orWhereBetween('period_end', [$startDate, $endDate])
+                    ->where(function($q) use ($startDate, $endDate) {
+                        $q->whereBetween('period_from', [$startDate, $endDate])
+                          ->orWhereBetween('period_to', [$startDate, $endDate]);
+                    })
                     ->get();
     }
 
@@ -256,7 +330,7 @@ class Bank extends Model
     {
         return $this->transactions()
                     ->whereBetween('transaction_date', [$startDate, $endDate])
-                    ->sum('amount');
+                    ->sum(DB::raw('COALESCE(debit_amount, 0) + COALESCE(credit_amount, 0)'));
     }
 
     /*
@@ -325,6 +399,9 @@ class Bank extends Model
     |--------------------------------------------------------------------------
     */
 
+    /**
+     * ✅ Get statistics (all companies)
+     */
     public function getStatistics(): array
     {
         return [
@@ -337,6 +414,19 @@ class Bank extends Model
             'total_credit' => $this->getTotalCredit(),
             'statements_this_month' => $this->getStatementsThisMonth(),
             'transactions_this_month' => $this->getTransactionsThisMonth(),
+        ];
+    }
+
+    /**
+     * ✅ Get statistics untuk company tertentu
+     */
+    public function getStatisticsForCompany($companyId): array
+    {
+        return [
+            'total_statements' => $this->getTotalStatementsForCompany($companyId),
+            'total_transactions' => $this->getTotalTransactionsForCompany($companyId),
+            'total_debit' => $this->transactionsForCompany($companyId)->sum('debit_amount'),
+            'total_credit' => $this->transactionsForCompany($companyId)->sum('credit_amount'),
         ];
     }
 
@@ -393,15 +483,22 @@ class Bank extends Model
                           ->whereYear('transaction_date', $date->year)
                           ->count();
             
-            $amount = $this->transactions()
+            $debit = $this->transactions()
+                          ->whereMonth('transaction_date', $date->month)
+                          ->whereYear('transaction_date', $date->year)
+                          ->sum('debit_amount');
+            
+            $credit = $this->transactions()
                            ->whereMonth('transaction_date', $date->month)
                            ->whereYear('transaction_date', $date->year)
-                           ->sum('amount');
+                           ->sum('credit_amount');
             
             $trend[] = [
                 'month' => $month,
                 'transactions' => $count,
-                'amount' => $amount,
+                'debit' => $debit,
+                'credit' => $credit,
+                'total' => $debit + $credit,
             ];
         }
         
@@ -411,9 +508,9 @@ class Bank extends Model
     public function getLastStatementDate()
     {
         return $this->bankStatements()
-                    ->latest('period_end')
+                    ->latest('period_to')
                     ->first()
-                    ?->period_end;
+                    ?->period_to;
     }
 
     public function getLastUploadDate()
@@ -422,5 +519,33 @@ class Bank extends Model
                     ->latest('created_at')
                     ->first()
                     ?->created_at;
+    }
+
+    /**
+     * ✅ Check if bank is used by specific company
+     */
+    public function isUsedByCompany($companyId): bool
+    {
+        return $this->bankStatements()->where('company_id', $companyId)->exists();
+    }
+
+    /**
+     * ✅ Get companies yang menggunakan bank ini
+     */
+    public function getCompanies()
+    {
+        return Company::whereHas('bankStatements', function($q) {
+            $q->where('bank_id', $this->id);
+        })->get();
+    }
+
+    /**
+     * ✅ Count companies yang menggunakan bank ini
+     */
+    public function getCompaniesCount(): int
+    {
+        return Company::whereHas('bankStatements', function($q) {
+            $q->where('bank_id', $this->id);
+        })->count();
     }
 }

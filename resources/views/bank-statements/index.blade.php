@@ -5,7 +5,7 @@
         
         {{-- SUCCESS MESSAGE --}}
         @if(session('success'))
-            <div class="bg-green-600/20 border border-green-600 text-green-400 px-6 py-4 rounded-lg flex items-center space-x-3 mb-6">
+            <div class="bg-green-600/20 border border-green-600 text-green-400 px-6 py-4 rounded-lg flex items-center space-x-3 mb-6 alert-animate">
                 <i class="fas fa-check-circle text-2xl"></i>
                 <p class="font-semibold">{{ session('success') }}</p>
             </div>
@@ -13,7 +13,7 @@
 
         {{-- Processing Queue Alert --}}
         @php
-            $processingCount = $statements->where('ocr_status', 'pending')->count() + $statements->where('ocr_status', 'processing')->count();
+            $processingCount = $stats['pending'] + $stats['processing'];
         @endphp
         @if($processingCount > 0)
             <div id="processingAlert" class="bg-gradient-to-r from-yellow-600/20 to-orange-600/20 border border-yellow-500 rounded-xl p-6 mb-6 shadow-lg">
@@ -50,17 +50,156 @@
                 <h2 class="text-2xl font-bold text-white mb-2">Bank Statements</h2>
                 <p class="text-gray-400">Upload and manage your bank statements for automatic transaction processing</p>
             </div>
-            @if(auth()->user()->isSuperAdmin())
-                <a href="{{ route('bank-statements.select-company') }}" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg flex items-center space-x-2">
-                    <i class="fas fa-upload"></i>
-                    <span>Upload Statement</span>
-                </a>
-            @else
-                <a href="{{ route('bank-statements.create') }}" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg flex items-center space-x-2">
-                    <i class="fas fa-upload"></i>
-                    <span>Upload Statement</span>
-                </a>
-            @endif
+            <div class="flex items-center space-x-3">
+                {{-- Clear Filters Button --}}
+                @if(request()->hasAny(['company_id', 'bank_id', 'ocr_status', 'is_reconciled', 'user_id', 'date_from', 'date_to', 'search']))
+                    <a href="{{ route('bank-statements.index') }}" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-3 rounded-xl font-semibold transition-all flex items-center space-x-2">
+                        <i class="fas fa-times"></i>
+                        <span>Clear Filters</span>
+                    </a>
+                @endif
+
+                {{-- Upload Button --}}
+                @if(auth()->user()->isSuperAdmin())
+                    <a href="{{ route('bank-statements.select-company') }}" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg flex items-center space-x-2">
+                        <i class="fas fa-upload"></i>
+                        <span>Upload Statement</span>
+                    </a>
+                @else
+                    <a href="{{ route('bank-statements.create') }}" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg flex items-center space-x-2">
+                        <i class="fas fa-upload"></i>
+                        <span>Upload Statement</span>
+                    </a>
+                @endif
+            </div>
+        </div>
+
+        {{-- FILTERS SECTION --}}
+        <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 shadow-xl p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-white flex items-center">
+                    <i class="fas fa-filter mr-2 text-blue-400"></i>
+                    Filters
+                </h3>
+                <button onclick="toggleFilters()" class="text-gray-400 hover:text-white transition">
+                    <i id="filterIcon" class="fas fa-chevron-up"></i>
+                </button>
+            </div>
+
+            <form method="GET" action="{{ route('bank-statements.index') }}" id="filterForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    
+                    {{-- SUPER ADMIN: Company Filter --}}
+                    @if(auth()->user()->isSuperAdmin())
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">
+                                <i class="fas fa-building mr-1"></i>Company
+                            </label>
+                            <select name="company_id" id="companyFilter" class="w-full bg-slate-900/50 border border-slate-700 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">All Companies</option>
+                                @foreach($companies as $company)
+                                    <option value="{{ $company->id }}" {{ request('company_id') == $company->id ? 'selected' : '' }}>
+                                        {{ $company->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
+
+                    {{-- Bank Filter --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">
+                            <i class="fas fa-university mr-1"></i>Bank
+                        </label>
+                        <select name="bank_id" class="w-full bg-slate-900/50 border border-slate-700 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">All Banks</option>
+                            @foreach($banks as $bank)
+                                <option value="{{ $bank->id }}" {{ request('bank_id') == $bank->id ? 'selected' : '' }}>
+                                    {{ $bank->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- OCR Status Filter --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">
+                            <i class="fas fa-tasks mr-1"></i>OCR Status
+                        </label>
+                        <select name="ocr_status" class="w-full bg-slate-900/50 border border-slate-700 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">All Status</option>
+                            @foreach($ocrStatuses as $key => $label)
+                                <option value="{{ $key }}" {{ request('ocr_status') == $key ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Reconciliation Status --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">
+                            <i class="fas fa-check-double mr-1"></i>Reconciled
+                        </label>
+                        <select name="is_reconciled" class="w-full bg-slate-900/50 border border-slate-700 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">All</option>
+                            <option value="1" {{ request('is_reconciled') === '1' ? 'selected' : '' }}>Reconciled</option>
+                            <option value="0" {{ request('is_reconciled') === '0' ? 'selected' : '' }}>Not Reconciled</option>
+                        </select>
+                    </div>
+
+                    {{-- User Filter (Admin & Super Admin) --}}
+                    @if($users && $users->count() > 0)
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">
+                                <i class="fas fa-user mr-1"></i>Uploaded By
+                            </label>
+                            <select name="user_id" class="w-full bg-slate-900/50 border border-slate-700 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">All Users</option>
+                                @foreach($users as $filterUser)
+                                    <option value="{{ $filterUser->id }}" {{ request('user_id') == $filterUser->id ? 'selected' : '' }}>
+                                        {{ $filterUser->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
+
+                    {{-- Date From --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">
+                            <i class="fas fa-calendar mr-1"></i>Period From
+                        </label>
+                        <input type="date" name="date_from" value="{{ request('date_from') }}" class="w-full bg-slate-900/50 border border-slate-700 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    {{-- Date To --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">
+                            <i class="fas fa-calendar-check mr-1"></i>Period To
+                        </label>
+                        <input type="date" name="date_to" value="{{ request('date_to') }}" class="w-full bg-slate-900/50 border border-slate-700 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    {{-- Search --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">
+                            <i class="fas fa-search mr-1"></i>Search
+                        </label>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Filename, account..." class="w-full bg-slate-900/50 border border-slate-700 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                </div>
+
+                {{-- Filter Actions --}}
+                <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-700">
+                    <a href="{{ route('bank-statements.index') }}" class="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-all">
+                        <i class="fas fa-times mr-2"></i>Reset
+                    </a>
+                    <button type="submit" class="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-semibold transition-all">
+                        <i class="fas fa-filter mr-2"></i>Apply Filters
+                    </button>
+                </div>
+            </form>
         </div>
 
         {{-- Statistics Cards --}}
@@ -69,7 +208,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-400 text-sm mb-1">Total Statements</p>
-                        <p class="text-white text-3xl font-bold">{{ $statements->total() }}</p>
+                        <p class="text-white text-3xl font-bold">{{ number_format($stats['total']) }}</p>
                     </div>
                     <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
                         <i class="fas fa-file-pdf text-white text-xl"></i>
@@ -80,7 +219,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-400 text-sm mb-1">Processing</p>
-                        <p class="text-white text-3xl font-bold">{{ $statements->where('ocr_status', 'processing')->count() + $statements->where('ocr_status', 'pending')->count() }}</p>
+                        <p class="text-white text-3xl font-bold">{{ number_format($stats['processing'] + $stats['pending']) }}</p>
                     </div>
                     <div class="w-12 h-12 bg-yellow-600 rounded-xl flex items-center justify-center">
                         <i class="fas fa-spinner fa-spin text-white text-xl"></i>
@@ -91,7 +230,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-400 text-sm mb-1">Completed</p>
-                        <p class="text-white text-3xl font-bold">{{ $statements->where('ocr_status', 'completed')->count() }}</p>
+                        <p class="text-white text-3xl font-bold">{{ number_format($stats['completed']) }}</p>
                     </div>
                     <div class="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center">
                         <i class="fas fa-check-circle text-white text-xl"></i>
@@ -102,7 +241,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-400 text-sm mb-1">Failed</p>
-                        <p class="text-white text-3xl font-bold">{{ $statements->where('ocr_status', 'failed')->count() }}</p>
+                        <p class="text-white text-3xl font-bold">{{ number_format($stats['failed']) }}</p>
                     </div>
                     <div class="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center">
                         <i class="fas fa-exclamation-circle text-white text-xl"></i>
@@ -111,10 +250,87 @@
             </div>
         </div>
 
+        {{-- Active Filters Display --}}
+        @if(request()->hasAny(['company_id', 'bank_id', 'ocr_status', 'is_reconciled', 'user_id', 'date_from', 'date_to', 'search']))
+            <div class="bg-blue-600/10 border border-blue-500/30 rounded-xl p-4 mb-6">
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                    <div class="flex items-center flex-wrap gap-2">
+                        <span class="text-blue-400 font-semibold text-sm">
+                            <i class="fas fa-filter mr-1"></i>Active Filters:
+                        </span>
+                        
+                        @if(request('company_id') && isset($companies))
+                            @php $company = $companies->firstWhere('id', request('company_id')); @endphp
+                            @if($company)
+                                <span class="px-3 py-1 bg-blue-600/20 text-blue-300 rounded-lg text-xs font-semibold">
+                                    Company: {{ $company->name }}
+                                </span>
+                            @endif
+                        @endif
+
+                        @if(request('bank_id'))
+                            @php $bank = $banks->firstWhere('id', request('bank_id')); @endphp
+                            @if($bank)
+                                <span class="px-3 py-1 bg-blue-600/20 text-blue-300 rounded-lg text-xs font-semibold">
+                                    Bank: {{ $bank->name }}
+                                </span>
+                            @endif
+                        @endif
+
+                        @if(request('ocr_status'))
+                            <span class="px-3 py-1 bg-blue-600/20 text-blue-300 rounded-lg text-xs font-semibold">
+                                Status: {{ $ocrStatuses[request('ocr_status')] ?? request('ocr_status') }}
+                            </span>
+                        @endif
+
+                        @if(request('is_reconciled') !== null)
+                            <span class="px-3 py-1 bg-blue-600/20 text-blue-300 rounded-lg text-xs font-semibold">
+                                {{ request('is_reconciled') == '1' ? 'Reconciled' : 'Not Reconciled' }}
+                            </span>
+                        @endif
+
+                        @if(request('user_id') && isset($users))
+                            @php $filterUser = $users->firstWhere('id', request('user_id')); @endphp
+                            @if($filterUser)
+                                <span class="px-3 py-1 bg-blue-600/20 text-blue-300 rounded-lg text-xs font-semibold">
+                                    User: {{ $filterUser->name }}
+                                </span>
+                            @endif
+                        @endif
+
+                        @if(request('date_from'))
+                            <span class="px-3 py-1 bg-blue-600/20 text-blue-300 rounded-lg text-xs font-semibold">
+                                From: {{ \Carbon\Carbon::parse(request('date_from'))->format('d M Y') }}
+                            </span>
+                        @endif
+
+                        @if(request('date_to'))
+                            <span class="px-3 py-1 bg-blue-600/20 text-blue-300 rounded-lg text-xs font-semibold">
+                                To: {{ \Carbon\Carbon::parse(request('date_to'))->format('d M Y') }}
+                            </span>
+                        @endif
+
+                        @if(request('search'))
+                            <span class="px-3 py-1 bg-blue-600/20 text-blue-300 rounded-lg text-xs font-semibold">
+                                Search: "{{ request('search') }}"
+                            </span>
+                        @endif
+                    </div>
+
+                    <a href="{{ route('bank-statements.index') }}" class="text-blue-400 hover:text-blue-300 text-sm font-semibold transition">
+                        <i class="fas fa-times mr-1"></i>Clear All
+                    </a>
+                </div>
+            </div>
+        @endif
+
         {{-- Statements List --}}
         <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 shadow-xl overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-700">
-                <h3 class="text-lg font-bold text-white">All Bank Statements</h3>
+            <div class="px-6 py-4 border-b border-slate-700 flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-bold text-white">Bank Statements</h3>
+                    <p class="text-sm text-gray-400">Showing {{ $statements->firstItem() ?? 0 }} to {{ $statements->lastItem() ?? 0 }} of {{ $statements->total() }} results</p>
+                </div>
             </div>
             <div class="p-6">
                 <div class="space-y-3">
@@ -152,6 +368,14 @@
                                                 <i class="fas fa-{{ $status['icon'] }} mr-1 {{ $statement->ocr_status === 'processing' ? 'fa-spin' : '' }}"></i>
                                                 {{ $status['text'] }}
                                             </span>
+
+                                            {{-- Super Admin: Show Company Badge --}}
+                                            @if(auth()->user()->isSuperAdmin())
+                                                <span class="px-3 py-1 bg-purple-600/20 text-purple-400 rounded-lg text-xs font-semibold border border-purple-500/30">
+                                                    <i class="fas fa-building mr-1"></i>
+                                                    {{ $statement->company->name }}
+                                                </span>
+                                            @endif
                                         </div>
                                         
                                         <div class="flex items-center space-x-4 text-sm text-gray-400 flex-wrap gap-y-2">
@@ -242,11 +466,19 @@
                         <div class="text-center py-12">
                             <i class="fas fa-file-pdf text-gray-600 text-5xl mb-4"></i>
                             <p class="text-gray-400 text-lg mb-2">No bank statements found</p>
-                            <p class="text-gray-500 text-sm mb-6">Upload your first bank statement to get started</p>
-                            <a href="{{ route('bank-statements.create') }}" class="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all">
-                                <i class="fas fa-upload"></i>
-                                <span>Upload First Statement</span>
-                            </a>
+                            @if(request()->hasAny(['company_id', 'bank_id', 'ocr_status', 'is_reconciled', 'user_id', 'date_from', 'date_to', 'search']))
+                                <p class="text-gray-500 text-sm mb-6">Try adjusting your filters</p>
+                                <a href="{{ route('bank-statements.index') }}" class="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all">
+                                    <i class="fas fa-times"></i>
+                                    <span>Clear Filters</span>
+                                </a>
+                            @else
+                                <p class="text-gray-500 text-sm mb-6">Upload your first bank statement to get started</p>
+                                <a href="{{ route('bank-statements.create') }}" class="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all">
+                                    <i class="fas fa-upload"></i>
+                                    <span>Upload First Statement</span>
+                                </a>
+                            @endif
                         </div>
                     @endforelse
                 </div>
@@ -307,6 +539,30 @@
         let timerInterval = null;
         let secondsLeft = 10;
 
+        // Toggle Filters
+        function toggleFilters() {
+            const form = document.getElementById('filterForm');
+            const icon = document.getElementById('filterIcon');
+            
+            if (form.classList.contains('hidden')) {
+                form.classList.remove('hidden');
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            } else {
+                form.classList.add('hidden');
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            }
+        }
+
+        // Auto-submit on company change (Super Admin)
+        @if(auth()->user()->isSuperAdmin())
+        document.getElementById('companyFilter')?.addEventListener('change', function() {
+            // Reload users based on selected company
+            document.getElementById('filterForm').submit();
+        });
+        @endif
+
         // Delete Modal Functions
         function confirmDelete(id, filename) {
             deleteFormId = id;
@@ -345,7 +601,7 @@
         }
 
         // Auto refresh functionality
-        const hasProcessing = {{ ($statements->where('ocr_status', 'processing')->count() + $statements->where('ocr_status', 'pending')->count()) > 0 ? 'true' : 'false' }};
+        const hasProcessing = {{ $processingCount > 0 ? 'true' : 'false' }};
         
         if (hasProcessing) {
             // Update timer display
@@ -382,12 +638,11 @@
 
         // Auto-hide success messages
         setTimeout(() => {
-            document.querySelectorAll('.bg-green-600\\/20').forEach(el => {
-                if (el.textContent.includes('successfully') || el.textContent.includes('queued')) {
-                    el.style.transition = 'opacity 0.5s';
-                    el.style.opacity = '0';
-                    setTimeout(() => el.remove(), 500);
-                }
+            const successAlerts = document.querySelectorAll('.alert-animate');
+            successAlerts.forEach(el => {
+                el.style.transition = 'opacity 0.5s';
+                el.style.opacity = '0';
+                setTimeout(() => el.remove(), 500);
             });
         }, 8000);
 

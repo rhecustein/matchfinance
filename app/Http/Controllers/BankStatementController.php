@@ -19,8 +19,8 @@ use Illuminate\Support\Str;
 
 class BankStatementController extends Controller
 {
-    /**
-     * Display a listing of bank statements (COMPANY SCOPED or SUPER ADMIN)
+   /**
+     * Display listing of bank statements with filters
      */
     public function index(Request $request)
     {
@@ -28,21 +28,21 @@ class BankStatementController extends Controller
 
         // SUPER ADMIN: Can see all statements from all companies
         if ($user->isSuperAdmin()) {
-            $query = BankStatement::with(['bank:id,name,code', 'user:id,name', 'company:id,name'])
+            $query = BankStatement::with(['bank:id,name,code,logo', 'user:id,name', 'company:id,name'])
                 ->latest('uploaded_at');
 
-            // Filter by company (super admin)
+            // Filter by company (super admin only)
             if ($request->filled('company_id')) {
                 $query->where('company_id', $request->company_id);
             }
         } else {
             // COMPANY SCOPED QUERY (regular users)
             $query = BankStatement::where('company_id', $user->company_id)
-                ->with(['bank:id,name,code', 'user:id,name'])
+                ->with(['bank:id,name,code,logo', 'user:id,name'])
                 ->latest('uploaded_at');
         }
 
-        // Filter by bank (global banks - no company check needed)
+        // Filter by bank
         if ($request->filled('bank_id')) {
             $query->where('bank_id', $request->bank_id);
         }
@@ -57,6 +57,11 @@ class BankStatementController extends Controller
             $query->where('is_reconciled', $request->boolean('is_reconciled'));
         }
 
+        // Filter by uploaded user
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
         // Filter by date range (period)
         if ($request->filled('date_from')) {
             $query->where('period_from', '>=', $request->date_from);
@@ -66,7 +71,7 @@ class BankStatementController extends Controller
             $query->where('period_to', '<=', $request->date_to);
         }
 
-        // Search by filename or account number
+        // Search by filename, account number, or holder name
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -76,19 +81,106 @@ class BankStatementController extends Controller
             });
         }
 
+        // Get paginated results
         $statements = $query->paginate(20)->withQueryString();
 
-        // Get global banks for filter (no company restriction)
+        // Get filter options
         $banks = Bank::active()
             ->orderBy('name')
-            ->get(['id', 'name', 'code']);
+            ->get(['id', 'name', 'code', 'logo']);
         
-        // Get companies for filter (Super Admin only)
+        // Companies (Super Admin only)
         $companies = $user->isSuperAdmin() 
-            ? Company::orderBy('name')->get(['id', 'name'])
+            ? Company::where('status', '!=', 'cancelled')
+                ->orderBy('name')
+                ->get(['id', 'name'])
             : null;
 
-        return view('bank-statements.index', compact('statements', 'banks', 'companies'));
+        // Users for filter (within company scope)
+        $users = $user->isSuperAdmin() && $request->filled('company_id')
+            ? \App\Models\User::where('company_id', $request->company_id)
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name'])
+            : ($user->isAdmin() 
+                ? \App\Models\User::where('company_id', $user->company_id)
+                    ->where('is_active', true)
+                    ->orderBy('name')
+                    ->get(['id', 'name'])
+                : null);
+
+        // OCR Status options
+        $ocrStatuses = [
+            'pending' => 'Pending',
+            'processing' => 'Processing',
+            'completed' => 'Completed',
+            'failed' => 'Failed'
+        ];
+
+        // ✅ FIX: Statistics - Clone query untuk setiap count
+        $baseQuery = clone $query->getQuery(); // Clone base query
+        
+        // Build base query untuk stats (tanpa pagination)
+        $statsQuery = BankStatement::query();
+        
+        // Apply same filters untuk stats
+        if ($user->isSuperAdmin()) {
+            // Super admin filters
+            if ($request->filled('company_id')) {
+                $statsQuery->where('company_id', $request->company_id);
+            }
+        } else {
+            // Company scoped
+            $statsQuery->where('company_id', $user->company_id);
+        }
+
+        // Apply all other filters
+        if ($request->filled('bank_id')) {
+            $statsQuery->where('bank_id', $request->bank_id);
+        }
+
+        if ($request->filled('is_reconciled')) {
+            $statsQuery->where('is_reconciled', $request->boolean('is_reconciled'));
+        }
+
+        if ($request->filled('user_id')) {
+            $statsQuery->where('user_id', $request->user_id);
+        }
+
+        if ($request->filled('date_from')) {
+            $statsQuery->where('period_from', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $statsQuery->where('period_to', '<=', $request->date_to);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $statsQuery->where(function ($q) use ($search) {
+                $q->where('original_filename', 'like', "%{$search}%")
+                  ->orWhere('account_number', 'like', "%{$search}%")
+                  ->orWhere('account_holder_name', 'like', "%{$search}%");
+            });
+        }
+
+        // Calculate stats with same filters
+        $stats = [
+            'total' => (clone $statsQuery)->count(),
+            'pending' => (clone $statsQuery)->where('ocr_status', 'pending')->count(),
+            'processing' => (clone $statsQuery)->where('ocr_status', 'processing')->count(),
+            'completed' => (clone $statsQuery)->where('ocr_status', 'completed')->count(),
+            'failed' => (clone $statsQuery)->where('ocr_status', 'failed')->count(),
+        ];
+
+        return view('bank-statements.index', compact(
+            'statements', 
+            'banks', 
+            'companies', 
+            'users', 
+            'ocrStatuses',
+            'stats'
+        ));
     }
 
     /**

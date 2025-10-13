@@ -102,9 +102,16 @@ class StatementTransaction extends Model
         return $this->belongsTo(BankStatement::class);
     }
 
-    public function bank(): BelongsTo
+    public function bank()
     {
-        return $this->bankStatement->bank();
+        return $this->hasOneThrough(
+            Bank::class,
+            BankStatement::class,
+            'id', // Foreign key on bank_statements table
+            'id', // Foreign key on banks table
+            'bank_statement_id', // Local key on statement_transactions table
+            'bank_id' // Local key on bank_statements table
+        )->withoutGlobalScopes();
     }
 
     public function verifiedBy(): BelongsTo
