@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class CompanyInvitations extends Model
+class CompanySubscription extends Model
 {
     //
 }
