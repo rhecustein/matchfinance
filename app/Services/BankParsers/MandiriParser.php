@@ -2,78 +2,77 @@
 
 namespace App\Services\BankParsers;
 
-use Carbon\Carbon;
-
 class MandiriParser extends BaseBankParser
 {
     protected string $bankName = 'Mandiri';
     
-    /**
-     * Parse Mandiri bank statement OCR data
-     */
     public function parse(array $ocrData): array
     {
-        $ocr = $ocrData['ocr'] ?? [];
+        $ocr = $ocrData['ocr'] ?? $ocrData;
+        
+        // Parse account info yang kompleks
+        $accountInfo = $this->parseAccountInfo($ocr['AccountNo'] ?? '');
         
         return [
-            'bank_name' => $ocr['Bank'] ?? 'Mandiri',
-            'period_from' => $this->parsePeriodDate($ocr['PeriodFrom'] ?? null),
-            'period_to' => $this->parsePeriodDate($ocr['PeriodTo'] ?? null),
-            'account_number' => $ocr['AccountNo'] ?? null,
-            'currency' => $ocr['Currency'] ?? 'IDR',
-            'branch_code' => $ocr['Branch'] ?? null,
+            'bank_name' => $ocr['Bank'] ?? $this->bankName,
+            'period_from' => $this->formatDate($this->parseDate($ocr['PeriodFrom'] ?? null)),
+            'period_to' => $this->formatDate($this->parseDate($ocr['PeriodTo'] ?? null)),
+            'account_number' => $accountInfo['number'],
+            'account_holder_name' => $accountInfo['holder_name'],
+            'currency' => $accountInfo['currency'] ?? ($ocr['Currency'] ?? 'IDR'),
+            'branch_code' => $ocr['Branch'] ?? $accountInfo['branch'],
+            'branch_name' => $accountInfo['branch_name'],
             'opening_balance' => $this->parseAmount($ocr['OpeningBalance'] ?? '0'),
             'closing_balance' => $this->parseAmount($ocr['ClosingBalance'] ?? '0'),
-            'total_credit_count' => (int) ($ocr['CreditNo'] ?? 0),
-            'total_debit_count' => (int) ($ocr['DebitNo'] ?? 0),
+            'total_credit_count' => !empty($ocr['CreditNo']) ? (int) $ocr['CreditNo'] : null,
+            'total_debit_count' => !empty($ocr['DebitNo']) ? (int) $ocr['DebitNo'] : null,
             'total_credit_amount' => $this->parseAmount($ocr['TotalAmountCredited'] ?? '0'),
             'total_debit_amount' => $this->parseAmount($ocr['TotalAmountDebited'] ?? '0'),
-            'transactions' => $this->parseTransactions($ocr['TableData'] ?? [], $ocr['PeriodFrom'] ?? null),
+            'transactions' => $this->parseTransactions($ocr['TableData'] ?? []),
         ];
     }
     
     /**
-     * Parse period date (Format: DD/MM/YYYY)
+     * Parse account info dari format: "1560006875217 IDR KIMIA FARMA APOTIK  BO BEKASI"
      */
-    private function parsePeriodDate(?string $date): ?Carbon
+    private function parseAccountInfo(string $accountString): array
     {
-        return $this->parseDate($date);
+        $parts = preg_split('/\s+/', trim($accountString), 3);
+        
+        return [
+            'number' => $parts[0] ?? null,
+            'currency' => $parts[1] ?? 'IDR',
+            'holder_name' => $parts[2] ?? null,
+            'branch' => null,
+            'branch_name' => null,
+        ];
     }
     
-    /**
-     * Parse transactions data
-     */
-    private function parseTransactions(array $tableData, ?string $periodFrom): array
+    private function parseTransactions(array $tableData): array
     {
-        // Extract year from period for date parsing
-        $year = null;
-        if ($periodFrom) {
-            try {
-                $year = Carbon::parse($periodFrom)->year;
-            } catch (\Exception $e) {
-                $year = null;
-            }
-        }
-        
         $transactions = [];
         
         foreach ($tableData as $row) {
-            $date = $this->parseDate($row['Date'] ?? null, $year);
+            // Mandiri format: DD/MM/YYYY (lengkap)
+            $date = $this->parseDate($row['Date'] ?? null);
+            $valueDate = $this->parseDate($row['ValueDate'] ?? null);
+            
             $debit = $this->parseAmount($row['Debit'] ?? '0');
             $credit = $this->parseAmount($row['Credit'] ?? '0');
+            $amount = $credit > 0 ? $credit : -$debit;
             
             $transactions[] = [
-                'transaction_date' => $date?->format('Y-m-d'),
+                'transaction_date' => $this->formatDate($date),
                 'transaction_time' => $this->parseTime($row['Time'] ?? null),
-                'value_date' => null,
+                'value_date' => $this->formatDate($valueDate),
                 'branch_code' => $row['Branch'] ?? null,
-                'description' => $row['Description'] ?? null,
+                'description' => $this->cleanDescription($row['Description'] ?? ''),
                 'reference_no' => $row['ReferenceNo'] ?? null,
                 'debit_amount' => $debit,
                 'credit_amount' => $credit,
                 'balance' => $this->parseAmount($row['Balance'] ?? '0'),
+                'amount' => abs($amount),
                 'transaction_type' => $debit > 0 ? 'debit' : 'credit',
-                'amount' => max($debit, $credit),
             ];
         }
         

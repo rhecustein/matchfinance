@@ -58,4 +58,10 @@ return [
         'retry_times' => env('OCR_RETRY_TIMES', 3),
         'retry_delay' => env('OCR_RETRY_DELAY', 2), // seconds
     ],
+
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', env('APP_URL') . '/auth/google/callback'),
+    ],
 ];
