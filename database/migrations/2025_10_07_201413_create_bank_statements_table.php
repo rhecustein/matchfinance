@@ -10,7 +10,8 @@ return new class extends Migration
     {
         Schema::create('bank_statements', function (Blueprint $table) {
             $table->id();
-            
+            $table->uuid('uuid')->unique();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
             // Foreign Keys - Relations
             $table->foreignId('bank_id')
                   ->constrained('banks')

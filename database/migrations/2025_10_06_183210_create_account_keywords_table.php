@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('account_keywords', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid')->unique();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->foreignId('account_id')->constrained('accounts')->cascadeOnDelete();
             $table->string('keyword')->comment('Keyword untuk matching, bisa regex');
             $table->boolean('is_regex')->default(false);

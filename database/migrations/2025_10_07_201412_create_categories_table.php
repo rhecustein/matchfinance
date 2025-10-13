@@ -10,7 +10,10 @@ return new class extends Migration
     {
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid')->unique();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->foreignId('type_id')->constrained()->onDelete('cascade');
+            $table->string('slug')->unique();
             $table->string('name', 100);
             $table->text('description')->nullable();
             $table->string('color', 7)->default('#3B82F6'); // Tailwind blue-500
@@ -19,6 +22,14 @@ return new class extends Migration
             $table->softDeletes();
             
             $table->index('type_id');
+            $table->unique(['company_id', 'slug']);
+
+            Schema::create('category_product', function (Blueprint $table) {
+                $table->foreignId('product_id')->constrained()->onDelete('cascade');
+                $table->foreignId('category_id')->constrained()->onDelete('cascade');
+                
+                $table->primary(['product_id', 'category_id']);
+            });
         });
     }
 

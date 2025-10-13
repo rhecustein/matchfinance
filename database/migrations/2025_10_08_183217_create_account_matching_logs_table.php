@@ -10,7 +10,8 @@ return new class extends Migration
     {
         Schema::create('account_matching_logs', function (Blueprint $table) {
             $table->id();
-            
+            $table->uuid('uuid')->unique();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
             // Foreign Keys - Core Relations
             $table->foreignId('statement_transaction_id')
                   ->constrained('statement_transactions')

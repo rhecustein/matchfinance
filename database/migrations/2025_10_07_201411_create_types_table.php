@@ -10,6 +10,8 @@ return new class extends Migration
     {
         Schema::create('types', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid')->unique();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name', 100);
             $table->text('description')->nullable();
             $table->integer('sort_order')->default(0);

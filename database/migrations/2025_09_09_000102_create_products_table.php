@@ -11,24 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-      Schema::create('accounts', function (Blueprint $table) {
+        Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->uuid('uuid')->unique();
-            $table->string('name');
-            $table->string('code', 50)->nullable()->unique();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
             $table->text('description')->nullable();
-            $table->string('account_type', 50)->nullable(); // Asset, Liability, Equity, Revenue, Expense
-            $table->string('color', 20)->default('#3B82F6');
-            $table->unsignedTinyInteger('priority')->default(5); // 1-10, higher = matched first
+            $table->decimal('price', 12, 2);
+            $table->integer('stock')->default(0);
             $table->boolean('is_active')->default(true);
+            $table->foreignId('created_by')->constrained('users');
             $table->timestamps();
             $table->softDeletes();
-
-            // Indexes
-            $table->index('is_active');
-            $table->index('account_type');
-            $table->index(['priority', 'name']);
+            
+            $table->index(['company_id', 'is_active']);
         });
     }
 
@@ -37,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('accounts');
+        Schema::dropIfExists('products');
     }
 };
