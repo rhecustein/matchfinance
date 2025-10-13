@@ -2,38 +2,42 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
+use App\Traits\BelongsToTenant;
 
+// ====================================
+// TYPE MODEL
+// ====================================
 class Type extends Model
 {
-    use HasFactory, SoftDeletes;
+    use SoftDeletes, BelongsToTenant;
 
     protected $fillable = [
+        'uuid',
+        'company_id',
         'name',
         'description',
-        'sort_order',
+        'sort_order'
     ];
 
     protected $casts = [
-        'sort_order' => 'integer',
+        'sort_order' => 'integer'
     ];
 
-    /**
-     * Get all categories for this type
-     */
-    public function categories(): HasMany
+    protected static function boot()
     {
-        return $this->hasMany(Category::class)->orderBy('sort_order');
+        parent::boot();
+        static::creating(fn($m) => $m->uuid = $m->uuid ?? (string) Str::uuid());
     }
 
-    /**
-     * Get all transactions for this type
-     */
-    public function transactions(): HasMany
-    {
-        return $this->hasMany(StatementTransaction::class);
-    }
+    public function getRouteKeyName() { return 'uuid'; }
+
+    // Relationships
+    public function company() { return $this->belongsTo(Company::class); }
+    public function categories() { return $this->hasMany(Category::class)->orderBy('sort_order'); }
+    public function transactions() { return $this->hasMany(StatementTransaction::class); }
+    
+    public function scopeOrdered($query) { return $query->orderBy('sort_order'); }
 }

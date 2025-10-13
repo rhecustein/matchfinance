@@ -35,11 +35,11 @@ return new class extends Migration
             
             // Account Matching System - NEW FEATURE
             $table->foreignId('account_id')
-                  ->nullable()
-                  ->constrained('accounts')
-                  ->nullOnDelete()
-                  ->comment('Matched accounting account (Chart of Accounts)');
-                  
+            ->nullable()
+            ->constrained('accounts')
+            ->nullOnDelete()
+            ->comment('Matched account for this transaction');
+            
             $table->foreignId('matched_account_keyword_id')
                   ->nullable()
                   ->constrained('account_keywords')
