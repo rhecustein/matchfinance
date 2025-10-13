@@ -5,15 +5,17 @@ namespace App\Http\Controllers;
 use App\Models\Bank;
 use App\Models\BankStatement;
 use App\Models\Company;
+use App\Models\DocumentCollection;
+use App\Models\DocumentItem;
 use App\Jobs\ProcessBankStatementOCR;
+use App\Jobs\ProcessAccountMatching;
+use App\Jobs\ProcessTransactionMatching;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use App\Jobs\ProcessAccountMatching;
-use App\Jobs\ProcessTransactionMatching;
 
 class BankStatementController extends Controller
 {
@@ -706,7 +708,7 @@ class BankStatementController extends Controller
             403
         );
 
-        \App\Jobs\ProcessTransactionMatching::dispatch($bankStatement)
+        ProcessTransactionMatching::dispatch($bankStatement)
             ->onQueue('matching');
 
         return back()->with('success', 'Transaction matching has been queued.');
@@ -745,7 +747,7 @@ class BankStatementController extends Controller
         }
 
         // Dispatch matching job
-        \App\Jobs\ProcessTransactionMatching::dispatch($bankStatement)
+        ProcessTransactionMatching::dispatch($bankStatement)
             ->onQueue('matching');
 
         Log::info('All transactions rematching queued', [
@@ -772,6 +774,43 @@ class BankStatementController extends Controller
             ->onQueue('matching');
 
         return back()->with('success', 'Account matching has been queued.');
+    }
+
+    /**
+     * Rematch all accounts (COMPANY SCOPED or SUPER ADMIN)
+     */
+    public function rematchAccounts(BankStatement $bankStatement)
+    {
+        // AUTHORIZATION: Super admin or company ownership
+        abort_unless(
+            auth()->user()->isSuperAdmin() || $bankStatement->company_id === auth()->user()->company_id,
+            403
+        );
+
+        // Reset account matching data
+        $bankStatement->transactions()->update([
+            'account_id' => null,
+            'matched_account_keyword_id' => null,
+            'account_confidence_score' => null,
+            'is_manual_account' => false,
+        ]);
+
+        // Delete existing account matching logs
+        foreach ($bankStatement->transactions as $transaction) {
+            $transaction->accountMatchingLogs()->delete();
+        }
+
+        // Dispatch account matching job with force rematch
+        ProcessAccountMatching::dispatch($bankStatement, $forceRematch = true)
+            ->onQueue('matching');
+
+        Log::info('All accounts rematching queued', [
+            'statement_id' => $bankStatement->id,
+            'company_id' => $bankStatement->company_id,
+            'user_id' => auth()->id(),
+        ]);
+
+        return back()->with('success', 'All accounts will be re-matched.');
     }
 
     /**
@@ -1206,6 +1245,7 @@ class BankStatementController extends Controller
 
     /**
      * Replace existing bank statement
+     * + Handle existing document collection
      */
     private function replaceExistingStatement(
         BankStatement $existingStatement,
@@ -1270,6 +1310,24 @@ class BankStatementController extends Controller
             'notes' => null,
         ]);
 
+        // ✅ HANDLE DOCUMENT COLLECTION
+        if ($existingStatement->documentItem) {
+            // Keep existing collection, reset item status
+            $existingStatement->documentItem->update([
+                'knowledge_status' => 'pending',
+                'knowledge_error' => null,
+                'processed_at' => null,
+            ]);
+
+            Log::info('✅ Document collection kept for replaced statement', [
+                'statement_id' => $existingStatement->id,
+                'collection_id' => $existingStatement->documentItem->document_collection_id,
+            ]);
+        } else {
+            // Create new collection if doesn't exist
+            $this->createDocumentCollection($existingStatement);
+        }
+
         // Dispatch new OCR job
         ProcessBankStatementOCR::dispatch($existingStatement, $bank->slug)
             ->onQueue('ocr-processing');
@@ -1277,6 +1335,7 @@ class BankStatementController extends Controller
 
     /**
      * Create new bank statement
+     * + Auto-create document collection for AI chat
      */
     private function createNewStatement(
         Bank $bank,
@@ -1287,7 +1346,7 @@ class BankStatementController extends Controller
         int $companyId
     ): BankStatement {
         $bankStatement = BankStatement::create([
-            'company_id' => $companyId, // AUTO ASSIGN COMPANY_ID
+            'company_id' => $companyId,
             'bank_id' => $bank->id,
             'user_id' => auth()->id(),
             'file_path' => $path,
@@ -1300,11 +1359,90 @@ class BankStatementController extends Controller
             'uploaded_at' => now(),
         ]);
 
+        // ✅ AUTO-CREATE DOCUMENT COLLECTION
+        $this->createDocumentCollection($bankStatement);
+
         // Dispatch OCR job
         ProcessBankStatementOCR::dispatch($bankStatement, $bank->slug)
             ->onQueue('ocr-processing');
 
         return $bankStatement;
+    }
+
+    /**
+     * ✅ NEW METHOD: Create document collection & item for bank statement
+     */
+    private function createDocumentCollection(BankStatement $bankStatement): void
+    {
+        try {
+            // Generate collection name from filename & date
+            $baseName = pathinfo($bankStatement->original_filename, PATHINFO_FILENAME);
+            $bankName = $bankStatement->bank->name ?? 'Bank';
+            $collectionName = "{$bankName} - " . Str::limit($baseName, 80) . ' (' . now()->format('d M Y') . ')';
+            
+            // Create document collection
+            $collection = DocumentCollection::create([
+                'uuid' => Str::uuid(),
+                'company_id' => $bankStatement->company_id,
+                'user_id' => $bankStatement->user_id,
+                'name' => $collectionName,
+                'description' => "Auto-created from: {$bankStatement->original_filename}",
+                'color' => $this->getRandomColor(),
+                'icon' => 'document-text',
+                'document_count' => 1,
+                'total_transactions' => 0,
+                'total_debit' => 0,
+                'total_credit' => 0,
+                'is_active' => true,
+            ]);
+
+            // Create document item (link statement to collection)
+            DocumentItem::create([
+                'uuid' => Str::uuid(),
+                'company_id' => $bankStatement->company_id,
+                'document_collection_id' => $collection->id,
+                'bank_statement_id' => $bankStatement->id,
+                'document_type' => 'bank_statement',
+                'sort_order' => 0,
+                'knowledge_status' => 'pending', // Will be updated to 'ready' after OCR
+            ]);
+
+            Log::info('✅ Document collection auto-created', [
+                'collection_id' => $collection->id,
+                'collection_name' => $collection->name,
+                'statement_id' => $bankStatement->id,
+                'company_id' => $bankStatement->company_id,
+            ]);
+
+        } catch (\Exception $e) {
+            // Don't fail the upload if collection creation fails
+            Log::error('❌ Failed to create document collection', [
+                'statement_id' => $bankStatement->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        }
+    }
+
+    /**
+     * ✅ NEW METHOD: Get random color for collection UI
+     */
+    private function getRandomColor(): string
+    {
+        $colors = [
+            '#3B82F6', // Blue
+            '#10B981', // Green
+            '#F59E0B', // Amber
+            '#EF4444', // Red
+            '#8B5CF6', // Purple
+            '#EC4899', // Pink
+            '#06B6D4', // Cyan
+            '#F97316', // Orange
+            '#14B8A6', // Teal
+            '#84CC16', // Lime
+        ];
+
+        return $colors[array_rand($colors)];
     }
 
     /**

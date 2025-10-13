@@ -10,6 +10,17 @@
                     Collection Details
                 </h2>
             </div>
+            
+            {{-- ✅ Quick Start Chat Button in Header --}}
+            @if($documentCollection->is_active && $documentCollection->document_count > 0)
+            <form action="{{ route('document-collections.start-chat', $documentCollection) }}" method="POST" class="inline-block">
+                @csrf
+                <button type="submit" 
+                        class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition font-bold shadow-lg hover:shadow-xl transform hover:scale-105">
+                    <i class="fas fa-comments mr-2"></i>Start Chat Session
+                </button>
+            </form>
+            @endif
         </div>
     </x-slot>
 
@@ -20,19 +31,29 @@
             <!-- Header -->
             <div class="p-6 bg-gradient-to-r from-purple-600 to-blue-600">
                 <div class="flex items-start justify-between">
-                    <div>
+                    <div class="flex-1">
                         <h3 class="text-3xl font-bold text-white mb-2">{{ $documentCollection->name }}</h3>
                         @if($documentCollection->description)
                         <p class="text-blue-100 max-w-2xl">{{ $documentCollection->description }}</p>
                         @endif
+                        
+                        {{-- Super Admin: Show company info --}}
+                        @if(auth()->user()->isSuperAdmin() && $documentCollection->company)
+                        <div class="mt-3">
+                            <span class="px-3 py-1 bg-white/20 text-white rounded-full text-sm font-semibold">
+                                <i class="fas fa-building mr-1"></i>{{ $documentCollection->company->name }}
+                            </span>
+                        </div>
+                        @endif
                     </div>
+                    
                     @if($documentCollection->is_active)
                     <span class="px-4 py-2 bg-green-500 text-white rounded-full text-sm font-bold">
-                        Active
+                        <i class="fas fa-check-circle mr-1"></i>Active
                     </span>
                     @else
                     <span class="px-4 py-2 bg-gray-500 text-white rounded-full text-sm font-bold">
-                        Inactive
+                        <i class="fas fa-pause-circle mr-1"></i>Inactive
                     </span>
                     @endif
                 </div>
@@ -84,61 +105,77 @@
                     @if($documentCollection->items->isNotEmpty())
                     <div class="space-y-3">
                         @foreach($documentCollection->items as $item)
-                        <div class="p-4 bg-slate-900/50 rounded-lg border border-slate-700 hover:border-blue-500 transition">
-                            <div class="flex items-start justify-between mb-3">
-                                <div>
-                                    <h5 class="text-white font-semibold">
-                                        {{ $item->bankStatement->bank->name ?? 'Unknown Bank' }}
-                                    </h5>
-                                    <p class="text-gray-400 text-sm">
-                                        {{ $item->bankStatement->period_start->format('M Y') }} - 
-                                        {{ $item->bankStatement->period_end->format('M Y') }}
-                                    </p>
+                            @if($item->bankStatement)
+                            <div class="p-4 bg-slate-900/50 rounded-lg border border-slate-700 hover:border-blue-500 transition">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div>
+                                        <h5 class="text-white font-semibold">
+                                            {{ $item->bankStatement->bank->name ?? 'Unknown Bank' }}
+                                        </h5>
+                                        <p class="text-gray-400 text-sm">
+                                            @if($item->bankStatement->period_from && $item->bankStatement->period_to)
+                                                {{ $item->bankStatement->period_from->format('M Y') }} - 
+                                                {{ $item->bankStatement->period_to->format('M Y') }}
+                                            @elseif($item->bankStatement->period_from)
+                                                {{ $item->bankStatement->period_from->format('M Y') }}
+                                            @else
+                                                Period not set
+                                            @endif
+                                        </p>
+                                    </div>
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                        @if($item->knowledge_status === 'ready') bg-green-900/30 text-green-400
+                                        @elseif($item->knowledge_status === 'processing') bg-yellow-900/30 text-yellow-400
+                                        @elseif($item->knowledge_status === 'failed') bg-red-900/30 text-red-400
+                                        @else bg-gray-900/30 text-gray-400
+                                        @endif">
+                                        {{ ucfirst($item->knowledge_status) }}
+                                    </span>
                                 </div>
-                                <span class="px-3 py-1 rounded-full text-xs font-semibold
-                                    @if($item->knowledge_status === 'ready') bg-green-900/30 text-green-400
-                                    @elseif($item->knowledge_status === 'processing') bg-yellow-900/30 text-yellow-400
-                                    @elseif($item->knowledge_status === 'failed') bg-red-900/30 text-red-400
-                                    @else bg-gray-900/30 text-gray-400
-                                    @endif">
-                                    {{ ucfirst($item->knowledge_status) }}
-                                </span>
-                            </div>
 
-                            <div class="grid grid-cols-3 gap-4 text-sm">
-                                <div>
-                                    <p class="text-gray-500">Transactions</p>
-                                    <p class="text-white font-semibold">
-                                        {{ number_format($item->bankStatement->total_transactions) }}
-                                    </p>
+                                <div class="grid grid-cols-3 gap-4 text-sm">
+                                    <div>
+                                        <p class="text-gray-500">Transactions</p>
+                                        <p class="text-white font-semibold">
+                                            {{ number_format($item->bankStatement->total_transactions ?? 0) }}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-500">Debit</p>
+                                        <p class="text-red-400 font-semibold">
+                                            Rp {{ number_format($item->bankStatement->total_debit_amount ?? 0, 0, ',', '.') }}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-500">Credit</p>
+                                        <p class="text-green-400 font-semibold">
+                                            Rp {{ number_format($item->bankStatement->total_credit_amount ?? 0, 0, ',', '.') }}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="text-gray-500">Debit</p>
-                                    <p class="text-red-400 font-semibold">
-                                        Rp {{ number_format($item->bankStatement->total_debit_amount, 0, ',', '.') }}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-500">Credit</p>
-                                    <p class="text-green-400 font-semibold">
-                                        Rp {{ number_format($item->bankStatement->total_credit_amount, 0, ',', '.') }}
-                                    </p>
-                                </div>
-                            </div>
 
-                            <div class="mt-3 flex items-center gap-2">
-                                <a href="{{ route('bank-statements.show', $item->bankStatement) }}" 
-                                   class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition font-semibold">
-                                    <i class="fas fa-eye mr-1"></i>View Statement
-                                </a>
+                                <div class="mt-3 flex items-center gap-2">
+                                    <a href="{{ route('bank-statements.show', $item->bankStatement->uuid) }}" 
+                                       class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition font-semibold">
+                                        <i class="fas fa-eye mr-1"></i>View Statement
+                                    </a>
+                                    <span class="text-gray-500 text-xs">
+                                        ID: {{ Str::limit($item->bankStatement->uuid, 8, '') }}
+                                    </span>
+                                </div>
                             </div>
-                        </div>
+                            @endif
                         @endforeach
                     </div>
                     @else
-                    <div class="text-center py-8">
-                        <i class="fas fa-inbox text-gray-600 text-4xl mb-3"></i>
-                        <p class="text-gray-400">No bank statements in this collection</p>
+                    <div class="text-center py-12">
+                        <i class="fas fa-inbox text-gray-600 text-5xl mb-4"></i>
+                        <p class="text-gray-400 text-lg mb-2">No bank statements in this collection</p>
+                        <p class="text-gray-500 text-sm mb-4">Add bank statements to start using this collection</p>
+                        <a href="{{ route('document-collections.edit', $documentCollection) }}" 
+                           class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
+                            <i class="fas fa-plus mr-2"></i>Add Bank Statements
+                        </a>
                     </div>
                     @endif
                 </div>
@@ -155,39 +192,65 @@
                     @if($documentCollection->chatSessions->isNotEmpty())
                     <div class="space-y-3">
                         @foreach($documentCollection->chatSessions as $chat)
-                        <div class="p-4 bg-slate-900/50 rounded-lg border border-slate-700">
+                        <div class="p-4 bg-slate-900/50 rounded-lg border border-slate-700 hover:border-blue-500 transition">
                             <div class="flex items-start justify-between mb-2">
                                 <div class="flex-1">
-                                    <h5 class="text-white font-semibold">{{ $chat->title }}</h5>
-                                    <p class="text-gray-400 text-sm">by {{ $chat->user->name }}</p>
+                                    <h5 class="text-white font-semibold">{{ $chat->title ?? 'Untitled Chat' }}</h5>
+                                    <p class="text-gray-400 text-sm">by {{ $chat->user->name ?? 'Unknown User' }}</p>
                                 </div>
                                 <span class="px-3 py-1 rounded-full text-xs font-semibold
-                                    @if($chat->is_active) bg-green-900/30 text-green-400
+                                    @if(!$chat->is_archived) bg-green-900/30 text-green-400
                                     @else bg-gray-900/30 text-gray-400
                                     @endif">
-                                    {{ $chat->is_active ? 'Active' : 'Ended' }}
+                                    {{ !$chat->is_archived ? 'Active' : 'Archived' }}
                                 </span>
                             </div>
                             
                             <div class="flex items-center justify-between text-sm">
                                 <span class="text-gray-400">
                                     <i class="fas fa-message mr-1"></i>
-                                    {{ $chat->message_count }} messages
+                                    {{ $chat->message_count ?? 0 }} messages
                                 </span>
                                 <span class="text-gray-400">
-                                    {{ $chat->last_activity_at->diffForHumans() }}
+                                    {{ $chat->last_activity_at ? $chat->last_activity_at->diffForHumans() : 'No activity' }}
                                 </span>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <a href="{{ route('chat-sessions.show', $chat) }}" 
+                                   class="px-3 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700 transition font-semibold">
+                                    <i class="fas fa-arrow-right mr-1"></i>Open Chat
+                                </a>
                             </div>
                         </div>
                         @endforeach
                     </div>
                     @else
-                    <div class="text-center py-8">
-                        <i class="fas fa-comments text-gray-600 text-4xl mb-3"></i>
-                        <p class="text-gray-400 mb-4">No chat sessions yet</p>
-                        <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
-                            <i class="fas fa-plus mr-2"></i>Start Chat Session
-                        </button>
+                    <div class="text-center py-12">
+                        <i class="fas fa-comments text-gray-600 text-5xl mb-4"></i>
+                        <p class="text-gray-400 text-lg mb-2">No chat sessions yet</p>
+                        <p class="text-gray-500 text-sm mb-4">Start a conversation with your documents</p>
+                        
+                        {{-- ✅ Start Chat Button with Validation --}}
+                        @if($documentCollection->is_active && $documentCollection->document_count > 0)
+                        <form action="{{ route('document-collections.start-chat', $documentCollection) }}" method="POST" class="inline-block">
+                            @csrf
+                            <button type="submit" 
+                                    class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition font-semibold shadow-lg">
+                                <i class="fas fa-plus mr-2"></i>Start Chat Session
+                            </button>
+                        </form>
+                        @elseif(!$documentCollection->is_active)
+                        <p class="text-yellow-500 text-sm mb-2">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>Collection is inactive
+                        </p>
+                        <p class="text-gray-500 text-xs">Activate the collection first to start chatting</p>
+                        @else
+                        <p class="text-yellow-500 text-sm mb-2">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>No documents in collection
+                        </p>
+                        <p class="text-gray-500 text-xs">Add documents first before starting a chat</p>
+                        @endif
                     </div>
                     @endif
                 </div>
@@ -205,6 +268,17 @@
                     </h4>
 
                     <div class="space-y-3">
+                        {{-- ✅ Primary Action: Start Chat --}}
+                        @if($documentCollection->is_active && $documentCollection->document_count > 0)
+                        <form action="{{ route('document-collections.start-chat', $documentCollection) }}" method="POST">
+                            @csrf
+                            <button type="submit" 
+                                    class="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition font-semibold shadow-lg">
+                                <i class="fas fa-comments mr-2"></i>Start New Chat
+                            </button>
+                        </form>
+                        @endif
+
                         <a href="{{ route('document-collections.edit', $documentCollection) }}" 
                            class="block w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-semibold text-center">
                             <i class="fas fa-edit mr-2"></i>Edit Collection
@@ -227,12 +301,13 @@
                             </button>
                         </form>
 
-                        @if($documentCollection->chatSessions->where('is_active', true)->isEmpty())
-                        <form action="{{ route('document-collections.destroy', $documentCollection) }}" method="POST">
+                        @if($documentCollection->chatSessions->where('is_archived', false)->isEmpty())
+                        <form action="{{ route('document-collections.destroy', $documentCollection) }}" 
+                              method="POST"
+                              onsubmit="return confirm('Are you sure you want to delete this collection? This action cannot be undone.')">
                             @csrf
                             @method('DELETE')
                             <button type="submit" 
-                                    onclick="return confirm('Are you sure you want to delete this collection?')"
                                     class="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold">
                                 <i class="fas fa-trash mr-2"></i>Delete Collection
                             </button>
@@ -249,9 +324,16 @@
                     </h4>
 
                     <div class="space-y-4">
+                        @if(auth()->user()->isSuperAdmin() && $documentCollection->company)
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-1">Company</label>
+                            <p class="text-white font-semibold">{{ $documentCollection->company->name }}</p>
+                        </div>
+                        @endif
+
                         <div>
                             <label class="block text-sm font-medium text-gray-400 mb-1">Created By</label>
-                            <p class="text-white font-semibold">{{ $documentCollection->user->name }}</p>
+                            <p class="text-white font-semibold">{{ $documentCollection->user->name ?? 'Unknown' }}</p>
                         </div>
 
                         <div>
@@ -275,8 +357,8 @@
                         @endif
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-400 mb-1">UUID</label>
-                            <p class="text-white text-xs font-mono bg-slate-900/50 p-2 rounded">{{ $documentCollection->uuid }}</p>
+                            <label class="block text-sm font-medium text-gray-400 mb-1">Collection ID</label>
+                            <p class="text-white text-xs font-mono bg-slate-900/50 p-2 rounded break-all">{{ $documentCollection->uuid }}</p>
                         </div>
                     </div>
                 </div>
@@ -313,7 +395,7 @@
                         <div class="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
                             <span class="text-gray-400">Active Chats</span>
                             <span class="text-blue-400 font-bold">
-                                {{ $documentCollection->chatSessions->where('is_active', true)->count() }}
+                                {{ $documentCollection->chatSessions->where('is_archived', false)->count() }}
                             </span>
                         </div>
                     </div>

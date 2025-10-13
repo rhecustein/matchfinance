@@ -212,28 +212,31 @@ Route::middleware(['auth', 'verified'])->group(function () {
     /*
     |--------------------------------------------------------------------------
     | Bank Statements Management
+    | ✅ FIXED: Proper route ordering to avoid conflicts
     |--------------------------------------------------------------------------
     */
     
     Route::prefix('bank-statements')->name('bank-statements.')->group(function () {
-        // List & View
-        Route::get('/', [BankStatementController::class, 'index'])->name('index');
-        
-        // ADD THIS - Company selection for super admin
+        // ===================================
+        // STATIC ROUTES FIRST (Highest Priority)
+        // ===================================
         Route::get('/select-company', [BankStatementController::class, 'selectCompany'])
-        ->name('select-company')
-        ->middleware('role:super_admin'); // Only super admin
+            ->name('select-company')
+            ->middleware('role:super_admin');
         
         Route::get('/create', [BankStatementController::class, 'create'])->name('create');
-        Route::get('/{bankStatement}', [BankStatementController::class, 'show'])->name('show');
         
-        // Actions
+        // Statistics (static route)
+        Route::get('/stats/summary', [BankStatementController::class, 'statistics'])->name('statistics');
+        
+        // List
+        Route::get('/', [BankStatementController::class, 'index'])->name('index');
         Route::post('/', [BankStatementController::class, 'store'])->name('store');
-        Route::get('/{bankStatement}/edit', [BankStatementController::class, 'edit'])->name('edit');
-        Route::put('/{bankStatement}', [BankStatementController::class, 'update'])->name('update');
-        Route::delete('/{bankStatement}', [BankStatementController::class, 'destroy'])->name('destroy');
         
-        // Download & Export
+        // ===================================
+        // DYNAMIC ROUTES WITH ACTIONS (Before generic {bankStatement})
+        // ===================================
+        Route::get('/{bankStatement}/edit', [BankStatementController::class, 'edit'])->name('edit');
         Route::get('/{bankStatement}/download', [BankStatementController::class, 'download'])->name('download');
         
         // OCR Operations
@@ -244,16 +247,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{bankStatement}/match-transactions', [BankStatementController::class, 'matchTransactions'])->name('match-transactions');
         Route::post('/{bankStatement}/match-accounts', [BankStatementController::class, 'matchAccounts'])->name('match-accounts');
         Route::post('/{bankStatement}/rematch-all', [BankStatementController::class, 'rematchAll'])->name('rematch-all');
+        Route::post('/{bankStatement}/rematch-accounts', [BankStatementController::class, 'rematchAccounts'])->name('rematch-accounts');
         
         // Verification Operations
         Route::post('/{bankStatement}/verify-all-matched', [BankStatementController::class, 'verifyAllMatched'])->name('verify-all-matched');
+        Route::post('/{bankStatement}/verify-high-confidence', [BankStatementController::class, 'verifyHighConfidence'])->name('verify-high-confidence');
         
         // Reconciliation
         Route::post('/{bankStatement}/reconcile', [BankStatementController::class, 'reconcile'])->name('reconcile');
         Route::post('/{bankStatement}/unreconcile', [BankStatementController::class, 'unreconcile'])->name('unreconcile');
         
-        // Statistics
-        Route::get('/stats/summary', [BankStatementController::class, 'statistics'])->name('statistics');
+        // ===================================
+        // GENERIC ROUTES LAST (Lowest Priority)
+        // ===================================
+        Route::get('/{bankStatement}', [BankStatementController::class, 'show'])->name('show');
+        Route::put('/{bankStatement}', [BankStatementController::class, 'update'])->name('update');
+        Route::delete('/{bankStatement}', [BankStatementController::class, 'destroy'])->name('destroy');
     });
 
     /*
@@ -275,6 +284,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{documentCollection}/toggle-active', [DocumentCollectionController::class, 'toggleActive'])->name('toggle-active');
         Route::post('/{documentCollection}/process', [DocumentCollectionController::class, 'process'])->name('process');
         Route::get('/{documentCollection}/statistics', [DocumentCollectionController::class, 'statistics'])->name('statistics');
+
+        Route::post('/{documentCollection}/start-chat', [DocumentCollectionController::class, 'startChat'])->name('start-chat');
         
         // Document Items
         Route::get('/{documentCollection}/items', [DocumentCollectionController::class, 'items'])->name('items');

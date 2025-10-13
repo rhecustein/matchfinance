@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\DocumentCollection;
 use App\Models\BankStatement;
 use App\Models\Company;
+use App\Models\ChatSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -197,27 +198,120 @@ class DocumentCollectionController extends Controller
     }
 
     /**
-     * Display the specified collection
+     * Display the specified collection (FIXED: Proper authorization & null checks)
      */
     public function show(DocumentCollection $documentCollection)
     {
         $user = auth()->user();
         
-        // Authorization: super admin or same company
-        if (!$user->isSuperAdmin() && $documentCollection->company_id !== $user->company_id) {
-            abort(403);
+        // ===================================
+        // AUTHORIZATION
+        // ===================================
+        if ($user->isSuperAdmin()) {
+            // Super Admin: Full access with company info
+            $documentCollection->load([
+                'company:id,name',
+                'user:id,name,email',
+                'items.bankStatement' => function($q) {
+                    // ✅ TAMBAH 'uuid' untuk route model binding!
+                    $q->select('id', 'uuid', 'bank_id', 'period_from', 'period_to', 
+                            'total_transactions', 'total_debit_amount', 'total_credit_amount');
+                },
+                'items.bankStatement.bank:id,name,code,logo', // Specify columns
+                'chatSessions' => function($q) {
+                    $q->latest('last_activity_at')->limit(10);
+                }
+            ]);
+        } else {
+            // Regular User: Company-scoped only
+            if ($documentCollection->company_id !== $user->company_id) {
+                abort(403, 'You do not have permission to view this collection.');
+            }
+            
+            $documentCollection->load([
+                'user:id,name,email',
+                'items.bankStatement' => function($q) {
+                    // ✅ TAMBAH 'uuid' untuk route model binding!
+                    $q->select('id', 'uuid', 'bank_id', 'period_from', 'period_to', 
+                            'total_transactions', 'total_debit_amount', 'total_credit_amount');
+                },
+                'items.bankStatement.bank:id,name,code,logo', // Specify columns
+                'chatSessions' => function($q) {
+                    $q->latest('last_activity_at')->limit(10);
+                }
+            ]);
         }
 
-        $documentCollection->load([
-            'company',
-            'user',
-            'items.bankStatement.bank',
-            'chatSessions' => function($q) {
-                $q->latest('last_activity_at')->limit(10);
-            }
-        ]);
-
         return view('document-collections.show', compact('documentCollection'));
+    }
+
+    // Add this method to DocumentCollectionController.php (after the 'items' method)
+
+    /**
+     * Start a new chat session directly from this collection
+     */
+    public function startChat(DocumentCollection $documentCollection)
+    {
+        $user = auth()->user();
+        
+        // Authorization
+        if (!$user->isSuperAdmin() && $documentCollection->company_id !== $user->company_id) {
+            abort(403, 'You do not have permission to use this collection.');
+        }
+
+        // Validation: Collection must be active
+        if (!$documentCollection->is_active) {
+            return back()->with('error', 'Cannot start chat with inactive collection. Please activate it first.');
+        }
+
+        // Validation: Collection must have documents
+        if ($documentCollection->document_count === 0) {
+            return back()->with('error', 'Cannot start chat with empty collection. Please add documents first.');
+        }
+
+        // Validation: Collection must have ready items
+        if ($documentCollection->readyItems()->count() === 0) {
+            return back()->with('error', 'Collection has no ready documents. Please process the collection first.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Create new chat session
+            $session = ChatSession::create([
+                'uuid' => Str::uuid(),
+                'company_id' => $documentCollection->company_id,
+                'user_id' => $user->id,
+                'mode' => 'collection',
+                'document_collection_id' => $documentCollection->id,
+                'bank_statement_id' => null,
+                'title' => "Chat: {$documentCollection->name}",
+                'context_description' => $documentCollection->description,
+                'is_pinned' => false,
+                'is_archived' => false,
+            ]);
+
+            DB::commit();
+
+            // Log activity
+            Log::info("Chat session started from collection", [
+                'user_id' => $user->id,
+                'collection_id' => $documentCollection->id,
+                'session_id' => $session->id,
+            ]);
+
+            return redirect()->route('chat-sessions.show', $session)
+                ->with('success', 'Chat session started! You can now ask questions about your documents.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to start chat from collection: ' . $e->getMessage(), [
+                'collection_id' => $documentCollection->id,
+                'user_id' => $user->id,
+            ]);
+            
+            return back()->with('error', 'Failed to start chat session: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -229,7 +323,7 @@ class DocumentCollectionController extends Controller
         
         // Authorization
         if (!$user->isSuperAdmin() && $documentCollection->company_id !== $user->company_id) {
-            abort(403);
+            abort(403, 'You do not have permission to edit this collection.');
         }
 
         $documentCollection->load('items.bankStatement');
@@ -253,7 +347,7 @@ class DocumentCollectionController extends Controller
         
         // Authorization
         if (!$user->isSuperAdmin() && $documentCollection->company_id !== $user->company_id) {
-            abort(403);
+            abort(403, 'You do not have permission to update this collection.');
         }
 
         $validated = $request->validate([
@@ -285,7 +379,7 @@ class DocumentCollectionController extends Controller
         
         // Authorization
         if (!$user->isSuperAdmin() && $documentCollection->company_id !== $user->company_id) {
-            abort(403);
+            abort(403, 'You do not have permission to delete this collection.');
         }
 
         try {
@@ -315,7 +409,7 @@ class DocumentCollectionController extends Controller
         
         // Authorization
         if (!$user->isSuperAdmin() && $documentCollection->company_id !== $user->company_id) {
-            abort(403);
+            abort(403, 'You do not have permission to modify this collection.');
         }
 
         try {
@@ -339,7 +433,12 @@ class DocumentCollectionController extends Controller
      */
     public function process(DocumentCollection $documentCollection)
     {
-        abort_unless($documentCollection->company_id === auth()->user()->company_id, 403);
+        $user = auth()->user();
+        
+        // Authorization
+        if (!$user->isSuperAdmin() && $documentCollection->company_id !== $user->company_id) {
+            abort(403, 'You do not have permission to process this collection.');
+        }
 
         try {
             // TODO: Implement AI knowledge processing
@@ -370,7 +469,15 @@ class DocumentCollectionController extends Controller
      */
     public function statistics(DocumentCollection $documentCollection)
     {
-        abort_unless($documentCollection->company_id === auth()->user()->company_id, 403);
+        $user = auth()->user();
+        
+        // Authorization
+        if (!$user->isSuperAdmin() && $documentCollection->company_id !== $user->company_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 403);
+        }
 
         $stats = [
             'document_count' => $documentCollection->document_count,
@@ -396,7 +503,15 @@ class DocumentCollectionController extends Controller
      */
     public function items(DocumentCollection $documentCollection)
     {
-        abort_unless($documentCollection->company_id === auth()->user()->company_id, 403);
+        $user = auth()->user();
+        
+        // Authorization
+        if (!$user->isSuperAdmin() && $documentCollection->company_id !== $user->company_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 403);
+        }
 
         $items = $documentCollection->items()
             ->with('bankStatement.bank')
