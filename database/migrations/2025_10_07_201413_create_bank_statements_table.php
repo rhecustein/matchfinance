@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->uuid('uuid')->unique();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            
             // Foreign Keys - Relations
             $table->foreignId('bank_id')
                   ->constrained('banks')
@@ -82,19 +83,37 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
             
-            // Performance Indexes
-            $table->index(['bank_id', 'ocr_status'], 'idx_bank_ocr_status');
-            $table->index(['user_id', 'uploaded_at'], 'idx_user_uploaded');
-            $table->index(['period_from', 'period_to'], 'idx_period_range');
-            $table->index('account_number', 'idx_account_number');
-            $table->index('ocr_status', 'idx_ocr_status');
-            $table->index('ocr_job_id', 'idx_ocr_job');
-            $table->index(['is_reconciled', 'deleted_at'], 'idx_reconciled_deleted');
-            $table->index(['user_id', 'period_from', 'deleted_at'], 'idx_user_period_deleted');
+            // =========================================================
+            // INDEXES - OPTIMIZED FOR QUERY PERFORMANCE
+            // =========================================================
             
-            // Composite indexes for common queries
-            $table->index(['bank_id', 'account_number', 'period_from'], 'idx_bank_account_period');
-            $table->index(['user_id', 'bank_id', 'ocr_status'], 'idx_user_bank_status');
+            // 1. MULTI-TENANT PRIMARY QUERIES (MOST IMPORTANT!) ⭐⭐⭐
+            $table->index(['company_id', 'uploaded_at'], 'idx_company_uploaded');
+            $table->index(['company_id', 'ocr_status'], 'idx_company_ocr_status');
+            
+            // 2. OCR PROCESSING & MONITORING
+            $table->index(['ocr_status', 'ocr_started_at'], 'idx_ocr_processing');
+            $table->index(['ocr_job_id'], 'idx_ocr_job');
+            
+            // 3. USER ACTIVITY & FILTERING
+            $table->index(['user_id', 'bank_id', 'uploaded_at'], 'idx_user_bank_uploaded');
+            
+            // 4. PERIOD & DATE RANGE QUERIES
+            $table->index(['period_from', 'period_to'], 'idx_period_range');
+            $table->index(['company_id', 'period_from', 'period_to'], 'idx_company_period');
+            
+            // 5. ACCOUNT LOOKUP
+            $table->index(['bank_id', 'account_number'], 'idx_bank_account');
+            
+            // 6. RECONCILIATION STATUS
+            $table->index(['company_id', 'is_reconciled'], 'idx_company_reconciled');
+            
+            // 7. STATISTICS & REPORTING
+            $table->index(['matched_transactions', 'total_transactions'], 'idx_matching_stats');
+            
+            // 8. SOFT DELETE AWARE (CRITICAL for Multi-tenant)
+            $table->index(['company_id', 'deleted_at'], 'idx_company_deleted');
+            $table->index(['user_id', 'deleted_at'], 'idx_user_deleted');
         });
     }
 

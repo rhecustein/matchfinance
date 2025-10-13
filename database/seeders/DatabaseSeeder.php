@@ -17,12 +17,13 @@ class DatabaseSeeder extends Seeder
 
         // Run seeders in correct order (important for foreign keys!)
         $this->call([
+            CompanySeeder::class,
             BankSeeder::class,
             TypeSeeder::class,
             CategorySeeder::class,
             SubCategorySeeder::class,
             KeywordSeeder::class,
-            CompanySeeder::class,
+           
             UserSeeder::class,
             PlanSeeder::class,
             CompanyInvitationSeeder::class,

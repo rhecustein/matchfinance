@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->uuid('uuid')->unique();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            
             // Foreign Keys - Core Relations
             $table->foreignId('statement_transaction_id')
                   ->constrained('statement_transactions')
@@ -94,25 +95,45 @@ return new class extends Migration
             // Timestamps
             $table->timestamps();
             
-            // Performance Indexes
-            $table->index('statement_transaction_id', 'idx_transaction_id');
-            $table->index('account_id', 'idx_account_id');
-            $table->index('account_keyword_id', 'idx_keyword_id');
-            $table->index('confidence_score', 'idx_confidence');
-            $table->index('is_matched', 'idx_is_matched');
-            $table->index('is_selected', 'idx_is_selected');
-            $table->index('matching_engine', 'idx_matching_engine');
-            $table->index('created_at', 'idx_created_at');
+            // =========================================================
+            // INDEXES - OPTIMIZED FOR ACCOUNT MATCHING ANALYSIS
+            // =========================================================
             
-            // Composite Indexes for Analytics
-            $table->index(['statement_transaction_id', 'is_matched'], 'idx_trans_matched');
+            // 1. PRIMARY TRANSACTION LOOKUP (MOST IMPORTANT!) ⭐⭐⭐
+            // Get all account matches for a transaction
+            $table->index(['statement_transaction_id', 'is_matched', 'confidence_score'], 'idx_trans_match_lookup');
+            
+            // 2. SELECTED ACCOUNT MATCH (CRITICAL) ⭐⭐⭐
+            // Find the selected account for a transaction
             $table->index(['statement_transaction_id', 'is_selected'], 'idx_trans_selected');
-            $table->index(['account_id', 'is_matched', 'confidence_score'], 'idx_account_match_conf');
-            $table->index(['account_keyword_id', 'is_matched'], 'idx_keyword_matched');
             
-            // For finding best matches
-            $table->index(['statement_transaction_id', 'confidence_score', 'priority_score'], 'idx_trans_scores');
-            $table->index(['is_matched', 'confidence_score', 'created_at'], 'idx_matched_conf_time');
+            // 3. BEST MATCH SELECTION (CRITICAL) ⭐⭐⭐
+            // For selecting best account match when multiple options exist
+            $table->index(['statement_transaction_id', 'priority_score', 'confidence_score'], 'idx_trans_best_match');
+            
+            // 4. ACCOUNT PERFORMANCE ANALYSIS ⭐⭐
+            // Analyze account matching effectiveness
+            $table->index(['account_id', 'is_matched', 'confidence_score'], 'idx_account_performance');
+            
+            // 5. KEYWORD EFFECTIVENESS ⭐⭐
+            // Track which account keywords work best
+            $table->index(['account_keyword_id', 'is_matched', 'confidence_score'], 'idx_keyword_effectiveness');
+            
+            // 6. CONFIDENCE FILTERING ⭐⭐
+            // Find low/high confidence matches for review
+            $table->index(['company_id', 'confidence_score', 'is_matched'], 'idx_company_confidence');
+            
+            // 7. MATCHING ENGINE ANALYTICS ⭐
+            // Compare engine performance
+            $table->index(['matching_engine', 'confidence_score'], 'idx_engine_performance');
+            
+            // 8. TEMPORAL ANALYSIS ⭐⭐
+            // Matching trends over time
+            $table->index(['company_id', 'created_at'], 'idx_company_timeline');
+            
+            // 9. MATCHED TRANSACTIONS ONLY ⭐⭐
+            // Filter successful matches
+            $table->index(['company_id', 'is_matched', 'created_at'], 'idx_company_matched_time');
         });
     }
 

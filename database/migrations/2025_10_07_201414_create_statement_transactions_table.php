@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->uuid('uuid')->unique();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            
             // Foreign Keys - Core Relations
             $table->foreignId('bank_statement_id')
                   ->constrained('bank_statements')
@@ -33,12 +34,12 @@ return new class extends Migration
             $table->enum('transaction_type', ['debit', 'credit'])->comment('Transaction direction: debit (out) or credit (in)');
             $table->decimal('amount', 15, 2)->comment('Absolute transaction amount (always positive)');
             
-            // Account Matching System - NEW FEATURE
+            // Account Matching System
             $table->foreignId('account_id')
-            ->nullable()
-            ->constrained('accounts')
-            ->nullOnDelete()
-            ->comment('Matched account for this transaction');
+                  ->nullable()
+                  ->constrained('accounts')
+                  ->nullOnDelete()
+                  ->comment('Matched account for this transaction');
             
             $table->foreignId('matched_account_keyword_id')
                   ->nullable()
@@ -55,7 +56,6 @@ return new class extends Migration
                   ->comment('True if account was manually assigned by user');
             
             // Category Matching System - Denormalized for Performance
-            // Note: Full details in transaction_categories table, this is for quick access
             $table->foreignId('matched_keyword_id')
                   ->nullable()
                   ->constrained('keywords')
@@ -134,46 +134,45 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
             
-            // Performance Indexes - Core Queries
-            $table->index('bank_statement_id', 'idx_statement_id');
-            $table->index('transaction_date', 'idx_transaction_date');
-            $table->index('transaction_type', 'idx_transaction_type');
+            // =========================================================
+            // INDEXES - OPTIMIZED & CONSOLIDATED
+            // =========================================================
             
-            // Account Matching Indexes
+            // 1. CORE QUERY INDEXES (Most Frequently Used)
+            $table->index(['company_id', 'transaction_date'], 'idx_company_date');
+            $table->index(['bank_statement_id', 'transaction_date'], 'idx_statement_date');
+            
+            // 2. MATCHING SYSTEM INDEXES
+            $table->index(['bank_statement_id', 'matched_keyword_id'], 'idx_statement_matching');
+            $table->index(['matched_keyword_id', 'confidence_score'], 'idx_keyword_confidence');
+            
+            // 3. ACCOUNT MATCHING INDEXES
             $table->index(['account_id', 'transaction_date'], 'idx_account_date');
             $table->index(['account_id', 'is_manual_account'], 'idx_account_manual');
-            $table->index('matched_account_keyword_id', 'idx_matched_account_keyword');
             
-            // Category Matching Indexes
-            $table->index(['sub_category_id', 'category_id', 'type_id'], 'idx_categories');
-            $table->index('matched_keyword_id', 'idx_matched_keyword');
-            $table->index('is_manual_category', 'idx_manual_category');
+            // 4. CATEGORY HIERARCHY INDEXES
+            $table->index(['type_id', 'category_id', 'sub_category_id'], 'idx_category_hierarchy');
+            $table->index(['sub_category_id', 'transaction_date'], 'idx_subcat_date');
             
-            // Verification & Quality Indexes
-            $table->index(['is_verified', 'confidence_score'], 'idx_verification');
-            $table->index(['verified_by', 'verified_at'], 'idx_verifier_time');
+            // 5. VERIFICATION INDEXES
+            $table->index(['is_verified', 'verified_at'], 'idx_verified');
+            $table->index(['is_verified', 'confidence_score'], 'idx_verified_confidence');
             
-            // Soft Delete Aware Indexes (Critical for Performance)
-            $table->index(['id', 'deleted_at'], 'idx_id_deleted');
-            $table->index(['transaction_date', 'deleted_at'], 'idx_date_deleted');
-            $table->index(['is_verified', 'deleted_at'], 'idx_verified_deleted');
-            $table->index(['matched_keyword_id', 'deleted_at'], 'idx_matched_deleted');
-            $table->index(['confidence_score', 'deleted_at'], 'idx_confidence_deleted');
-            $table->index(['type_id', 'deleted_at'], 'idx_type_deleted');
-            $table->index(['category_id', 'deleted_at'], 'idx_category_deleted');
-            $table->index(['sub_category_id', 'deleted_at'], 'idx_sub_category_deleted');
-            $table->index(['account_id', 'deleted_at'], 'idx_account_deleted');
+            // 6. TRANSACTION TYPE & AMOUNT INDEXES
+            $table->index(['transaction_type', 'transaction_date'], 'idx_type_date');
+            $table->index(['transaction_type', 'amount'], 'idx_type_amount');
             
-            // Special Purpose Indexes
-            $table->index(['is_transfer', 'deleted_at'], 'idx_transfer_deleted');
+            // 7. SPECIAL FLAGS INDEXES
+            $table->index(['is_transfer', 'transaction_date'], 'idx_transfer_date');
             $table->index(['is_recurring', 'recurring_pattern'], 'idx_recurring');
             
-            // Composite Indexes for Complex Queries
-            $table->index(['bank_statement_id', 'transaction_date', 'transaction_type'], 'idx_statement_date_type');
-            $table->index(['account_id', 'category_id', 'transaction_date'], 'idx_account_cat_date');
-            $table->index(['is_verified', 'confidence_score', 'transaction_date'], 'idx_verified_conf_date');
+            // 8. SOFT DELETE AWARE COMPOSITE INDEXES (CRITICAL!)
+            // These are for queries that filter by deleted_at frequently
+            $table->index(['company_id', 'deleted_at'], 'idx_company_deleted');
+            $table->index(['bank_statement_id', 'deleted_at'], 'idx_statement_deleted');
+            $table->index(['is_verified', 'deleted_at'], 'idx_verified_deleted');
             
-            // Full Text Search Index for Description
+            // 9. FULL TEXT SEARCH for Description
             $table->fullText('description', 'idx_description_fulltext');
         });
     }

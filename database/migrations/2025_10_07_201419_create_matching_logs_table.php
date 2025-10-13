@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->uuid('uuid')->unique();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            
             // Foreign Keys - Core Relations
             $table->foreignId('statement_transaction_id')
                   ->constrained('statement_transactions')
@@ -77,24 +78,43 @@ return new class extends Migration
                   ->nullable()
                   ->comment('IP address if manually triggered');
             
-            // Timestamps (untuk tracking updates jika ada)
+            // Timestamps
             $table->timestamps();
             
-            // Performance Indexes
-            $table->index('statement_transaction_id', 'idx_transaction_id');
-            $table->index('keyword_id', 'idx_keyword_id');
-            $table->index('confidence_score', 'idx_confidence');
-            $table->index('is_selected', 'idx_is_selected');
-            $table->index('matched_at', 'idx_matched_at');
-            $table->index('matching_engine', 'idx_matching_engine');
+            // =========================================================
+            // INDEXES - OPTIMIZED FOR MATCHING ANALYSIS
+            // =========================================================
             
-            // Composite Indexes for Analytics
-            $table->index(['keyword_id', 'confidence_score', 'matched_at'], 'idx_keyword_conf_time');
+            // 1. PRIMARY LOOKUP QUERIES (MOST IMPORTANT!) ⭐⭐⭐
+            // Get all matches for a transaction
+            $table->index(['statement_transaction_id', 'is_selected', 'confidence_score'], 'idx_trans_match_lookup');
+            
+            // 2. SELECTED MATCH LOOKUP (CRITICAL) ⭐⭐⭐
+            // Find the selected match for a transaction
             $table->index(['statement_transaction_id', 'is_selected'], 'idx_trans_selected');
-            $table->index(['is_selected', 'confidence_score'], 'idx_selected_confidence');
             
-            // For finding best matches
-            $table->index(['statement_transaction_id', 'confidence_score', 'priority_score'], 'idx_trans_scores');
+            // 3. KEYWORD PERFORMANCE ANALYSIS ⭐⭐
+            // Analyze keyword effectiveness over time
+            $table->index(['keyword_id', 'confidence_score', 'matched_at'], 'idx_keyword_performance');
+            
+            // 4. CONFIDENCE FILTERING ⭐⭐
+            // Find low/high confidence matches
+            $table->index(['company_id', 'confidence_score', 'is_selected'], 'idx_company_confidence');
+            
+            // 5. MATCHING ENGINE ANALYTICS ⭐
+            // Track which engine performs better
+            $table->index(['matching_engine', 'confidence_score'], 'idx_engine_performance');
+            
+            // 6. TEMPORAL ANALYSIS ⭐⭐
+            // Matching trends over time
+            $table->index(['company_id', 'matched_at'], 'idx_company_timeline');
+            
+            // 7. BEST MATCH SELECTION ⭐⭐⭐
+            // For selecting best match when multiple options exist
+            $table->index(['statement_transaction_id', 'priority_score', 'confidence_score'], 'idx_trans_best_match');
+            
+            // 8. MULTI-TENANT SOFT DELETE AWARE ⭐⭐
+            $table->index(['company_id', 'created_at'], 'idx_company_created');
         });
     }
 

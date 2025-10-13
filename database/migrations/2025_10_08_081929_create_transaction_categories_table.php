@@ -31,9 +31,8 @@ return new class extends Migration
             $table->timestamps();
             
             // Indexes
-            $table->unique(['statement_transaction_id', 'sub_category_id'], 'unique_trans_sub_cat');
-            $table->index(['is_primary', 'confidence_score']);
-            $table->index('statement_transaction_id');
+            $table->index(['statement_transaction_id', 'is_primary']);
+            $table->index(['confidence_score', 'is_primary']);
             $table->index(['category_id', 'type_id']);
             $table->index('assigned_at');
         });
