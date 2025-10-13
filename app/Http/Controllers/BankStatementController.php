@@ -331,46 +331,166 @@ class BankStatementController extends Controller
         }
     }
     /**
-     * Display the specified bank statement (COMPANY SCOPED or SUPER ADMIN)
+     * Display the specified bank statement with complete filters
+     * Supports: Super Admin & Regular Users with advanced filtering
      */
     public function show(BankStatement $bankStatement)
     {
-        // AUTHORIZATION: Super admin or company ownership
-        abort_unless(
-            auth()->user()->isSuperAdmin() || $bankStatement->company_id === auth()->user()->company_id,
-            403
-        );
+        $user = auth()->user();
+        
+        // ===================================
+        // ACCESS CONTROL
+        // ===================================
+        if ($user->isSuperAdmin()) {
+            // Super Admin: Full Access to all companies
+            $bankStatement->load([
+                'bank:id,name,code,logo',
+                'user:id,name,email',
+                'reconciledBy:id,name',
+                'company:id,name'
+            ]);
+        } else {
+            // Regular User: Company-scoped only
+            abort_unless($bankStatement->company_id === $user->company_id, 403, 
+                'You do not have permission to view this bank statement.');
+            
+            $bankStatement->load([
+                'bank:id,name,code,logo',
+                'user:id,name,email',
+                'reconciledBy:id,name'
+            ]);
+        }
 
-        $bankStatement->load([
-            'bank:id,name,code,logo',
-            'user:id,name,email',
-            'company:id,name',
-            'reconciledBy:id,name',
-            'transactions' => function ($query) {
-                $query->with([
-                    'type:id,name',
-                    'category:id,name,color',
-                    'subCategory:id,name',
-                    'account:id,name,code,account_type',
-                    'verifiedBy:id,name'
-                ])->latest('transaction_date');
-            }
-        ]);
+        // ===================================
+        // BUILD QUERY WITH RELATIONSHIPS
+        // ===================================
+        $query = $bankStatement->transactions()
+            ->with([
+                'type:id,name',
+                'category:id,name,color',
+                'subCategory:id,name',
+                'account:id,name,code,account_type',
+                'verifiedBy:id,name'
+            ]);
 
-        // Get summary statistics
+        // ===================================
+        // APPLY STATUS FILTERS
+        // ===================================
+        $filter = request('filter');
+        
+        switch ($filter) {
+            case 'categorized':
+                $query->whereNotNull('sub_category_id');
+                break;
+            case 'uncategorized':
+                $query->whereNull('sub_category_id');
+                break;
+            case 'verified':
+                $query->where('is_verified', true);
+                break;
+            case 'with-account':
+                $query->whereNotNull('account_id');
+                break;
+            case 'high-confidence':
+                $query->where('confidence_score', '>=', 80);
+                break;
+            case 'low-confidence':
+                $query->where('confidence_score', '>', 0)
+                    ->where('confidence_score', '<', 50);
+                break;
+        }
+
+        // ===================================
+        // APPLY TYPE FILTER (Credit/Debit)
+        // ===================================
+        $type = request('type');
+        if ($type === 'credit') {
+            $query->where('transaction_type', 'credit');
+        } elseif ($type === 'debit') {
+            $query->where('transaction_type', 'debit');
+        }
+
+        // ===================================
+        // APPLY AMOUNT RANGE FILTER
+        // ===================================
+        $amountRange = request('amount_range');
+        switch ($amountRange) {
+            case 'large':
+                $query->where('amount', '>', 1000000); // > 1 Million
+                break;
+            case 'medium':
+                $query->whereBetween('amount', [100000, 1000000]); // 100K - 1M
+                break;
+            case 'small':
+                $query->where('amount', '<', 100000); // < 100K
+                break;
+        }
+
+        // ===================================
+        // APPLY SPECIAL FILTERS
+        // ===================================
+        $special = request('special');
+        switch ($special) {
+            case 'round':
+                // Round numbers: divisible by 100K or 1M
+                $query->where(function($q) {
+                    $q->whereRaw('amount % 1000000 = 0')
+                    ->orWhereRaw('amount % 100000 = 0');
+                });
+                break;
+            case 'manual':
+                // Manual categorization or account assignment
+                $query->where(function($q) {
+                    $q->where('is_manual_category', true)
+                    ->orWhere('is_manual_account', true);
+                });
+                break;
+        }
+
+        // ===================================
+        // APPLY SORTING
+        // ===================================
+        $sort = request('sort', 'date-desc'); // Default: newest first
+        
+        switch ($sort) {
+            case 'amount-desc':
+                $query->orderBy('amount', 'desc');
+                break;
+            case 'amount-asc':
+                $query->orderBy('amount', 'asc');
+                break;
+            case 'date-asc':
+                $query->orderBy('transaction_date', 'asc')
+                    ->orderBy('transaction_time', 'asc');
+                break;
+            case 'date-desc':
+            default:
+                $query->orderBy('transaction_date', 'desc')
+                    ->orderBy('transaction_time', 'desc');
+                break;
+        }
+
+        // ===================================
+        // PAGINATE RESULTS
+        // ===================================
+        $transactions = $query->paginate(20);
+
+        // ===================================
+        // CALCULATE STATISTICS
+        // ===================================
         $statistics = [
             'total' => $bankStatement->total_transactions,
-            'categorized' => $bankStatement->transactions()->categorized()->count(),
-            'uncategorized' => $bankStatement->transactions()->uncategorized()->count(),
+            'categorized' => $bankStatement->transactions()->whereNotNull('sub_category_id')->count(),
+            'uncategorized' => $bankStatement->transactions()->whereNull('sub_category_id')->count(),
             'with_account' => $bankStatement->transactions()->whereNotNull('account_id')->count(),
             'without_account' => $bankStatement->transactions()->whereNull('account_id')->count(),
             'verified' => $bankStatement->verified_transactions,
             'unverified' => $bankStatement->total_transactions - $bankStatement->verified_transactions,
-            'high_confidence' => $bankStatement->transactions()->highConfidence(80)->count(),
-            'low_confidence' => $bankStatement->transactions()->lowConfidence(50)->count(),
+            'high_confidence' => $bankStatement->transactions()->where('confidence_score', '>=', 80)->count(),
+            'low_confidence' => $bankStatement->transactions()->where('confidence_score', '>', 0)->where('confidence_score', '<', 50)->count(),
         ];
 
-        return view('bank-statements.show', compact('bankStatement', 'statistics'));
+        return view('bank-statements.show', compact('bankStatement', 'statistics', 'transactions'));
     }
 
     /**
