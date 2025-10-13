@@ -68,6 +68,8 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     
     // Admin Dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/stats', [AdminDashboardController::class, 'stats'])
+    ->name('dashboard.stats');
     
     // Company Management (Super Admin)
     Route::resource('companies', CompanyManagementController::class);
