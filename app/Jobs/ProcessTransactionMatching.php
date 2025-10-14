@@ -424,21 +424,23 @@ class ProcessTransactionMatching implements ShouldQueue
         ]);
 
         // Log primary match to matching_logs
-        MatchingLog::create([
-            'statement_transaction_id' => $transaction->id,
-            'keyword_id' => $primaryMatch['keyword']->id,
-            'matched_text' => $primaryMatch['matched_text'],
-            'confidence_score' => $primaryMatch['score'],
-            'match_metadata' => [
-                'method' => $primaryMatch['method'],
-                'keyword_text' => $primaryMatch['keyword']->keyword,
-                'description' => $transaction->description,
-                'raw_score' => $primaryMatch['raw_score'],
-                'weighted_score' => $primaryMatch['weighted_score'],
-                'alternatives_count' => count($suggestions) - 1,
-            ],
-            'matched_at' => now(),
-        ]);
+       MatchingLog::create([
+        'uuid' => \Illuminate\Support\Str::uuid(), // ✅ Add UUID
+        'company_id' => $transaction->company_id, // ✅ Add company_id from transaction
+        'statement_transaction_id' => $transaction->id,
+        'keyword_id' => $primaryMatch['keyword']->id,
+        'matched_text' => $primaryMatch['matched_text'],
+        'confidence_score' => $primaryMatch['score'],
+        'match_metadata' => [
+            'method' => $primaryMatch['method'],
+            'keyword_text' => $primaryMatch['keyword']->keyword,
+            'description' => $transaction->description,
+            'raw_score' => $primaryMatch['raw_score'],
+            'weighted_score' => $primaryMatch['weighted_score'],
+            'alternatives_count' => count($suggestions) - 1,
+        ],
+        'matched_at' => now(),
+    ]);
 
         // Update keyword statistics
         $primaryMatch['keyword']->increment('match_count');

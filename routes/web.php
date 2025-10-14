@@ -33,7 +33,7 @@ use Illuminate\Support\Facades\Route;
 
 // Home/Welcome Route
 Route::get('/', function () {
-    // Redirect authenticated users to dashboard
+    // Redirect authenticated users to appropriate dashboard
     if (auth()->check()) {
         $user = auth()->user();
         
@@ -43,6 +43,7 @@ Route::get('/', function () {
         
         return redirect()->route('dashboard');
     }
+    
     return view('welcome');
 })->name('welcome');
 
@@ -54,7 +55,10 @@ Route::get('/home', function () {
         if ($user->isSuperAdmin()) {
             return redirect()->route('admin.dashboard');
         }
+        
+        return redirect()->route('dashboard');
     }
+    
     return redirect()->route('dashboard');
 })->name('home')->middleware('auth');
 
@@ -62,14 +66,15 @@ Route::get('/home', function () {
 |--------------------------------------------------------------------------
 | Super Admin Only Routes
 |--------------------------------------------------------------------------
+| Access: ONLY super_admin role
+| Middleware: auth, verified, super_admin
 */
 
-Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'verified', 'super_admin'])->prefix('admin')->name('admin.')->group(function () {
     
     // Admin Dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/stats', [AdminDashboardController::class, 'stats'])
-    ->name('dashboard.stats');
+    Route::get('/dashboard/stats', [AdminDashboardController::class, 'stats'])->name('dashboard.stats');
     
     // Company Management (Super Admin)
     Route::resource('companies', CompanyManagementController::class);
@@ -96,8 +101,14 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::prefix('system-users')->name('system-users.')->group(function () {
         Route::get('/', [UserManagementController::class, 'systemIndex'])->name('index');
         Route::get('/{user}', [UserManagementController::class, 'systemShow'])->name('show');
-        Route::post('/{user}/impersonate', [UserManagementController::class, 'impersonate'])->name('impersonate');
-        Route::post('/stop-impersonating', [UserManagementController::class, 'stopImpersonating'])->name('stop-impersonating');
+        
+        // Impersonation with loop prevention
+        Route::post('/{user}/impersonate', [UserManagementController::class, 'impersonate'])
+            ->name('impersonate')
+            ->middleware('prevent-impersonation-loop');
+        
+        Route::post('/stop-impersonating', [UserManagementController::class, 'stopImpersonating'])
+            ->name('stop-impersonating');
     });
     
     // System Settings (Super Admin)
@@ -111,25 +122,21 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated Routes - All Users (Tenant-based)
+| Authenticated Routes - All Company Users
 |--------------------------------------------------------------------------
+| Access: All authenticated company users
+| Middleware: auth, verified, company.member
 */
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'company.member'])->group(function () {
     
-    // Dashboard - Accessible by all authenticated users
+    // Dashboard - Accessible by all company users
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
-    // Clear Dashboard Cache (Admin only)
-    Route::post('/dashboard/clear-cache', [DashboardController::class, 'clearCache'])
-        ->name('dashboard.clear-cache')
-        ->middleware('role:admin');
-    
     // Get Dashboard Stats via AJAX
-    Route::get('/dashboard/stats', [DashboardController::class, 'getStats'])
-        ->name('dashboard.stats');
+    Route::get('/dashboard/stats', [DashboardController::class, 'getStats'])->name('dashboard.stats');
 
-    // Profile Management - Accessible by all authenticated users
+    // Profile Management - All authenticated users
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::patch('/', [ProfileController::class, 'update'])->name('update');
@@ -140,161 +147,110 @@ Route::middleware(['auth', 'verified'])->group(function () {
     |--------------------------------------------------------------------------
     | Transactions Management
     |--------------------------------------------------------------------------
+    | Read: All company users
+    | Write: Manager+
     */
     
     Route::prefix('transactions')->name('transactions.')->group(function () {
-        // Read access for all authenticated users
+        // Read access for all company users
         Route::get('/', [TransactionController::class, 'index'])->name('index');
         Route::get('/{transaction}', [TransactionController::class, 'show'])->name('show');
         
-        // Write access
-        Route::get('/{transaction}/edit', [TransactionController::class, 'edit'])->name('edit');
-        Route::patch('/{transaction}', [TransactionController::class, 'update'])->name('update');
-        
-        // Transaction actions
-        Route::post('/{transaction}/verify', [TransactionController::class, 'verify'])->name('verify');
-        Route::post('/{transaction}/unverify', [TransactionController::class, 'unverify'])->name('unverify');
-        Route::post('/{transaction}/rematch', [TransactionController::class, 'rematch'])->name('rematch');
-        Route::post('/{transaction}/unmatch', [TransactionController::class, 'unmatch'])->name('unmatch');
-        
-        // Bulk actions
-        Route::post('/bulk-verify', [TransactionController::class, 'bulkVerify'])->name('bulk-verify');
-        Route::post('/bulk-rematch', [TransactionController::class, 'bulkRematch'])->name('bulk-rematch');
-        Route::post('/bulk-categorize', [TransactionController::class, 'bulkCategorize'])->name('bulk-categorize');
-        
-        // Delete
-        Route::delete('/{transaction}', [TransactionController::class, 'destroy'])->name('destroy');
-    });
-
-    /*
-    |--------------------------------------------------------------------------
-    | Accounts Management
-    |--------------------------------------------------------------------------
-    */
-    
-    Route::prefix('accounts')->name('accounts.')->group(function () {
-        Route::get('/', [AccountController::class, 'index'])->name('index');
-        Route::get('/create', [AccountController::class, 'create'])->name('create');
-        Route::post('/', [AccountController::class, 'store'])->name('store');
-        Route::get('/{account}', [AccountController::class, 'show'])->name('show');
-        Route::get('/{account}/edit', [AccountController::class, 'edit'])->name('edit');
-        Route::put('/{account}', [AccountController::class, 'update'])->name('update');
-        Route::delete('/{account}', [AccountController::class, 'destroy'])->name('destroy');
-        
-        // Account actions
-        Route::post('/{account}/toggle-status', [AccountController::class, 'toggleStatus'])->name('toggle-status');
-        Route::post('/{account}/rematch', [AccountController::class, 'rematch'])->name('rematch');
-        Route::get('/{account}/statistics', [AccountController::class, 'statistics'])->name('statistics');
-        
-        // Account Keywords
-        Route::get('/{account}/keywords', [AccountController::class, 'keywords'])->name('keywords');
-    });
-
-    /*
-    |--------------------------------------------------------------------------
-    | Account Keywords Routes
-    |--------------------------------------------------------------------------
-    */
-    
-    Route::prefix('account-keywords')->name('account-keywords.')->group(function () {
-        Route::get('/create', [AccountKeywordController::class, 'create'])->name('create');
-        Route::post('/', [AccountKeywordController::class, 'store'])->name('store');
-        Route::get('/{accountKeyword}/edit', [AccountKeywordController::class, 'edit'])->name('edit');
-        Route::put('/{accountKeyword}', [AccountKeywordController::class, 'update'])->name('update');
-        Route::delete('/{accountKeyword}', [AccountKeywordController::class, 'destroy'])->name('destroy');
-        
-        // Keyword actions
-        Route::post('/{accountKeyword}/toggle-status', [AccountKeywordController::class, 'toggleStatus'])->name('toggle-status');
-        Route::post('/test', [AccountKeywordController::class, 'test'])->name('test');
-        Route::post('/bulk-store', [AccountKeywordController::class, 'bulkStore'])->name('bulk-store');
+        // Write access - Manager+
+        Route::middleware('company.manager')->group(function () {
+            Route::get('/{transaction}/edit', [TransactionController::class, 'edit'])->name('edit');
+            Route::patch('/{transaction}', [TransactionController::class, 'update'])->name('update');
+            
+            // Transaction actions
+            Route::post('/{transaction}/verify', [TransactionController::class, 'verify'])->name('verify');
+            Route::post('/{transaction}/unverify', [TransactionController::class, 'unverify'])->name('unverify');
+            Route::post('/{transaction}/rematch', [TransactionController::class, 'rematch'])->name('rematch');
+            Route::post('/{transaction}/unmatch', [TransactionController::class, 'unmatch'])->name('unmatch');
+            
+            // Bulk actions
+            Route::post('/bulk-verify', [TransactionController::class, 'bulkVerify'])->name('bulk-verify');
+            Route::post('/bulk-rematch', [TransactionController::class, 'bulkRematch'])->name('bulk-rematch');
+            Route::post('/bulk-categorize', [TransactionController::class, 'bulkCategorize'])->name('bulk-categorize');
+            
+            // Delete
+            Route::delete('/{transaction}', [TransactionController::class, 'destroy'])->name('destroy');
+        });
     });
 
     /*
     |--------------------------------------------------------------------------
     | Bank Statements Management
-    | ✅ FIXED: Proper route ordering + Validation Feature Routes
     |--------------------------------------------------------------------------
+    | Read: All company users
+    | Write: Admin+
     */
     
     Route::prefix('bank-statements')->name('bank-statements.')->group(function () {
-        // ===================================
-        // STATIC ROUTES FIRST (Highest Priority)
-        // ===================================
-        Route::get('/select-company', [BankStatementController::class, 'selectCompany'])
-            ->name('select-company')
-            ->middleware('role:super_admin');
-        
-        Route::get('/create', [BankStatementController::class, 'create'])->name('create');
-        
-        // Statistics (static route)
-        Route::get('/stats/summary', [BankStatementController::class, 'statistics'])->name('statistics');
-        
-        // 🆕 VALIDATION FEATURE - Search Keywords for Select2 (AJAX)
-        // ⚠️ MUST be before dynamic routes to avoid conflict
-        Route::get('/keywords/search', [BankStatementController::class, 'searchKeywords'])
-            ->name('keywords.search');
-        
-        // List
+        // Read access for all company users
         Route::get('/', [BankStatementController::class, 'index'])->name('index');
+        Route::get('/create', [BankStatementController::class, 'create'])->name('create');
         Route::post('/', [BankStatementController::class, 'store'])->name('store');
-        
-        // ===================================
-        // DYNAMIC ROUTES WITH ACTIONS (Before generic {bankStatement})
-        // ===================================
-        Route::get('/{bankStatement}/edit', [BankStatementController::class, 'edit'])->name('edit');
+        Route::get('/{bankStatement}', [BankStatementController::class, 'show'])->name('show');
         Route::get('/{bankStatement}/download', [BankStatementController::class, 'download'])->name('download');
         
-        // 🆕 VALIDATION FEATURE - Show validation view
-        Route::get('/{bankStatement}/validate', [BankStatementController::class, 'validateView'])
-            ->name('validate');
+        // Statistics
+        Route::get('/stats/summary', [BankStatementController::class, 'statistics'])->name('statistics');
         
-        // OCR Operations
-        Route::post('/{bankStatement}/reprocess', [BankStatementController::class, 'reprocess'])->name('reprocess');
-        Route::post('/{bankStatement}/retry', [BankStatementController::class, 'retryOCR'])->name('retry');
+        // AJAX - Keywords search
+        Route::get('/keywords/search', [BankStatementController::class, 'searchKeywords'])->name('keywords.search');
         
-        // Matching Operations
-        Route::post('/{bankStatement}/match-transactions', [BankStatementController::class, 'matchTransactions'])->name('match-transactions');
-        Route::post('/{bankStatement}/match-accounts', [BankStatementController::class, 'matchAccounts'])->name('match-accounts');
-        Route::post('/{bankStatement}/rematch-all', [BankStatementController::class, 'rematchAll'])->name('rematch-all');
-        Route::post('/{bankStatement}/rematch-accounts', [BankStatementController::class, 'rematchAccounts'])->name('rematch-accounts');
-        
-        // Verification Operations
-        Route::post('/{bankStatement}/verify-all-matched', [BankStatementController::class, 'verifyAllMatched'])->name('verify-all-matched');
-        Route::post('/{bankStatement}/verify-high-confidence', [BankStatementController::class, 'verifyHighConfidence'])->name('verify-high-confidence');
-        
-        // Reconciliation
-        Route::post('/{bankStatement}/reconcile', [BankStatementController::class, 'reconcile'])->name('reconcile');
-        Route::post('/{bankStatement}/unreconcile', [BankStatementController::class, 'unreconcile'])->name('unreconcile');
-        
-        // ===================================
-        // GENERIC ROUTES LAST (Lowest Priority)
-        // ===================================
-        Route::get('/{bankStatement}', [BankStatementController::class, 'show'])->name('show');
-        Route::put('/{bankStatement}', [BankStatementController::class, 'update'])->name('update');
-        Route::delete('/{bankStatement}', [BankStatementController::class, 'destroy'])->name('destroy');
+        // Write access - Admin+
+        Route::middleware('company.admin')->group(function () {
+            // Super Admin can select company
+            Route::get('/select-company', [BankStatementController::class, 'selectCompany'])
+                ->name('select-company')
+                ->middleware('super_admin');
+            
+            Route::get('/create', [BankStatementController::class, 'create'])->name('create');
+            Route::post('/', [BankStatementController::class, 'store'])->name('store');
+            Route::get('/{bankStatement}/edit', [BankStatementController::class, 'edit'])->name('edit');
+            Route::put('/{bankStatement}', [BankStatementController::class, 'update'])->name('update');
+            Route::delete('/{bankStatement}', [BankStatementController::class, 'destroy'])->name('destroy');
+            
+            // Validation
+            Route::get('/{bankStatement}/validate', [BankStatementController::class, 'validateView'])->name('validate');
+            
+            // OCR Operations
+            Route::post('/{bankStatement}/reprocess', [BankStatementController::class, 'reprocess'])->name('reprocess');
+            Route::post('/{bankStatement}/retry', [BankStatementController::class, 'retryOCR'])->name('retry');
+            
+            // Matching Operations
+            Route::post('/{bankStatement}/match-transactions', [BankStatementController::class, 'matchTransactions'])->name('match-transactions');
+            Route::post('/{bankStatement}/match-accounts', [BankStatementController::class, 'matchAccounts'])->name('match-accounts');
+            Route::post('/{bankStatement}/rematch-all', [BankStatementController::class, 'rematchAll'])->name('rematch-all');
+            Route::post('/{bankStatement}/rematch-accounts', [BankStatementController::class, 'rematchAccounts'])->name('rematch-accounts');
+            
+            // Verification Operations
+            Route::post('/{bankStatement}/verify-all-matched', [BankStatementController::class, 'verifyAllMatched'])->name('verify-all-matched');
+            Route::post('/{bankStatement}/verify-high-confidence', [BankStatementController::class, 'verifyHighConfidence'])->name('verify-high-confidence');
+            
+            // Reconciliation
+            Route::post('/{bankStatement}/reconcile', [BankStatementController::class, 'reconcile'])->name('reconcile');
+            Route::post('/{bankStatement}/unreconcile', [BankStatementController::class, 'unreconcile'])->name('unreconcile');
+        });
     });
 
     /*
     |--------------------------------------------------------------------------
-    | 🆕 Statement Transactions Validation Actions (AJAX)
-    | Separate prefix untuk avoid conflict dengan bank-statements routes
+    | Statement Transactions Validation Actions (AJAX)
     |--------------------------------------------------------------------------
     */
     
-    Route::prefix('statement-transactions')->name('statement-transactions.')->group(function () {
-        // 🆕 Approve auto suggestion (AJAX)
-        Route::post('/{transaction}/approve', [BankStatementController::class, 'approveTransaction'])
-            ->name('approve');
-        
-        // 🆕 Set keyword manually (AJAX)
-        Route::post('/{transaction}/set-keyword', [BankStatementController::class, 'setKeywordManually'])
-            ->name('set-keyword');
+    Route::prefix('statement-transactions')->name('statement-transactions.')->middleware('company.admin')->group(function () {
+        Route::post('/{transaction}/approve', [BankStatementController::class, 'approveTransaction'])->name('approve');
+        Route::post('/{transaction}/set-keyword', [BankStatementController::class, 'setKeywordManually'])->name('set-keyword');
     });
 
     /*
     |--------------------------------------------------------------------------
     | Document Collections Management (AI Chat Context)
     |--------------------------------------------------------------------------
+    | All company users can manage their collections
     */
     
     Route::prefix('document-collections')->name('document-collections.')->group(function () {
@@ -310,10 +266,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{documentCollection}/toggle-active', [DocumentCollectionController::class, 'toggleActive'])->name('toggle-active');
         Route::post('/{documentCollection}/process', [DocumentCollectionController::class, 'process'])->name('process');
         Route::get('/{documentCollection}/statistics', [DocumentCollectionController::class, 'statistics'])->name('statistics');
-
         Route::post('/{documentCollection}/start-chat', [DocumentCollectionController::class, 'startChat'])->name('start-chat');
-        
-        // Document Items
         Route::get('/{documentCollection}/items', [DocumentCollectionController::class, 'items'])->name('items');
     });
 
@@ -328,14 +281,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{documentItem}', [DocumentItemController::class, 'show'])->name('show');
         Route::put('/{documentItem}', [DocumentItemController::class, 'update'])->name('update');
         Route::delete('/{documentItem}', [DocumentItemController::class, 'destroy'])->name('destroy');
-        
-        // Item actions
         Route::post('/{documentItem}/retry', [DocumentItemController::class, 'retry'])->name('retry');
         Route::post('/{documentItem}/sync-metadata', [DocumentItemController::class, 'syncMetadata'])->name('sync-metadata');
         Route::post('/{documentItem}/move-up', [DocumentItemController::class, 'moveUp'])->name('move-up');
         Route::post('/{documentItem}/move-down', [DocumentItemController::class, 'moveDown'])->name('move-down');
-        
-        // Bulk actions
         Route::post('/bulk-process', [DocumentItemController::class, 'bulkProcess'])->name('bulk-process');
         Route::post('/bulk-delete', [DocumentItemController::class, 'bulkDelete'])->name('bulk-delete');
         Route::post('/reorder', [DocumentItemController::class, 'reorder'])->name('reorder');
@@ -345,6 +294,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     |--------------------------------------------------------------------------
     | AI Chat Sessions Management
     |--------------------------------------------------------------------------
+    | All company users can use AI chat
     */
     
     Route::prefix('chat-sessions')->name('chat-sessions.')->group(function () {
@@ -354,19 +304,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{chatSession}', [ChatSessionController::class, 'show'])->name('show');
         Route::put('/{chatSession}', [ChatSessionController::class, 'update'])->name('update');
         Route::delete('/{chatSession}', [ChatSessionController::class, 'destroy'])->name('destroy');
-        
-        // Session actions
         Route::post('/{chatSession}/archive', [ChatSessionController::class, 'archive'])->name('archive');
         Route::post('/{chatSession}/unarchive', [ChatSessionController::class, 'unarchive'])->name('unarchive');
         Route::post('/{chatSession}/pin', [ChatSessionController::class, 'pin'])->name('pin');
         Route::post('/{chatSession}/unpin', [ChatSessionController::class, 'unpin'])->name('unpin');
         Route::post('/{chatSession}/update-title', [ChatSessionController::class, 'updateTitle'])->name('update-title');
-        
-        // Messages
         Route::get('/{chatSession}/messages', [ChatSessionController::class, 'messages'])->name('messages');
         Route::post('/{chatSession}/messages', [ChatSessionController::class, 'sendMessage'])->name('send-message');
-        
-        // Statistics
         Route::get('/{chatSession}/statistics', [ChatSessionController::class, 'statistics'])->name('statistics');
     });
 
@@ -379,8 +323,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('chat-messages')->name('chat-messages.')->group(function () {
         Route::get('/{chatMessage}', [ChatMessageController::class, 'show'])->name('show');
         Route::delete('/{chatMessage}', [ChatMessageController::class, 'destroy'])->name('destroy');
-        
-        // Message actions
         Route::post('/{chatMessage}/rate', [ChatMessageController::class, 'rate'])->name('rate');
         Route::post('/{chatMessage}/feedback', [ChatMessageController::class, 'feedback'])->name('feedback');
         Route::post('/{chatMessage}/regenerate', [ChatMessageController::class, 'regenerate'])->name('regenerate');
@@ -388,27 +330,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Keyword Suggestions
+    | Reports - Manager+
     |--------------------------------------------------------------------------
+    | Access: Manager, Admin, Owner
     */
     
-    Route::prefix('keyword-suggestions')->name('keyword-suggestions.')->group(function () {
-        Route::get('/{bankStatement}/analyze', [KeywordSuggestionController::class, 'analyze'])->name('analyze');
-        Route::post('/create', [KeywordSuggestionController::class, 'createFromSuggestion'])->name('create');
-        Route::post('/batch-create', [KeywordSuggestionController::class, 'batchCreate'])->name('batch-create');
-        Route::post('/dismiss', [KeywordSuggestionController::class, 'dismiss'])->name('dismiss');
-        Route::post('/preview', [KeywordSuggestionController::class, 'preview'])->name('preview');
-        Route::get('/{bankStatement}/export', [KeywordSuggestionController::class, 'export'])->name('export');
-        Route::post('/{bankStatement}/refresh', [KeywordSuggestionController::class, 'refresh'])->name('refresh');
-    });
-
-    /*
-    |--------------------------------------------------------------------------
-    | Reports
-    |--------------------------------------------------------------------------
-    */
-    
-    Route::prefix('reports')->name('reports.')->group(function () {
+    Route::prefix('reports')->name('reports.')->middleware('company.manager')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
         Route::get('/monthly-by-bank', [ReportController::class, 'monthlyByBank'])->name('monthly-by-bank');
         Route::get('/by-keyword', [ReportController::class, 'byKeyword'])->name('by-keyword');
@@ -425,11 +352,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Company Admin Only Routes (Tenant-based)
+| Company Admin Routes
 |--------------------------------------------------------------------------
+| Access: Owner, Admin (NOT super_admin)
+| Middleware: auth, verified, company.admin
 */
 
-Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
+Route::middleware(['auth', 'verified', 'company.admin'])->group(function () {
+    
+    // Clear Dashboard Cache
+    Route::post('/dashboard/clear-cache', [DashboardController::class, 'clearCache'])->name('dashboard.clear-cache');
     
     // User Management (Company Admin)
     Route::prefix('users')->name('users.')->group(function () {
@@ -444,7 +376,64 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         Route::post('/{user}/reset-password', [UserManagementController::class, 'resetPassword'])->name('reset-password');
     });
 
-    // Master Data Management (Company Admin Only)
+    /*
+    |--------------------------------------------------------------------------
+    | Accounts Management - Admin+
+    |--------------------------------------------------------------------------
+    */
+    
+    Route::prefix('accounts')->name('accounts.')->group(function () {
+        Route::get('/', [AccountController::class, 'index'])->name('index');
+        Route::get('/create', [AccountController::class, 'create'])->name('create');
+        Route::post('/', [AccountController::class, 'store'])->name('store');
+        Route::get('/{account}', [AccountController::class, 'show'])->name('show');
+        Route::get('/{account}/edit', [AccountController::class, 'edit'])->name('edit');
+        Route::put('/{account}', [AccountController::class, 'update'])->name('update');
+        Route::delete('/{account}', [AccountController::class, 'destroy'])->name('destroy');
+        Route::post('/{account}/toggle-status', [AccountController::class, 'toggleStatus'])->name('toggle-status');
+        Route::post('/{account}/rematch', [AccountController::class, 'rematch'])->name('rematch');
+        Route::get('/{account}/statistics', [AccountController::class, 'statistics'])->name('statistics');
+        Route::get('/{account}/keywords', [AccountController::class, 'keywords'])->name('keywords');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Account Keywords Routes
+    |--------------------------------------------------------------------------
+    */
+    
+    Route::prefix('account-keywords')->name('account-keywords.')->group(function () {
+        Route::get('/create', [AccountKeywordController::class, 'create'])->name('create');
+        Route::post('/', [AccountKeywordController::class, 'store'])->name('store');
+        Route::get('/{accountKeyword}/edit', [AccountKeywordController::class, 'edit'])->name('edit');
+        Route::put('/{accountKeyword}', [AccountKeywordController::class, 'update'])->name('update');
+        Route::delete('/{accountKeyword}', [AccountKeywordController::class, 'destroy'])->name('destroy');
+        Route::post('/{accountKeyword}/toggle-status', [AccountKeywordController::class, 'toggleStatus'])->name('toggle-status');
+        Route::post('/test', [AccountKeywordController::class, 'test'])->name('test');
+        Route::post('/bulk-store', [AccountKeywordController::class, 'bulkStore'])->name('bulk-store');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Keyword Suggestions - Admin+
+    |--------------------------------------------------------------------------
+    */
+    
+    Route::prefix('keyword-suggestions')->name('keyword-suggestions.')->group(function () {
+        Route::get('/{bankStatement}/analyze', [KeywordSuggestionController::class, 'analyze'])->name('analyze');
+        Route::post('/create', [KeywordSuggestionController::class, 'createFromSuggestion'])->name('create');
+        Route::post('/batch-create', [KeywordSuggestionController::class, 'batchCreate'])->name('batch-create');
+        Route::post('/dismiss', [KeywordSuggestionController::class, 'dismiss'])->name('dismiss');
+        Route::post('/preview', [KeywordSuggestionController::class, 'preview'])->name('preview');
+        Route::get('/{bankStatement}/export', [KeywordSuggestionController::class, 'export'])->name('export');
+        Route::post('/{bankStatement}/refresh', [KeywordSuggestionController::class, 'refresh'])->name('refresh');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Master Data Management (Company Admin Only)
+    |--------------------------------------------------------------------------
+    */
     
     // Banks Management
     Route::resource('banks', BankController::class);
@@ -476,12 +465,15 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         Route::get('/', function () {
             return view('settings.index');
         })->name('index');
+        
         Route::get('/general', function () {
             return view('settings.general');
         })->name('general');
+        
         Route::get('/subscription', function () {
             return view('settings.subscription');
         })->name('subscription');
+        
         Route::get('/billing', function () {
             return view('settings.billing');
         })->name('billing');
@@ -492,6 +484,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 |--------------------------------------------------------------------------
 | API Routes (for AJAX calls)
 |--------------------------------------------------------------------------
+| Access: Authenticated users with API token
 */
 
 Route::middleware(['auth:sanctum'])->prefix('api/v1')->name('api.')->group(function () {

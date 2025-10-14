@@ -408,7 +408,7 @@
                     <p class="text-white font-semibold">Manage Banks</p>
                 </a>
                 
-                <a href="{{ route('admin.users.index') }}" class="bg-gradient-to-br from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 rounded-xl p-6 text-center transition-all transform hover:scale-105">
+                <a href="" class="bg-gradient-to-br from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 rounded-xl p-6 text-center transition-all transform hover:scale-105">
                     <i class="fas fa-users text-white text-3xl mb-3"></i>
                     <p class="text-white font-semibold">User Management</p>
                 </a>
