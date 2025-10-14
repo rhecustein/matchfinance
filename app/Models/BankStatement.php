@@ -62,6 +62,9 @@ class BankStatement extends Model
         'matching_notes',
         'matching_started_at',
         'matching_completed_at',
+        'account_matching_status',
+        'account_matching_started_at',
+        
     ];
 
     protected $casts = [

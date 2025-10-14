@@ -5,8 +5,8 @@ namespace App\Providers;
 use App\Events\BankStatementOcrCompleted;
 use App\Events\TransactionMatchingCompleted;
 use App\Events\AccountMatchingCompleted;
-use App\Listeners\StartTransactionMatching; // ✅ Already exists
-use App\Listeners\TriggerAccountMatching; // ✅ New
+use App\Listeners\StartTransactionMatching;
+use App\Listeners\StartAccountMatching; // ✅ New
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
@@ -17,20 +17,19 @@ class EventServiceProvider extends ServiceProvider
      * @var array<class-string, array<int, class-string>>
      */
     protected $listen = [
-        // ✅ STEP 1: OCR Completed → Trigger Transaction Matching
+        // ✅ STEP 1: OCR Complete → Transaction Matching
         BankStatementOcrCompleted::class => [
-            StartTransactionMatching::class, // Already exists in your repo
+            StartTransactionMatching::class, // HANYA INI SAJA
         ],
 
-        // ✅ STEP 2: Transaction Matching Completed → Trigger Account Matching
+        // ✅ STEP 2: Transaction Matching Complete → Account Matching
         TransactionMatchingCompleted::class => [
-            TriggerAccountMatching::class, // NEW - you need to create this
+            StartAccountMatching::class, // HANYA INI SAJA
         ],
 
-        // ✅ STEP 3: Account Matching Completed → (Optional: Notifications, Analytics, etc)
+        // ✅ STEP 3: Account Matching Complete (optional)
         AccountMatchingCompleted::class => [
-            // Add your listeners here if needed
-            // e.g., SendMatchingCompletedNotification::class
+            // Future: notifications, analytics, etc
         ],
     ];
 
