@@ -83,10 +83,9 @@ class StatementTransaction extends Model
 
     public function getRouteKeyName()
     {
-        return 'uuid';
+        return 'id';  // ✅ Gunakan ID numerik
     }
-
-    /*
+        /*
     |--------------------------------------------------------------------------
     | Relationships - Core
     |--------------------------------------------------------------------------

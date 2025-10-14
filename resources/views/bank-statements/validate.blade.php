@@ -30,21 +30,11 @@
                 </div>
                 <div class="w-16 h-16">
                     <svg class="transform -rotate-90" viewBox="0 0 36 36">
-                        <path
-                            class="text-gray-700"
-                            stroke="currentColor"
-                            stroke-width="3"
-                            fill="none"
-                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        />
-                        <path
-                            class="text-green-500"
-                            stroke="currentColor"
-                            stroke-width="3"
-                            fill="none"
+                        <path class="text-gray-700" stroke="currentColor" stroke-width="3" fill="none"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path class="text-green-500" stroke="currentColor" stroke-width="3" fill="none"
                             stroke-dasharray="{{ $stats['progress'] }}, 100"
-                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        />
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                     </svg>
                 </div>
             </div>
@@ -56,13 +46,11 @@
             
             {{-- Statistics Cards --}}
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
-                {{-- Total --}}
                 <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
                     <div class="text-gray-400 text-xs mb-1">Total</div>
                     <div class="text-2xl font-bold text-white">{{ $stats['total'] }}</div>
                 </div>
                 
-                {{-- Verified --}}
                 <div class="bg-green-900/20 border border-green-700 rounded-lg p-4">
                     <div class="text-green-400 text-xs mb-1">
                         <i class="fas fa-check-circle mr-1"></i>Verified
@@ -70,7 +58,6 @@
                     <div class="text-2xl font-bold text-green-400">{{ $stats['verified'] }}</div>
                 </div>
                 
-                {{-- Pending --}}
                 <div class="bg-yellow-900/20 border border-yellow-700 rounded-lg p-4">
                     <div class="text-yellow-400 text-xs mb-1">
                         <i class="fas fa-clock mr-1"></i>Pending
@@ -78,7 +65,6 @@
                     <div class="text-2xl font-bold text-yellow-400">{{ $stats['pending'] }}</div>
                 </div>
                 
-                {{-- High Confidence --}}
                 <div class="bg-blue-900/20 border border-blue-700 rounded-lg p-4">
                     <div class="text-blue-400 text-xs mb-1">
                         <i class="fas fa-star mr-1"></i>High
@@ -86,7 +72,6 @@
                     <div class="text-2xl font-bold text-blue-400">{{ $stats['high_confidence'] }}</div>
                 </div>
                 
-                {{-- Medium Confidence --}}
                 <div class="bg-purple-900/20 border border-purple-700 rounded-lg p-4">
                     <div class="text-purple-400 text-xs mb-1">
                         <i class="fas fa-star-half-alt mr-1"></i>Medium
@@ -94,7 +79,6 @@
                     <div class="text-2xl font-bold text-purple-400">{{ $stats['medium_confidence'] }}</div>
                 </div>
                 
-                {{-- Low Confidence --}}
                 <div class="bg-orange-900/20 border border-orange-700 rounded-lg p-4">
                     <div class="text-orange-400 text-xs mb-1">
                         <i class="fas fa-exclamation-triangle mr-1"></i>Low
@@ -102,7 +86,6 @@
                     <div class="text-2xl font-bold text-orange-400">{{ $stats['low_confidence'] }}</div>
                 </div>
                 
-                {{-- No Match --}}
                 <div class="bg-red-900/20 border border-red-700 rounded-lg p-4">
                     <div class="text-red-400 text-xs mb-1">
                         <i class="fas fa-times-circle mr-1"></i>No Match
@@ -110,7 +93,6 @@
                     <div class="text-2xl font-bold text-red-400">{{ $stats['no_match'] }}</div>
                 </div>
                 
-                {{-- Progress --}}
                 <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
                     <div class="text-gray-400 text-xs mb-1">Progress</div>
                     <div class="text-2xl font-bold text-white">{{ $stats['progress'] }}%</div>
@@ -155,9 +137,9 @@
                     <div class="text-sm text-blue-200">
                         <p class="font-semibold mb-1">How to validate transactions:</p>
                         <ul class="list-disc list-inside space-y-1 text-blue-300">
-                            <li>Review the <strong>suggested keyword</strong> and category for each transaction</li>
-                            <li>Click <strong class="text-green-400">✓ Approve</strong> if the suggestion is correct</li>
-                            <li>Use <strong class="text-purple-400">Select2 dropdown</strong> to choose a different keyword if needed</li>
+                            <li>Review the <strong>suggested keyword & category</strong> for each transaction</li>
+                            <li>Click <strong class="text-green-400">✓ Approve</strong> if correct, or <strong class="text-red-400">✗ Reject</strong> if wrong</li>
+                            <li>If rejected, a search dropdown will appear to select the correct keyword</li>
                             <li>Focus on <strong>High Confidence</strong> matches first for faster validation</li>
                         </ul>
                     </div>
@@ -178,8 +160,7 @@
                                 {{-- Date & Amount --}}
                                 <div class="flex items-center gap-3 mb-2">
                                     <span class="text-xs text-gray-400 font-mono">
-                                        {{-- ✅ FIX: Parse date properly --}}
-                                        {{ \Carbon\Carbon::parse($transaction->transaction_date)->format('d M Y') }}
+                                        {{ $transaction->transaction_date->format('d M Y') }}
                                         @if($transaction->transaction_time)
                                             {{ \Carbon\Carbon::parse($transaction->transaction_time)->format('H:i') }}
                                         @endif
@@ -188,7 +169,7 @@
                                         {{ strtoupper($transaction->transaction_type) }}
                                     </span>
                                     <span class="text-lg font-bold {{ $transaction->transaction_type === 'debit' ? 'text-red-400' : 'text-green-400' }}">
-                                        Rp {{ number_format($transaction->amount, 0, ',', '.') }}
+                                        {{ $transaction->formatted_amount }}
                                     </span>
                                 </div>
 
@@ -197,9 +178,9 @@
                                     {{ $transaction->description }}
                                 </div>
 
-                                {{-- Suggestion or No Match --}}
-                                @if($transaction->matched_keyword_id)
-                                <div class="bg-gray-900 rounded-lg p-3 border border-gray-700">
+                                {{-- Current Assignment/Suggestion --}}
+                                @if($transaction->matched_keyword_id && $transaction->matchedKeyword)
+                                <div class="bg-gray-900/50 rounded-lg p-3 border border-gray-700 mb-3">
                                     <div class="flex items-start gap-3">
                                         {{-- Confidence Badge --}}
                                         <div class="flex-shrink-0">
@@ -229,63 +210,106 @@
                                             </div>
                                         </div>
 
-                                        {{-- Suggested Category Path --}}
+                                        {{-- Suggested Category Hierarchy --}}
                                         <div class="flex-1 min-w-0">
-                                            <div class="text-xs text-gray-400 mb-1">
-                                                <i class="fas fa-lightbulb mr-1"></i>Suggested Category:
-                                            </div>
-                                            <div class="flex items-center gap-2 text-sm">
-                                                @if($transaction->matchedKeyword)
-                                                <div class="flex items-center gap-2 flex-wrap">
-                                                    <span class="px-2 py-1 bg-blue-900/30 text-blue-400 rounded border border-blue-700 font-semibold">
-                                                        🎯 {{ $transaction->matchedKeyword->keyword }}
-                                                    </span>
-                                                    <i class="fas fa-arrow-right text-gray-600"></i>
-                                                    @if($transaction->type)
-                                                    <span class="text-purple-400">{{ $transaction->type->name }}</span>
-                                                    <i class="fas fa-chevron-right text-gray-600 text-xs"></i>
-                                                    @endif
-                                                    @if($transaction->category)
-                                                    <span class="text-pink-400">{{ $transaction->category->name }}</span>
-                                                    <i class="fas fa-chevron-right text-gray-600 text-xs"></i>
-                                                    @endif
-                                                    @if($transaction->subCategory)
-                                                    <span class="text-cyan-400">{{ $transaction->subCategory->name }}</span>
-                                                    @endif
-                                                </div>
+                                            <div class="text-xs text-gray-400 mb-2">
+                                                <i class="fas fa-lightbulb mr-1"></i>
+                                                @if($transaction->is_verified)
+                                                    <span class="text-green-400">✓ Verified Assignment</span>
                                                 @else
-                                                <span class="text-gray-500 italic">No keyword matched</span>
+                                                    <span class="text-yellow-400">💡 Suggested Category (Please Review)</span>
                                                 @endif
                                             </div>
+                                            
+                                            {{-- Keyword dengan ID --}}
+                                            <div class="flex items-center gap-2 mb-2 flex-wrap">
+                                                <span class="px-2 py-1 bg-blue-900/30 text-blue-400 rounded border border-blue-700 font-semibold text-sm">
+                                                    🎯 {{ $transaction->matchedKeyword->keyword }}
+                                                </span>
+                                                <span class="text-xs text-gray-500">
+                                                    (Keyword ID: {{ $transaction->matched_keyword_id }})
+                                                </span>
+                                            </div>
+                                            
+                                            {{-- Full Category Hierarchy dengan IDs --}}
+                                            <div class="flex items-center gap-2 flex-wrap text-sm">
+                                                {{-- Type --}}
+                                                @if($transaction->type_id && $transaction->type)
+                                                <div class="flex items-center gap-1">
+                                                    <span class="px-2 py-1 bg-purple-900/30 text-purple-400 rounded border border-purple-700">
+                                                        {{ $transaction->type->name }}
+                                                    </span>
+                                                    <span class="text-xs text-gray-500">(Type: {{ $transaction->type_id }})</span>
+                                                </div>
+                                                <i class="fas fa-chevron-right text-gray-600 text-xs"></i>
+                                                @endif
+                                                
+                                                {{-- Category --}}
+                                                @if($transaction->category_id && $transaction->category)
+                                                <div class="flex items-center gap-1">
+                                                    <span class="px-2 py-1 bg-pink-900/30 text-pink-400 rounded border border-pink-700">
+                                                        {{ $transaction->category->name }}
+                                                    </span>
+                                                    <span class="text-xs text-gray-500">(Cat: {{ $transaction->category_id }})</span>
+                                                </div>
+                                                <i class="fas fa-chevron-right text-gray-600 text-xs"></i>
+                                                @endif
+                                                
+                                                {{-- Sub Category --}}
+                                                @if($transaction->sub_category_id && $transaction->subCategory)
+                                                <div class="flex items-center gap-1">
+                                                    <span class="px-2 py-1 bg-cyan-900/30 text-cyan-400 rounded border border-cyan-700">
+                                                        {{ $transaction->subCategory->name }}
+                                                    </span>
+                                                    <span class="text-xs text-gray-500">(SubCat: {{ $transaction->sub_category_id }})</span>
+                                                </div>
+                                                @endif
+                                            </div>
+
+                                            {{-- Matching Reason --}}
+                                            @if($transaction->matching_reason)
+                                            <div class="mt-2 text-xs text-gray-500 italic">
+                                                <i class="fas fa-info-circle mr-1"></i>
+                                                {{ $transaction->matching_reason }}
+                                            </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
                                 @else
-                                {{-- No Match --}}
-                                <div class="bg-red-900/20 border border-red-700 rounded-lg p-3">
+                                {{-- No Match Case --}}
+                                <div class="bg-red-900/20 border border-red-700 rounded-lg p-3 mb-3">
                                     <div class="flex items-center text-red-400">
                                         <i class="fas fa-times-circle mr-2"></i>
                                         <span class="text-sm font-semibold">No keyword match found</span>
                                     </div>
-                                    <p class="text-xs text-red-300 mt-1">Please select a keyword manually from the dropdown below</p>
+                                    <p class="text-xs text-red-300 mt-1">
+                                        No IDs: matched_keyword_id, sub_category_id, category_id, type_id = NULL
+                                    </p>
                                 </div>
                                 @endif
 
-                                {{-- Alternative Suggestions (if available) --}}
-                                @if($transaction->matchingLogs && $transaction->matchingLogs->count() > 1)
+                                {{-- Alternative Suggestions --}}
+                                @if(!$transaction->is_verified && $transaction->matchingLogs && $transaction->matchingLogs->count() > 1)
                                 <div class="mt-2">
                                     <details class="text-xs">
                                         <summary class="text-gray-400 hover:text-gray-300 cursor-pointer">
                                             <i class="fas fa-list mr-1"></i>
                                             View {{ $transaction->matchingLogs->count() - 1 }} alternative suggestion(s)
                                         </summary>
-                                        <div class="mt-2 space-y-1 pl-4">
+                                        <div class="mt-2 space-y-1 pl-4 bg-gray-900/30 rounded p-2">
                                             @foreach($transaction->matchingLogs->skip(1) as $log)
-                                            <div class="text-gray-400 flex items-center gap-2">
-                                                <span class="px-2 py-0.5 bg-gray-700 rounded text-xs">{{ $log->confidence_score }}%</span>
-                                                <span>{{ $log->keyword->keyword ?? 'Unknown' }}</span>
+                                            <div class="text-gray-400 flex items-center gap-2 py-1">
+                                                <span class="px-2 py-0.5 bg-gray-700 rounded text-xs font-semibold">{{ $log->confidence_score }}%</span>
+                                                <span class="font-medium">{{ $log->keyword->keyword ?? 'Unknown' }}</span>
+                                                @if($log->keyword && $log->keyword->subCategory)
                                                 <i class="fas fa-arrow-right text-gray-600 text-xs"></i>
-                                                <span class="text-gray-500">{{ $log->keyword->subCategory->name ?? '' }}</span>
+                                                <span class="text-gray-500">
+                                                    {{ $log->keyword->subCategory->category->type->name ?? '' }} →
+                                                    {{ $log->keyword->subCategory->category->name ?? '' }} →
+                                                    {{ $log->keyword->subCategory->name }}
+                                                </span>
+                                                @endif
                                             </div>
                                             @endforeach
                                         </div>
@@ -297,15 +321,15 @@
                             {{-- Right: Actions --}}
                             <div class="flex-shrink-0 flex flex-col gap-2 min-w-[300px]">
                                 @if($transaction->is_verified)
-                                    {{-- Already Verified --}}
+                                    {{-- Already Verified State --}}
                                     <div class="bg-green-900/30 border border-green-700 rounded-lg p-3 text-center">
                                         <i class="fas fa-check-circle text-green-400 text-2xl mb-1"></i>
                                         <div class="text-green-400 font-semibold text-sm">Verified ✓</div>
                                         <div class="text-green-300 text-xs mt-1">
                                             @if($transaction->is_manual_category)
-                                                <i class="fas fa-hand-pointer mr-1"></i>Manual
+                                                <i class="fas fa-hand-pointer mr-1"></i>Manual Assignment
                                             @else
-                                                <i class="fas fa-magic mr-1"></i>Auto
+                                                <i class="fas fa-magic mr-1"></i>Auto Approved
                                             @endif
                                         </div>
                                         @if($transaction->verifiedBy)
@@ -313,35 +337,70 @@
                                             by {{ $transaction->verifiedBy->name }}
                                         </div>
                                         @endif
-                                    </div>
-                                @else
-                                    {{-- Approve Button --}}
-                                    @if($transaction->matched_keyword_id)
-                                    <button type="button" 
-                                            class="approve-btn w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors duration-200 flex items-center justify-center gap-2"
-                                            data-transaction-id="{{ $transaction->id }}">
-                                        <i class="fas fa-check-circle"></i>
-                                        <span>Approve Suggestion</span>
-                                    </button>
-                                    @endif
-
-                                    {{-- Select2 Dropdown --}}
-                                    <div class="relative">
-                                        <select class="keyword-select w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                data-transaction-id="{{ $transaction->id }}"
-                                                data-placeholder="🔍 Search & select keyword...">
-                                            <option value="">-- Select Different Keyword --</option>
-                                        </select>
-                                    </div>
-
-                                    {{-- Helper Text --}}
-                                    <div class="text-xs text-gray-400 text-center">
-                                        @if($transaction->matched_keyword_id)
-                                            Click approve or choose different keyword
-                                        @else
-                                            Please select a keyword manually
+                                        @if($transaction->verified_at)
+                                        <div class="text-gray-500 text-xs mt-1">
+                                            {{ $transaction->verified_at->format('d M Y H:i') }}
+                                        </div>
                                         @endif
                                     </div>
+                                @else
+                                    {{-- Pending Validation State --}}
+                                    
+                                    @if($transaction->matched_keyword_id)
+                                        {{-- HAS SUGGESTION: Show Approve & Reject Buttons --}}
+                                        <div class="action-buttons-container">
+                                            <div class="flex gap-2">
+                                                <button type="button" 
+                                                        class="approve-btn flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors duration-200 flex items-center justify-center gap-2"
+                                                        data-transaction-id="{{ $transaction->id }}">
+                                                    <i class="fas fa-check-circle"></i>
+                                                    <span>Approve</span>
+                                                </button>
+                                                
+                                                <button type="button" 
+                                                        class="reject-btn flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors duration-200 flex items-center justify-center gap-2"
+                                                        data-transaction-id="{{ $transaction->id }}">
+                                                    <i class="fas fa-times-circle"></i>
+                                                    <span>Reject</span>
+                                                </button>
+                                            </div>
+                                            
+                                            <div class="text-xs text-center text-gray-400 mt-2">
+                                                Review suggestion above
+                                            </div>
+                                        </div>
+                                        
+                                        {{-- Hidden Select2 (will show after Reject) --}}
+                                        <div class="search-container hidden">
+                                            <select class="keyword-select w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                                    data-transaction-id="{{ $transaction->id }}"
+                                                    data-placeholder="🔍 Search & select correct keyword...">
+                                                <option value="">-- Select Correct Keyword --</option>
+                                            </select>
+                                            
+                                            <button type="button" 
+                                                    class="cancel-search-btn w-full mt-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm transition-colors"
+                                                    data-transaction-id="{{ $transaction->id }}">
+                                                <i class="fas fa-arrow-left mr-2"></i>Cancel & Back
+                                            </button>
+                                        </div>
+                                    @else
+                                        {{-- NO MATCH: Show Search Immediately --}}
+                                        <div class="search-container">
+                                            <div class="bg-orange-900/20 border border-orange-700 rounded-lg p-2 mb-2 text-center">
+                                                <span class="text-xs text-orange-300">
+                                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                                    No suggestion - Manual selection required
+                                                </span>
+                                            </div>
+                                            
+                                            <select class="keyword-select w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                                    data-transaction-id="{{ $transaction->id }}"
+                                                    data-placeholder="🔍 Search & select keyword...">
+                                                <option value="">-- Select Keyword --</option>
+                                            </select>
+                                        </div>
+                                    @endif
                                 @endif
                             </div>
                         </div>
@@ -374,11 +433,259 @@
         </div>
     </div>
 
-    {{-- Include Select2 CSS --}}
+    {{-- Scripts --}}
+    @push('scripts')
+    {{-- jQuery FIRST --}}
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    {{-- Select2 AFTER jQuery --}}
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <script>
+        jQuery(document).ready(function($) {
+            console.log('✅ jQuery loaded:', typeof $ !== 'undefined');
+            console.log('✅ Select2 loaded:', typeof $.fn.select2 !== 'undefined');
+            
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+            // Initialize Select2 untuk semua dropdown
+            function initializeSelect2($select) {
+                if ($select.hasClass('select2-hidden-accessible')) {
+                    $select.select2('destroy');
+                }
+                
+                const transactionId = $select.data('transaction-id');
+                
+                $select.select2({
+                    ajax: {
+                        url: '{{ route("bank-statements.keywords.search") }}',
+                        dataType: 'json',
+                        delay: 300,
+                        data: function(params) {
+                            return {
+                                q: params.term || '',
+                                page: params.page || 1
+                            };
+                        },
+                        processResults: function(data) {
+                            if (!data.results || data.results.length === 0) {
+                                return {
+                                    results: [{
+                                        id: '',
+                                        text: 'No keywords found',
+                                        disabled: true
+                                    }]
+                                };
+                            }
+                            return {
+                                results: data.results,
+                                pagination: data.pagination
+                            };
+                        },
+                        cache: true
+                    },
+                    placeholder: '🔍 Search & select keyword...',
+                    allowClear: true,
+                    minimumInputLength: 0,
+                    width: '100%',
+                    templateResult: formatKeywordResult,
+                    templateSelection: formatKeywordSelection,
+                    language: {
+                        searching: function() { return '🔍 Searching...'; },
+                        noResults: function() { return '❌ No keywords found'; }
+                    }
+                });
+
+                $select.on('select2:select', function(e) {
+                    handleManualKeywordSelection(transactionId, e.params.data.id, e.params.data);
+                });
+            }
+
+            // Initialize visible selects only
+            $('.keyword-select:visible').each(function() {
+                initializeSelect2($(this));
+            });
+
+            function formatKeywordResult(keyword) {
+                if (keyword.loading) {
+                    return $('<div class="text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</div>');
+                }
+                if (!keyword.id || keyword.disabled) {
+                    return keyword.text;
+                }
+
+                return $(`
+                    <div class="p-2">
+                        <div class="flex flex-col gap-1">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 bg-purple-900/50 text-purple-300 rounded text-xs font-semibold">
+                                    ${keyword.keyword || keyword.text}
+                                </span>
+                                ${keyword.priority ? `<span class="text-xs text-gray-400">Priority: ${keyword.priority}</span>` : ''}
+                            </div>
+                            ${keyword.category_path ? `<div class="text-xs text-gray-400">${keyword.category_path}</div>` : ''}
+                        </div>
+                    </div>
+                `);
+            }
+
+            function formatKeywordSelection(keyword) {
+                return keyword.keyword || keyword.text;
+            }
+
+            // ========================================
+            // APPROVE BUTTON - Auto approve suggestion
+            // ========================================
+            $(document).on('click', '.approve-btn', function() {
+                const $btn = $(this);
+                const transactionId = $btn.data('transaction-id');
+                const $row = $(`#transaction-${transactionId}`);
+                
+                $btn.prop('disabled', true).html('<span class="loading-spinner"></span> Approving...');
+                
+                $.ajax({
+                    url: `{{ url('statement-transactions') }}/${transactionId}/approve`,
+                    method: 'POST',
+                    success: function(response) {
+                        if (response.success) {
+                            showNotification('success', '✓ ' + response.message);
+                            updateRowToVerified($row, response.data, false);
+                            setTimeout(() => location.reload(), 1500);
+                        }
+                    },
+                    error: function(xhr) {
+                        showNotification('error', xhr.responseJSON?.message || 'Failed to approve');
+                        $btn.prop('disabled', false).html('<i class="fas fa-check-circle"></i> <span>Approve</span>');
+                    }
+                });
+            });
+
+            // ========================================
+            // REJECT BUTTON - Show search dropdown
+            // ========================================
+            $(document).on('click', '.reject-btn', function() {
+                const transactionId = $(this).data('transaction-id');
+                const $row = $(`#transaction-${transactionId}`);
+                const $buttonsContainer = $row.find('.action-buttons-container');
+                const $searchContainer = $row.find('.search-container');
+                
+                // Hide buttons, show search
+                $buttonsContainer.hide();
+                $searchContainer.removeClass('hidden').show();
+                
+                // Initialize Select2 untuk dropdown yang baru dimunculkan
+                const $select = $searchContainer.find('.keyword-select');
+                initializeSelect2($select);
+                
+                // Focus on search
+                setTimeout(() => {
+                    $select.select2('open');
+                }, 100);
+                
+                showNotification('info', 'Please select the correct keyword from the dropdown');
+            });
+
+            // ========================================
+            // CANCEL SEARCH BUTTON - Back to approve/reject
+            // ========================================
+            $(document).on('click', '.cancel-search-btn', function() {
+                const transactionId = $(this).data('transaction-id');
+                const $row = $(`#transaction-${transactionId}`);
+                const $buttonsContainer = $row.find('.action-buttons-container');
+                const $searchContainer = $row.find('.search-container');
+                
+                // Show buttons, hide search
+                $searchContainer.hide();
+                $buttonsContainer.show();
+                
+                // Clear selection
+                $searchContainer.find('.keyword-select').val(null).trigger('change');
+            });
+
+            // ========================================
+            // MANUAL KEYWORD SELECTION
+            // ========================================
+            function handleManualKeywordSelection(transactionId, keywordId, keywordData) {
+                const $row = $(`#transaction-${transactionId}`);
+                const $select = $row.find('.keyword-select');
+                $select.prop('disabled', true);
+                
+                $.ajax({
+                    url: `{{ url('statement-transactions') }}/${transactionId}/set-keyword`,
+                    method: 'POST',
+                    data: { keyword_id: keywordId },
+                    success: function(response) {
+                        if (response.success) {
+                            showNotification('success', '✓ ' + response.message);
+                            updateRowToVerified($row, response.data, true);
+                            setTimeout(() => location.reload(), 1500);
+                        }
+                    },
+                    error: function(xhr) {
+                        showNotification('error', xhr.responseJSON?.message || 'Failed to assign keyword');
+                        $select.prop('disabled', false).val(null).trigger('change');
+                    }
+                });
+            }
+
+            // ========================================
+            // UPDATE ROW TO VERIFIED STATE
+            // ========================================
+            function updateRowToVerified($row, data, isManual) {
+                const html = `
+                    <div class="bg-green-900/30 border border-green-700 rounded-lg p-3 text-center">
+                        <i class="fas fa-check-circle text-green-400 text-2xl mb-1"></i>
+                        <div class="text-green-400 font-semibold text-sm">Verified ✓</div>
+                        <div class="text-green-300 text-xs mt-1">
+                            ${isManual ? '<i class="fas fa-hand-pointer mr-1"></i>Manual Selection' : '<i class="fas fa-magic mr-1"></i>Auto Approved'}
+                        </div>
+                        <div class="text-gray-400 text-xs mt-1">by ${data.verified_by || 'You'}</div>
+                    </div>
+                `;
+                $row.find('.flex-shrink-0').html(html);
+                $row.addClass('border-green-700');
+                setTimeout(() => $row.removeClass('border-green-700'), 2000);
+            }
+
+            // ========================================
+            // NOTIFICATION HELPER
+            // ========================================
+            function showNotification(type, message) {
+                const bgColors = {
+                    'success': 'bg-green-600',
+                    'error': 'bg-red-600',
+                    'info': 'bg-blue-600'
+                };
+                const icons = {
+                    'success': 'fa-check-circle',
+                    'error': 'fa-exclamation-circle',
+                    'info': 'fa-info-circle'
+                };
+                
+                const bgColor = bgColors[type] || 'bg-gray-600';
+                const icon = icons[type] || 'fa-info-circle';
+                
+                const notification = $(`
+                    <div class="fixed top-4 right-4 ${bgColor} text-white px-6 py-4 rounded-lg shadow-lg z-50 flex items-center gap-3 max-w-md">
+                        <i class="fas ${icon}"></i>
+                        <span>${message}</span>
+                    </div>
+                `);
+                
+                $('body').append(notification);
+                setTimeout(() => notification.fadeOut(300, function() { $(this).remove(); }), 3000);
+            }
+        });
+    </script>
+    @endpush
+
+    {{-- Styles --}}
     @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
-        /* Select2 Dark Theme Customization */
         .select2-container--default .select2-selection--single {
             background-color: #374151 !important;
             border: 1px solid #4B5563 !important;
@@ -386,39 +693,24 @@
             height: 48px !important;
             padding: 8px 12px !important;
         }
-        
         .select2-container--default .select2-selection--single .select2-selection__rendered {
             color: #fff !important;
             line-height: 32px !important;
             padding-left: 12px !important;
         }
-        
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 46px !important;
-            right: 12px !important;
-        }
-        
         .select2-dropdown {
             background-color: #1F2937 !important;
             border: 1px solid #4B5563 !important;
             border-radius: 0.5rem !important;
         }
-        
         .select2-container--default .select2-results__option {
             color: #D1D5DB !important;
             padding: 12px 16px !important;
         }
-        
         .select2-container--default .select2-results__option--highlighted[aria-selected] {
             background-color: #7C3AED !important;
             color: #fff !important;
         }
-        
-        .select2-container--default .select2-results__option[aria-selected=true] {
-            background-color: #374151 !important;
-            color: #fff !important;
-        }
-        
         .select2-container--default .select2-search--dropdown .select2-search__field {
             background-color: #374151 !important;
             border: 1px solid #4B5563 !important;
@@ -426,18 +718,6 @@
             border-radius: 0.375rem !important;
             padding: 8px 12px !important;
         }
-        
-        .select2-container--default .select2-search--dropdown .select2-search__field:focus {
-            outline: none !important;
-            border-color: #7C3AED !important;
-            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1) !important;
-        }
-        
-        .select2-results__option--loading {
-            color: #9CA3AF !important;
-        }
-
-        /* Loading spinner */
         .loading-spinner {
             display: inline-block;
             width: 14px;
@@ -447,277 +727,12 @@
             border-top-color: #fff;
             animation: spin 0.6s linear infinite;
         }
-
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        .hidden {
+            display: none !important;
+        }
     </style>
     @endpush
-
-    {{-- JavaScript --}}
-    @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script>
-    $(document).ready(function() {
-        // CSRF Token
-        $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            }
-        });
-
-        // Initialize all Select2
-        $('.keyword-select').each(function() {
-            const transactionId = $(this).data('transaction-id');
-            
-            $(this).select2({
-                ajax: {
-                    url: '{{ route("bank-statements.keywords.search") }}',  // ✅ FIX: Route yang benar
-                    dataType: 'json',
-                    delay: 300,
-                    data: function(params) {
-                        return {
-                            q: params.term || '',
-                            page: params.page || 1
-                        };
-                    },
-                    processResults: function(data) {
-                        console.log('Search results:', data); // ✅ DEBUG: Log hasil
-                        
-                        if (!data.results || data.results.length === 0) {
-                            console.warn('No keywords found');
-                            return {
-                                results: [{
-                                    id: '',
-                                    text: 'No keywords found',
-                                    disabled: true
-                                }]
-                            };
-                        }
-                        
-                        return {
-                            results: data.results.map(item => ({
-                                id: item.id,
-                                text: item.text,
-                                keyword: item.keyword,
-                                category_path: item.category_path,
-                                priority: item.priority
-                            })),
-                            pagination: {
-                                more: data.pagination && data.pagination.more
-                            }
-                        };
-                    },
-                    cache: true
-                },
-                placeholder: '🔍 Search & select keyword...',
-                allowClear: true,
-                minimumInputLength: 0,  // ✅ FIX: 0 agar langsung load tanpa ketik
-                width: '100%',
-                templateResult: formatKeywordResult,
-                templateSelection: formatKeywordSelection,
-                language: {
-                    searching: function() {
-                        return 'Searching keywords...';
-                    },
-                    noResults: function() {
-                        return 'No keywords found';
-                    },
-                    inputTooShort: function() {
-                        return 'Start typing to search...';
-                    }
-                }
-            });
-
-            // ✅ FIX: Trigger load keywords saat dropdown dibuka
-            $(this).on('select2:opening', function(e) {
-                console.log('Select2 opening, loading keywords...');
-            });
-
-            // On select keyword
-            $(this).on('select2:select', function(e) {
-                const keywordData = e.params.data;
-                console.log('Keyword selected:', keywordData);
-                handleManualKeywordSelection(transactionId, keywordData.id, keywordData);
-            });
-        });
-
-        // Format keyword result in dropdown
-        function formatKeywordResult(keyword) {
-            if (keyword.loading) {
-                return $('<div class="text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</div>');
-            }
-            
-            if (!keyword.id) {
-                return keyword.text;
-            }
-
-            // ✅ FIX: Pastikan element dibuat dengan benar
-            const $result = $('<div class="p-2"></div>');
-            
-            const $content = $(`
-                <div class="flex flex-col gap-1">
-                    <div class="flex items-center gap-2">
-                        <span class="px-2 py-0.5 bg-purple-900/50 text-purple-300 rounded text-xs font-semibold">
-                            ${keyword.keyword || keyword.text}
-                        </span>
-                        <span class="text-xs text-gray-400">Priority: ${keyword.priority || 'N/A'}</span>
-                    </div>
-                    <div class="text-xs text-gray-400">${keyword.category_path || ''}</div>
-                </div>
-            `);
-            
-            $result.append($content);
-            return $result;
-        }
-
-        // Format selected keyword
-        function formatKeywordSelection(keyword) {
-            return keyword.keyword || keyword.text;
-        }
-
-        // Handle Approve Button Click
-        $('.approve-btn').on('click', function() {
-            const $btn = $(this);
-            const transactionId = $btn.data('transaction-id');
-            const $row = $(`#transaction-${transactionId}`);
-            
-            // Disable button
-            $btn.prop('disabled', true);
-            $btn.html('<span class="loading-spinner"></span> Approving...');
-            
-            // Send AJAX request
-            $.ajax({
-                url: `{{ url('statement-transactions') }}/${transactionId}/approve`,
-                method: 'POST',
-                success: function(response) {
-                    console.log('Approve response:', response);
-                    
-                    if (response.success) {
-                        // Show success message
-                        showNotification('success', response.message || 'Transaction approved successfully!');
-                        
-                        // Update row to show verified state
-                        updateRowToVerified($row, response.data, false);
-                        
-                        // Update statistics
-                        updateStatistics();
-                    } else {
-                        showNotification('error', response.message || 'Failed to approve transaction');
-                        $btn.prop('disabled', false);
-                        $btn.html('<i class="fas fa-check-circle"></i> <span>Approve Suggestion</span>');
-                    }
-                },
-                error: function(xhr) {
-                    console.error('Approve error:', xhr);
-                    const message = xhr.responseJSON?.message || 'An error occurred while approving';
-                    showNotification('error', message);
-                    $btn.prop('disabled', false);
-                    $btn.html('<i class="fas fa-check-circle"></i> <span>Approve Suggestion</span>');
-                }
-            });
-        });
-
-        // Handle Manual Keyword Selection
-        function handleManualKeywordSelection(transactionId, keywordId, keywordData) {
-            console.log('Setting keyword manually:', {transactionId, keywordId, keywordData});
-            
-            const $row = $(`#transaction-${transactionId}`);
-            const $select = $row.find('.keyword-select');
-            
-            // Show loading state
-            $select.prop('disabled', true);
-            
-            // Send AJAX request
-            $.ajax({
-                url: `{{ url('statement-transactions') }}/${transactionId}/set-keyword`,
-                method: 'POST',
-                data: {
-                    keyword_id: keywordId
-                },
-                success: function(response) {
-                    console.log('Set keyword response:', response);
-                    
-                    if (response.success) {
-                        showNotification('success', response.message || 'Keyword assigned successfully!');
-                        
-                        // Update row to show verified state
-                        updateRowToVerified($row, response.data, true);
-                        
-                        // Update statistics
-                        updateStatistics();
-                    } else {
-                        showNotification('error', response.message || 'Failed to assign keyword');
-                        $select.prop('disabled', false);
-                        $select.val(null).trigger('change');
-                    }
-                },
-                error: function(xhr) {
-                    console.error('Set keyword error:', xhr);
-                    const message = xhr.responseJSON?.message || 'An error occurred while assigning keyword';
-                    showNotification('error', message);
-                    $select.prop('disabled', false);
-                    $select.val(null).trigger('change');
-                }
-            });
-        }
-
-        // Update row to verified state
-        function updateRowToVerified($row, data, isManual) {
-            const verifiedHtml = `
-                <div class="bg-green-900/30 border border-green-700 rounded-lg p-3 text-center">
-                    <i class="fas fa-check-circle text-green-400 text-2xl mb-1"></i>
-                    <div class="text-green-400 font-semibold text-sm">Verified ✓</div>
-                    <div class="text-green-300 text-xs mt-1">
-                        ${isManual ? '<i class="fas fa-hand-pointer mr-1"></i>Manual' : '<i class="fas fa-magic mr-1"></i>Auto'}
-                    </div>
-                    <div class="text-gray-400 text-xs mt-1">
-                        by ${data.verified_by || 'You'}
-                    </div>
-                </div>
-            `;
-            
-            $row.find('.flex-shrink-0').html(verifiedHtml);
-            
-            // Add green border to indicate success
-            $row.addClass('border-green-700');
-            setTimeout(() => {
-                $row.removeClass('border-green-700');
-            }, 2000);
-        }
-
-        // Update statistics
-        function updateStatistics() {
-            // Reload page to update stats (simple approach)
-            setTimeout(() => {
-                location.reload();
-            }, 1500);
-        }
-
-        // Show notification
-        function showNotification(type, message) {
-            const bgColor = type === 'success' ? 'bg-green-600' : 'bg-red-600';
-            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
-            
-            const notification = $(`
-                <div class="fixed top-4 right-4 ${bgColor} text-white px-6 py-4 rounded-lg shadow-lg z-50 flex items-center gap-3">
-                    <i class="fas ${icon}"></i>
-                    <span>${message}</span>
-                </div>
-            `);
-            
-            $('body').append(notification);
-            
-            setTimeout(() => {
-                notification.fadeOut(300, function() {
-                    $(this).remove();
-                });
-            }, 3000);
-        }
-
-        // ✅ DEBUG: Test route
-        console.log('Keywords search route:', '{{ route("bank-statements.keywords.search") }}');
-    });
-</script>
-@endpush
 </x-app-layout>
