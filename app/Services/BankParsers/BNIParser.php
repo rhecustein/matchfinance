@@ -29,12 +29,15 @@ class BNIParser extends BaseBankParser
         ];
     }
     
-    private function parseTransactions(array $tableData): array
+    /**
+     * Parse transactions from BNI OCR response
+     * ✅ CHANGED: private → public
+     */
+    public function parseTransactions(array $data): array
     {
         $transactions = [];
         
-        foreach ($tableData as $row) {
-            // BNI format: DD/MM/YYYY (lengkap)
+        foreach ($data['transactions'] ?? [] as $row) {
             $date = $this->parseDate($row['Date'] ?? null);
             
             $debit = $this->parseAmount($row['Debit'] ?? '0');
@@ -44,7 +47,7 @@ class BNIParser extends BaseBankParser
             $transactions[] = [
                 'transaction_date' => $this->formatDate($date),
                 'transaction_time' => $this->parseTime($row['Time'] ?? null),
-                'value_date' => $this->formatDate($this->parseDate($row['ValueDate'] ?? null)),
+                'value_date' => $this->formatDate($date),
                 'branch_code' => $row['Branch'] ?? null,
                 'description' => $this->cleanDescription($row['Description'] ?? ''),
                 'reference_no' => $row['ReferenceNo'] ?? null,

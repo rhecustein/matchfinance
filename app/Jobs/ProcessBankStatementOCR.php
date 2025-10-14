@@ -1,9 +1,11 @@
 <?php
+// app/Jobs/ProcessBankStatementOCR.php
 
 namespace App\Jobs;
 
 use App\Models\BankStatement;
 use App\Models\StatementTransaction;
+use App\Events\BankStatementOcrCompleted; // ✅ ADD THIS
 use App\Services\BankParsers\BCAParser;
 use App\Services\BankParsers\BNIParser;
 use App\Services\BankParsers\BRIParser;
@@ -24,21 +26,15 @@ class ProcessBankStatementOCR implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $timeout = 300; // 5 minutes
+    public $timeout = 300;
     public $tries = 3;
     public $maxExceptions = 3;
 
-    /**
-     * Create a new job instance.
-     */
     public function __construct(
         public BankStatement $bankStatement,
         public string $bankSlug
     ) {}
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
         try {
@@ -50,14 +46,13 @@ class ProcessBankStatementOCR implements ShouldQueue
                 'ocr_started_at' => now(),
             ]);
 
-            // Get file path with multiple fallback strategies
+            // Get file path
             $filePath = $this->getFilePath();
             
             if (!$filePath) {
                 throw new \Exception("File not found after trying all path strategies");
             }
 
-            // Verify file is readable
             if (!is_readable($filePath)) {
                 throw new \Exception("File is not readable: {$filePath}");
             }
@@ -75,95 +70,97 @@ class ProcessBankStatementOCR implements ShouldQueue
                 throw new \Exception("OCR API returned error status");
             }
 
+            // Parse transactions using bank parser
+            $parser = $this->getBankParser($this->bankSlug);
+           // ✅ NORMALIZE: Different banks use different field names
+            $ocrData = $ocrResponse['ocr'] ?? $ocrResponse['data'] ?? $ocrResponse;
+
+            // Normalize transaction field names
+            if (isset($ocrData['TableData']) && !isset($ocrData['transactions'])) {
+                $ocrData['transactions'] = $ocrData['TableData'];
+            }
+
+            $ocrResponse['ocr'] = $ocrData;
+
             // Parse the OCR response based on bank
             $parser = $this->getBankParser($this->bankSlug);
             $parsedData = $parser->parse($ocrResponse);
 
-            // Begin Database Transaction
-            DB::beginTransaction();
 
-            // Update bank statement with parsed data
-            $this->bankStatement->update([
-                'ocr_status' => 'completed',
-                'ocr_response' => $ocrResponse,
-                'ocr_completed_at' => now(),
-                'bank_name' => $parsedData['bank_name'],
-                'period_from' => $parsedData['period_from'],
-                'period_to' => $parsedData['period_to'],
-                'account_number' => $parsedData['account_number'],
-                'currency' => $parsedData['currency'],
-                'branch_code' => $parsedData['branch_code'],
-                'opening_balance' => $parsedData['opening_balance'],
-                'closing_balance' => $parsedData['closing_balance'],
-                'total_credit_count' => $parsedData['total_credit_count'],
-                'total_debit_count' => $parsedData['total_debit_count'],
-                'total_credit_amount' => $parsedData['total_credit_amount'],
-                'total_debit_amount' => $parsedData['total_debit_amount'],
-                'total_transactions' => count($parsedData['transactions']),
-                'processed_transactions' => 0,
-            ]);
-
-            // CRITICAL FIX: Get company_id from bank statement
-            $companyId = $this->bankStatement->company_id;
-
-            // Insert transactions with explicit company_id and uuid
-            $transactionsInserted = 0;
-            foreach ($parsedData['transactions'] as $transaction) {
-                if (empty($transaction['transaction_date'])) {
-                    Log::warning("Skipping transaction without date", $transaction);
-                    continue;
-                }
-
-                // CRITICAL: Create instance with explicit company_id and uuid
-                $statementTransaction = new StatementTransaction([
-                    'uuid' => \Illuminate\Support\Str::uuid()->toString(), // EXPLICIT UUID
-                    'company_id' => $companyId, // EXPLICIT SET from bank statement
-                    'bank_statement_id' => $this->bankStatement->id,
-                    'transaction_date' => $transaction['transaction_date'],
-                    'transaction_time' => $transaction['transaction_time'] ?? null,
-                    'value_date' => $transaction['value_date'] ?? null,
-                    'branch_code' => $transaction['branch_code'] ?? null,
-                    'description' => $transaction['description'] ?? null,
-                    'reference_no' => $transaction['reference_no'] ?? null,
-                    'debit_amount' => $transaction['debit_amount'] ?? 0,
-                    'credit_amount' => $transaction['credit_amount'] ?? 0,
-                    'balance' => $transaction['balance'] ?? 0,
-                    'transaction_type' => $transaction['transaction_type'] ?? null,
-                    'amount' => $transaction['amount'] ?? 0,
-                ]);
-                
-                // Save without triggering trait events (bypass BelongsToTenant)
-                $statementTransaction->saveQuietly();
-
-                $transactionsInserted++;
+            if (empty($transactions)) {
+                throw new \Exception("No transactions found in OCR response");
             }
 
-            // Update processed count
+            DB::beginTransaction();
+
+            // Store transactions
+            $storedTransactions = [];
+            foreach ($transactions as $transactionData) {
+                $transaction = StatementTransaction::create([
+                    'uuid' => \Illuminate\Support\Str::uuid(),
+                    'company_id' => $this->bankStatement->company_id,
+                    'bank_statement_id' => $this->bankStatement->id,
+                    'transaction_date' => $transactionData['transaction_date'],
+                    'transaction_time' => $transactionData['transaction_time'] ?? null,
+                    'value_date' => $transactionData['value_date'] ?? null,
+                    'branch_code' => $transactionData['branch_code'] ?? null,
+                    'description' => $transactionData['description'],
+                    'reference_no' => $transactionData['reference_no'] ?? null,
+                    'debit_amount' => $transactionData['debit_amount'],
+                    'credit_amount' => $transactionData['credit_amount'],
+                    'balance' => $transactionData['balance'],
+                    'amount' => $transactionData['amount'],
+                    'transaction_type' => $transactionData['transaction_type'],
+                ]);
+                
+                $storedTransactions[] = $transaction;
+            }
+
+            // Update bank statement
             $this->bankStatement->update([
-                'processed_transactions' => $transactionsInserted,
+                'ocr_status' => 'completed',
+                'ocr_completed_at' => now(),
+                'ocr_response' => $ocrResponse,
+                'period_from' => $ocrResponse['data']['period_start'] ?? null,
+                'period_to' => $ocrResponse['data']['period_end'] ?? null,
+                'account_number' => $ocrResponse['data']['account_number'] ?? null,
+                'account_holder_name' => $ocrResponse['data']['account_holder_name'] ?? null,
+                'opening_balance' => $ocrResponse['data']['opening_balance'] ?? 0,
+                'closing_balance' => $ocrResponse['data']['closing_balance'] ?? 0,
+                'total_transactions' => count($transactions),
+                'processed_transactions' => count($transactions),
+                'total_debit_amount' => collect($transactions)->sum('debit_amount'),
+                'total_credit_amount' => collect($transactions)->sum('credit_amount'),
+                'total_debit_count' => collect($transactions)->where('transaction_type', 'debit')->count(),
+                'total_credit_count' => collect($transactions)->where('transaction_type', 'credit')->count(),
             ]);
 
             DB::commit();
 
-            Log::info("Successfully processed OCR for Bank Statement ID: {$this->bankStatement->id}", [
-                'company_id' => $companyId,
-                'transactions' => $transactionsInserted,
+            Log::info("OCR processing completed successfully", [
+                'statement_id' => $this->bankStatement->id,
+                'total_transactions' => count($transactions),
             ]);
 
-            // Dispatch matching job after successful OCR processing
-            \App\Jobs\ProcessTransactionMatching::dispatch($this->bankStatement);
+            // ✅ FIRE EVENT - This triggers auto-matching
+            event(new BankStatementOcrCompleted(
+                $this->bankStatement->fresh(),
+                $ocrResponse,
+                count($transactions)
+            ));
 
         } catch (\Exception $e) {
             DB::rollBack();
 
-            Log::error("OCR Processing failed for Bank Statement ID: {$this->bankStatement->id}", [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
             $this->bankStatement->update([
                 'ocr_status' => 'failed',
                 'ocr_error' => $e->getMessage(),
+                'ocr_completed_at' => now(),
+            ]);
+
+            Log::error("OCR processing failed", [
+                'statement_id' => $this->bankStatement->id,
+                'error' => $e->getMessage(),
             ]);
 
             throw $e;
@@ -278,6 +275,11 @@ class ProcessBankStatementOCR implements ShouldQueue
      */
     public function failed(\Throwable $exception): void
     {
+        Log::error("OCR job failed permanently", [
+            'statement_id' => $this->bankStatement->id,
+            'error' => $exception->getMessage(),
+        ]);
+        
         Log::error("Job failed permanently for Bank Statement ID: {$this->bankStatement->id}", [
             'error' => $exception->getMessage(),
         ]);

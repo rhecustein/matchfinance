@@ -6,6 +6,7 @@ use App\Models\Keyword;
 use App\Models\KeywordSuggestion;
 use App\Models\StatementTransaction;
 use App\Services\EnhancedKeywordExtractor;
+use Illuminate\Support\Facades\Log;
 
 
 class KeywordLearningService
@@ -69,6 +70,54 @@ class KeywordLearningService
             ]);
             
             $suggestion->update(['status' => 'approved']);
+        }
+    }
+    public function updateKeywordStats(int $keywordId, string $action): void
+    {
+        $keyword = Keyword::find($keywordId);
+        if (!$keyword) return;
+        
+        // Update match_count di keywords table (already exists)
+        switch ($action) {
+            case 'approved':
+                $keyword->increment('match_count');
+                $keyword->update(['last_matched_at' => now()]);
+                // Increase priority if highly successful
+                $this->adjustPriority($keyword, +1);
+                break;
+                
+            case 'rejected':
+                // Decrease priority if often rejected
+                $this->adjustPriority($keyword, -1);
+                break;
+                
+            case 'selected_from_suggestion':
+                $keyword->increment('match_count');
+                $keyword->update(['last_matched_at' => now()]);
+                // Significant boost - user actively chose this
+                $this->adjustPriority($keyword, +2);
+                break;
+                
+            case 'replaced_by_suggestion':
+                // Penalty - primary match was wrong
+                $this->adjustPriority($keyword, -2);
+                break;
+        }
+    }
+    
+    private function adjustPriority(Keyword $keyword, int $adjustment): void
+    {
+        $newPriority = max(1, min(10, $keyword->priority + $adjustment));
+        
+        if ($newPriority !== $keyword->priority) {
+            $keyword->update(['priority' => $newPriority]);
+            
+            Log::info('Keyword priority adjusted', [
+                'keyword_id' => $keyword->id,
+                'old_priority' => $keyword->priority,
+                'new_priority' => $newPriority,
+                'adjustment' => $adjustment
+            ]);
         }
     }
 }

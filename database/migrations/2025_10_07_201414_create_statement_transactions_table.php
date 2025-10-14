@@ -26,6 +26,38 @@ return new class extends Migration
             $table->string('branch_code', 50)->nullable()->comment('Bank branch code where transaction occurred');
             $table->text('description')->comment('Transaction description/narrative from bank statement');
             $table->string('reference_no', 100)->nullable()->comment('Bank reference/transaction number');
+            //status approved
+            $table->boolean('is_approved')->default(false)->comment('Whether transaction is approved by user');
+            $table->foreignId('approved_by')
+                  ->nullable()
+                  ->constrained('users')
+                  ->nullOnDelete()
+                  ->comment('User who approved the transaction');
+            $table->timestamp('approved_at')
+                  ->nullable()
+                  ->comment('Timestamp when transaction was approved');
+            //status rejected
+            $table->boolean('is_rejected')->default(false)->comment('Whether transaction is rejected by user');
+            $table->foreignId('rejected_by')
+                  ->nullable()
+                  ->constrained('users')
+                  ->nullOnDelete()
+                  ->comment('User who rejected the transaction');
+            $table->timestamp('rejected_at')
+                  ->nullable()
+                  ->comment('Timestamp when transaction was rejected');
+            //status pending
+            $table->boolean('is_pending')->default(false)->comment('Whether transaction is pending');
+            $table->foreignId('pending_by')
+                  ->nullable()
+                  ->constrained('users')
+                  ->nullOnDelete()
+                  ->comment('User who marked the transaction as pending');
+            $table->timestamp('pending_at')
+                  ->nullable()
+                  ->comment('Timestamp when transaction was marked as pending');
+            //status cancelled
+
             
             // Amount Fields - Financial Data
             $table->decimal('debit_amount', 15, 2)->default(0)->comment('Outgoing/debit amount (negative cash flow)');

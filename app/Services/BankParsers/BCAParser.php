@@ -32,13 +32,16 @@ class BCAParser extends BaseBankParser
         ];
     }
     
-    private function parseTransactions(array $tableData, ?string $year): array
+    /**
+     * Parse transactions from BCA OCR response
+     * ✅ CHANGED: private → public
+     */
+    public function parseTransactions(array $data): array
     {
         $transactions = [];
         
-        foreach ($tableData as $row) {
-            // BCA format: DD/MM (tanpa tahun)
-            $date = $this->parseDate($row['Date'] ?? null, $year);
+        foreach ($data['transactions'] ?? [] as $row) {
+            $date = $this->parseDate($row['Date'] ?? null);
             
             $debit = $this->parseAmount($row['Debit'] ?? '0');
             $credit = $this->parseAmount($row['Credit'] ?? '0');
@@ -47,7 +50,7 @@ class BCAParser extends BaseBankParser
             $transactions[] = [
                 'transaction_date' => $this->formatDate($date),
                 'transaction_time' => $this->parseTime($row['Time'] ?? null),
-                'value_date' => $this->formatDate($this->parseDate($row['ValueDate'] ?? null, $year)),
+                'value_date' => $this->formatDate($date),
                 'branch_code' => $row['Branch'] ?? null,
                 'description' => $this->cleanDescription($row['Description'] ?? ''),
                 'reference_no' => $row['ReferenceNo'] ?? null,

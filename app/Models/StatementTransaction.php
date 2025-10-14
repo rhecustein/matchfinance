@@ -31,6 +31,8 @@ class StatementTransaction extends Model
         'balance',
         'transaction_type',
         'amount',
+        'is_approved',
+        'is_rejected',
         'account_id',
         'matched_account_keyword_id',
         'account_confidence_score',
@@ -116,6 +118,18 @@ class StatementTransaction extends Model
     public function verifiedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    //approvedBy
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    //rejectedBy
+    public function rejectedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
     }
 
     /*

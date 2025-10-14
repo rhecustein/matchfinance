@@ -48,12 +48,15 @@ class MandiriParser extends BaseBankParser
         ];
     }
     
-    private function parseTransactions(array $tableData): array
+    /**
+     * Parse transactions from Mandiri OCR response
+     * ✅ CHANGED: private → public
+     */
+    public function parseTransactions(array $data): array
     {
         $transactions = [];
         
-        foreach ($tableData as $row) {
-            // Mandiri format: DD/MM/YYYY (lengkap)
+        foreach ($data['transactions'] ?? [] as $row) {
             $date = $this->parseDate($row['Date'] ?? null);
             $valueDate = $this->parseDate($row['ValueDate'] ?? null);
             

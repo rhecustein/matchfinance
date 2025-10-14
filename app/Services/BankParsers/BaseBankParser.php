@@ -66,8 +66,38 @@ abstract class BaseBankParser
         // Remove currency symbols and non-numeric characters except comma, dot, and minus
         $cleaned = preg_replace('/[^\d,.-]/', '', (string) $amount);
         
-        // Remove thousand separators (commas)
-        $cleaned = str_replace(',', '', $cleaned);
+        // Handle different decimal separators
+        // Indonesian format: 1.000.000,50 or 1,000,000.50
+        if (strpos($cleaned, ',') !== false && strpos($cleaned, '.') !== false) {
+            // Both comma and dot present
+            // Determine which is decimal separator (last one)
+            $lastComma = strrpos($cleaned, ',');
+            $lastDot = strrpos($cleaned, '.');
+            
+            if ($lastComma > $lastDot) {
+                // Comma is decimal separator (Indonesian format: 1.000,50)
+                $cleaned = str_replace('.', '', $cleaned); // Remove thousand separator
+                $cleaned = str_replace(',', '.', $cleaned); // Convert decimal separator
+            } else {
+                // Dot is decimal separator (US format: 1,000.50)
+                $cleaned = str_replace(',', '', $cleaned); // Remove thousand separator
+            }
+        } else {
+            // Only one type of separator or none
+            if (strpos($cleaned, ',') !== false) {
+                // Check if comma is decimal separator or thousand separator
+                $parts = explode(',', $cleaned);
+                if (isset($parts[1]) && strlen($parts[1]) <= 2) {
+                    // Comma is decimal separator (e.g., 1000,50)
+                    $cleaned = str_replace(',', '.', $cleaned);
+                } else {
+                    // Comma is thousand separator (e.g., 1,000)
+                    $cleaned = str_replace(',', '', $cleaned);
+                }
+            }
+            // If only dot, assume it's decimal separator or thousand separator
+            // Standard parseFloat will handle it
+        }
         
         return (float) $cleaned;
     }
@@ -84,15 +114,34 @@ abstract class BaseBankParser
             return null;
         }
         
-        // Normalize time format to HH:MM:SS
-        $time = str_replace(['.', ' '], ':', trim($time));
-        
-        // Add seconds if missing
-        if (substr_count($time, ':') === 1) {
-            $time .= ':00';
+        try {
+            // Normalize time format to HH:MM:SS
+            $time = str_replace(['.', ' '], ':', trim($time));
+            
+            // Add seconds if missing
+            if (substr_count($time, ':') === 1) {
+                $time .= ':00';
+            }
+            
+            // Validate time format
+            if (preg_match('/^\d{1,2}:\d{2}(:\d{2})?$/', $time)) {
+                // Parse and format to ensure valid time
+                $parts = explode(':', $time);
+                $hours = str_pad($parts[0], 2, '0', STR_PAD_LEFT);
+                $minutes = str_pad($parts[1], 2, '0', STR_PAD_LEFT);
+                $seconds = isset($parts[2]) ? str_pad($parts[2], 2, '0', STR_PAD_LEFT) : '00';
+                
+                return "{$hours}:{$minutes}:{$seconds}";
+            }
+            
+            return null;
+        } catch (\Exception $e) {
+            Log::warning("Failed to parse time: {$time}", [
+                'error' => $e->getMessage(),
+                'bank' => $this->bankName ?? 'unknown'
+            ]);
+            return null;
         }
-        
-        return $time;
     }
     
     /**
@@ -105,6 +154,9 @@ abstract class BaseBankParser
     {
         // Remove extra whitespace
         $cleaned = preg_replace('/\s+/', ' ', $description);
+        
+        // Remove special characters that might cause issues
+        $cleaned = preg_replace('/[\x00-\x1F\x7F]/u', '', $cleaned);
         
         // Trim
         $cleaned = trim($cleaned);
@@ -130,7 +182,7 @@ abstract class BaseBankParser
      */
     public function getBankName(): string
     {
-        return $this->bankName;
+        return $this->bankName ?? 'Unknown';
     }
     
     /**
@@ -151,6 +203,12 @@ abstract class BaseBankParser
             try {
                 return Carbon::parse($date)->format('Y');
             } catch (\Exception $e) {
+                Log::warning("Failed to extract year from period", [
+                    'period_from' => $periodFrom,
+                    'period_to' => $periodTo,
+                    'error' => $e->getMessage(),
+                    'bank' => $this->bankName ?? 'unknown'
+                ]);
                 return date('Y'); // Fallback to current year
             }
         }
@@ -167,5 +225,42 @@ abstract class BaseBankParser
     protected function formatDate(?Carbon $date): ?string
     {
         return $date ? $date->format($this->dateFormat) : null;
+    }
+    
+    /**
+     * Validate required fields in transaction data
+     * 
+     * @param array $transaction
+     * @return bool
+     */
+    protected function validateTransaction(array $transaction): bool
+    {
+        $requiredFields = ['transaction_date', 'description', 'amount', 'transaction_type'];
+        
+        foreach ($requiredFields as $field) {
+            if (!isset($transaction[$field]) || $transaction[$field] === null || $transaction[$field] === '') {
+                Log::warning("Missing required field in transaction", [
+                    'field' => $field,
+                    'transaction' => $transaction,
+                    'bank' => $this->bankName ?? 'unknown'
+                ]);
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Sanitize transaction data before returning
+     * 
+     * @param array $transactions
+     * @return array
+     */
+    protected function sanitizeTransactions(array $transactions): array
+    {
+        return array_filter($transactions, function($transaction) {
+            return $this->validateTransaction($transaction);
+        });
     }
 }

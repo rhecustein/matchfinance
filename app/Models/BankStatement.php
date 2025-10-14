@@ -57,6 +57,11 @@ class BankStatement extends Model
         'uploaded_at',
         'ocr_started_at',
         'ocr_completed_at',
+        //tambahan
+        'matching_status',
+        'matching_notes',
+        'matching_started_at',
+        'matching_completed_at',
     ];
 
     protected $casts = [

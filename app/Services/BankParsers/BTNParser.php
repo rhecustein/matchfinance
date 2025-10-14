@@ -32,19 +32,12 @@ class BTNParser extends BaseBankParser
         ];
     }
     
-    private function parseTransactions(array $tableData, ?string $year): array
+    public function parseTransactions(array $data): array
     {
         $transactions = [];
         
-        foreach ($tableData as $row) {
-            // BTN format: DD/MM (tanpa tahun)
-            $date = $this->parseDate($row['Date'] ?? null, $year);
-            
-            // Time ada di kolom Time DAN di dalam Description
-            $time = $this->parseTime($row['Time'] ?? null);
-            if (!$time) {
-                $time = $this->extractTimeFromDescription($row['Description'] ?? '');
-            }
+        foreach ($data['transactions'] ?? [] as $row) {
+            $date = $this->parseDate($row['Date'] ?? null);
             
             $debit = $this->parseAmount($row['Debit'] ?? '0');
             $credit = $this->parseAmount($row['Credit'] ?? '0');
@@ -52,8 +45,8 @@ class BTNParser extends BaseBankParser
             
             $transactions[] = [
                 'transaction_date' => $this->formatDate($date),
-                'transaction_time' => $time,
-                'value_date' => $this->formatDate($this->parseDate($row['ValueDate'] ?? null, $year)),
+                'transaction_time' => $this->parseTime($row['Time'] ?? null),
+                'value_date' => $this->formatDate($date),
                 'branch_code' => $row['Branch'] ?? null,
                 'description' => $this->cleanDescription($row['Description'] ?? ''),
                 'reference_no' => $row['ReferenceNo'] ?? null,
