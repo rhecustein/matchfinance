@@ -7,9 +7,12 @@ use App\Models\BankStatement;
 use App\Models\Company;
 use App\Models\DocumentCollection;
 use App\Models\DocumentItem;
+use App\Models\StatementTransaction;
+use App\Models\Keyword;
 use App\Jobs\ProcessBankStatementOCR;
 use App\Jobs\ProcessAccountMatching;
 use App\Jobs\ProcessTransactionMatching;
+use App\Services\TransactionMatchingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +22,14 @@ use Illuminate\Support\Str;
 
 class BankStatementController extends Controller
 {
-   /**
+    protected TransactionMatchingService $matchingService;
+    
+    public function __construct(TransactionMatchingService $matchingService)
+    {
+        $this->matchingService = $matchingService;
+    }
+
+    /**
      * Display listing of bank statements with filters
      */
     public function index(Request $request)
@@ -527,6 +537,372 @@ class BankStatementController extends Controller
 
         return view('bank-statements.show', compact('bankStatement', 'statistics', 'transactions'));
     }
+
+    // ========================================
+    // 🆕 VALIDATION FEATURE METHODS
+    // ========================================
+
+    /**
+     * Show validation view with keyword suggestions
+     */
+    public function validateView(BankStatement $bankStatement)
+    {
+        $user = auth()->user();
+        
+        // COMPANY OWNERSHIP CHECK
+        abort_unless(
+            $user->isSuperAdmin() || $bankStatement->company_id === $user->company_id, 
+            403,
+            'You do not have permission to validate this bank statement.'
+        );
+        
+        // Load bank statement relationships
+        $bankStatement->load([
+            'bank' => function($q) {
+                $q->withoutGlobalScopes()->select('id', 'name', 'code', 'logo');
+            },
+            'user:id,name'
+        ]);
+        
+        // Load transactions with suggestions and relationships
+        $query = $bankStatement->transactions()
+            ->with([
+                'matchedKeyword.subCategory.category.type',
+                'subCategory.category.type',
+                'type',
+                'category',
+                'verifiedBy:id,name',
+                'matchingLogs' => function($q) {
+                    $q->with('keyword.subCategory.category.type')
+                      ->orderByDesc('confidence_score')
+                      ->limit(3);
+                }
+            ]);
+        
+        // Apply filter
+        $filter = request('filter', 'all');
+        
+        switch ($filter) {
+            case 'pending':
+                $query->where('is_verified', false);
+                break;
+            case 'approved':
+                $query->where('is_verified', true);
+                break;
+            case 'high-confidence':
+                $query->where('is_verified', false)
+                      ->where('confidence_score', '>=', 80);
+                break;
+            case 'low-confidence':
+                $query->where('is_verified', false)
+                      ->where(function($q) {
+                          $q->where('confidence_score', '<', 50)
+                            ->orWhereNull('matched_keyword_id');
+                      });
+                break;
+            case 'no-match':
+                $query->where('is_verified', false)
+                      ->whereNull('matched_keyword_id');
+                break;
+        }
+        
+        $transactions = $query->orderBy('transaction_date')
+                              ->orderBy('transaction_time')
+                              ->get();
+        
+        // Calculate statistics
+        $stats = [
+            'total' => $bankStatement->total_transactions,
+            'verified' => $transactions->where('is_verified', true)->count(),
+            'pending' => $transactions->where('is_verified', false)->count(),
+            'high_confidence' => $transactions->where('confidence_score', '>=', 80)->count(),
+            'medium_confidence' => $transactions->where('confidence_score', '>=', 50)
+                                                ->where('confidence_score', '<', 80)->count(),
+            'low_confidence' => $transactions->where('confidence_score', '>', 0)
+                                             ->where('confidence_score', '<', 50)->count(),
+            'no_match' => $transactions->whereNull('matched_keyword_id')->count(),
+            'auto_approved' => $transactions->where('is_verified', true)
+                                           ->where('is_manual_category', false)->count(),
+            'manual_assigned' => $transactions->where('is_verified', true)
+                                              ->where('is_manual_category', true)->count(),
+        ];
+        
+        // Calculate progress percentage
+        $stats['progress'] = $bankStatement->total_transactions > 0 
+            ? round(($stats['verified'] / $bankStatement->total_transactions) * 100, 1)
+            : 0;
+        
+        return view('bank-statements.validate', compact('bankStatement', 'transactions', 'stats'));
+    }
+
+    
+    
+    /**
+     * Approve auto suggestion (AJAX)
+     */
+    public function approveTransaction(StatementTransaction $transaction)
+    {
+        $user = auth()->user();
+        
+        // COMPANY OWNERSHIP CHECK
+        abort_unless(
+            $user->isSuperAdmin() || $transaction->company_id === $user->company_id,
+            403
+        );
+        
+        // Validate ada suggestion
+        if (!$transaction->matched_keyword_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No keyword suggestion found for this transaction'
+            ], 400);
+        }
+        
+        // Check if already verified
+        if ($transaction->is_verified) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Transaction already verified'
+            ], 400);
+        }
+        
+        DB::beginTransaction();
+        
+        try {
+            // Update verification
+            $transaction->update([
+                'is_verified' => true,
+                'verified_by' => $user->id,
+                'verified_at' => now(),
+                'is_manual_category' => false, // auto suggestion approved
+            ]);
+            
+            // Update bank statement statistics
+            $transaction->bankStatement->increment('verified_transactions');
+            
+            DB::commit();
+            
+            // Load relationships untuk response
+            $transaction->load([
+                'matchedKeyword.subCategory.category.type',
+                'verifiedBy:id,name'
+            ]);
+            
+            Log::info('Transaction approved', [
+                'transaction_id' => $transaction->id,
+                'statement_id' => $transaction->bank_statement_id,
+                'user_id' => $user->id,
+                'keyword' => $transaction->matchedKeyword->keyword ?? null,
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaction approved successfully',
+                'data' => [
+                    'id' => $transaction->id,
+                    'is_verified' => true,
+                    'verified_at' => $transaction->verified_at->format('d M Y H:i'),
+                    'verified_by' => $transaction->verifiedBy->name ?? null,
+                    'is_manual' => false,
+                    'keyword' => $transaction->matchedKeyword->keyword ?? null,
+                    'sub_category' => $transaction->subCategory->name ?? null,
+                    'category' => $transaction->category->name ?? null,
+                    'type' => $transaction->type->name ?? null,
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Failed to approve transaction', [
+                'transaction_id' => $transaction->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to approve transaction: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Set keyword manually via Select2 (AJAX)
+     */
+    public function setKeywordManually(Request $request, StatementTransaction $transaction)
+    {
+        $user = auth()->user();
+        
+        // COMPANY OWNERSHIP CHECK
+        abort_unless(
+            $user->isSuperAdmin() || $transaction->company_id === $user->company_id,
+            403
+        );
+        
+        $validated = $request->validate([
+            'keyword_id' => 'required|exists:keywords,id'
+        ]);
+        
+        DB::beginTransaction();
+        
+        try {
+            // Load keyword dengan relationships
+            $keyword = Keyword::with('subCategory.category.type')
+                ->where('company_id', $transaction->company_id)
+                ->where('is_active', true)
+                ->findOrFail($validated['keyword_id']);
+            
+            // Check if already verified
+            $wasVerified = $transaction->is_verified;
+            
+            // Update transaction dengan keyword baru
+            $transaction->update([
+                'matched_keyword_id' => $keyword->id,
+                'sub_category_id' => $keyword->sub_category_id,
+                'category_id' => $keyword->subCategory->category_id,
+                'type_id' => $keyword->subCategory->category->type_id,
+                'confidence_score' => 100, // Manual = max confidence
+                'is_verified' => true,
+                'verified_by' => $user->id,
+                'verified_at' => now(),
+                'is_manual_category' => true, // manual selection
+                'matching_reason' => 'Manually assigned by user: ' . $user->name,
+            ]);
+            
+            // Update bank statement statistics (hanya jika belum verified sebelumnya)
+            if (!$wasVerified) {
+                $transaction->bankStatement->increment('verified_transactions');
+            }
+            
+            // Increment keyword usage count
+            $keyword->increment('match_count');
+            $keyword->update(['last_matched_at' => now()]);
+            
+            DB::commit();
+            
+            Log::info('Transaction manually assigned', [
+                'transaction_id' => $transaction->id,
+                'statement_id' => $transaction->bank_statement_id,
+                'user_id' => $user->id,
+                'keyword_id' => $keyword->id,
+                'keyword' => $keyword->keyword,
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Keyword assigned successfully',
+                'data' => [
+                    'id' => $transaction->id,
+                    'keyword_id' => $keyword->id,
+                    'keyword' => $keyword->keyword,
+                    'sub_category' => $keyword->subCategory->name,
+                    'category' => $keyword->subCategory->category->name,
+                    'type' => $keyword->subCategory->category->type->name,
+                    'confidence_score' => 100,
+                    'is_verified' => true,
+                    'is_manual' => true,
+                    'verified_at' => $transaction->verified_at->format('d M Y H:i'),
+                    'verified_by' => $user->name,
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Failed to set keyword manually', [
+                'transaction_id' => $transaction->id,
+                'user_id' => $user->id,
+                'keyword_id' => $validated['keyword_id'] ?? null,
+                'error' => $e->getMessage(),
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to assign keyword: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    public function searchKeywords(Request $request)
+    {
+        $user = auth()->user();
+        $search = $request->get('q', '');
+        $companyId = $user->isSuperAdmin() && $request->filled('company_id')
+            ? $request->company_id
+            : $user->company_id;
+        
+        try {
+            $keywords = Keyword::with('subCategory.category.type')
+                ->where('company_id', $companyId)
+                ->where('is_active', true)
+                ->when($search, function($query) use ($search) {
+                    $query->where(function($q) use ($search) {
+                        $q->where('keyword', 'like', "%{$search}%")
+                        ->orWhereHas('subCategory', function($sq) use ($search) {
+                            $sq->where('name', 'like', "%{$search}%")
+                                ->orWhereHas('category', function($cq) use ($search) {
+                                    $cq->where('name', 'like', "%{$search}%");
+                                });
+                        });
+                    });
+                })
+                ->orderByDesc('priority')
+                ->orderByDesc('match_count')
+                ->limit(50)
+                ->get()
+                ->map(function($keyword) {
+                    return [
+                        'id' => $keyword->id,
+                        'text' => $keyword->keyword . ' (' . $keyword->subCategory->name . ')',
+                        'keyword' => $keyword->keyword,
+                        'sub_category' => $keyword->subCategory->name,
+                        'category' => $keyword->subCategory->category->name,
+                        'type' => $keyword->subCategory->category->type->name,
+                        'priority' => $keyword->priority,
+                        'match_count' => $keyword->match_count,
+                        'category_path' => $keyword->subCategory->category->type->name . ' → ' . 
+                                        $keyword->subCategory->category->name . ' → ' . 
+                                        $keyword->subCategory->name,
+                    ];
+                });
+            
+            // ✅ ADD LOGGING
+            Log::info('Keywords search', [
+            'company_id' => $companyId,
+            'search' => $search,
+            'count' => $keywords->count()
+        ]);
+        
+        return response()->json([
+            'results' => $keywords,
+            'pagination' => [
+                'more' => false
+            ]
+        ]);
+        
+    } catch (\Exception $e) {
+        // ✅ ADD ERROR LOGGING
+        Log::error('Failed to search keywords', [
+            'user_id' => $user->id,
+            'search' => $search,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return response()->json([
+            'results' => [],
+            'error' => $e->getMessage(),
+            'pagination' => [
+                'more' => false
+            ]
+        ], 500);
+    }
+}
+
+    // ========================================
+    // EXISTING METHODS CONTINUE...
+    // ========================================
 
     /**
      * Show the form for editing

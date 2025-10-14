@@ -1,3 +1,5 @@
+{{-- resources/views/bank-statements/index.blade.php --}}
+
 <x-app-layout>
     <x-slot name="header">Bank Statements Management</x-slot>
 
@@ -376,6 +378,32 @@
                                                     {{ $statement->company->name }}
                                                 </span>
                                             @endif
+
+                                            {{-- 🆕 Validation Status Badge --}}
+                                            @if($statement->ocr_status === 'completed' && $statement->total_transactions > 0)
+                                                @php
+                                                    $verificationPercent = $statement->total_transactions > 0 
+                                                        ? round(($statement->verified_transactions / $statement->total_transactions) * 100, 1) 
+                                                        : 0;
+                                                @endphp
+                                                
+                                                @if($verificationPercent === 100.0)
+                                                    <span class="px-3 py-1 bg-emerald-600/20 text-emerald-400 rounded-lg text-xs font-semibold border border-emerald-500/30">
+                                                        <i class="fas fa-check-double mr-1"></i>
+                                                        100% Validated
+                                                    </span>
+                                                @elseif($verificationPercent > 0)
+                                                    <span class="px-3 py-1 bg-cyan-600/20 text-cyan-400 rounded-lg text-xs font-semibold border border-cyan-500/30">
+                                                        <i class="fas fa-tasks mr-1"></i>
+                                                        {{ $verificationPercent }}% Validated
+                                                    </span>
+                                                @else
+                                                    <span class="px-3 py-1 bg-amber-600/20 text-amber-400 rounded-lg text-xs font-semibold border border-amber-500/30 animate-pulse">
+                                                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                                                        Needs Validation
+                                                    </span>
+                                                @endif
+                                            @endif
                                         </div>
                                         
                                         <div class="flex items-center space-x-4 text-sm text-gray-400 flex-wrap gap-y-2">
@@ -395,6 +423,10 @@
                                                 <span>
                                                     <i class="fas fa-list mr-1"></i>
                                                     {{ $statement->total_transactions }} transactions
+                                                </span>
+                                                <span class="text-green-400">
+                                                    <i class="fas fa-check-circle mr-1"></i>
+                                                    {{ $statement->verified_transactions }} verified
                                                 </span>
                                             @endif
                                         </div>
@@ -436,27 +468,61 @@
 
                                 {{-- Actions --}}
                                 <div class="flex items-center space-x-2 flex-shrink-0">
-                                    <a href="{{ route('bank-statements.show', $statement) }}" class="p-3 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white rounded-lg transition-all" title="View Details">
+                                    {{-- 🆕 Validate Button (PROMINENT) --}}
+                                    @if($statement->ocr_status === 'completed' && $statement->total_transactions > 0)
+                                        @php
+                                            $unverifiedCount = $statement->total_transactions - $statement->verified_transactions;
+                                        @endphp
+                                        
+                                        @if($unverifiedCount > 0)
+                                            <a href="{{ route('bank-statements.validate', $statement) }}" 
+                                               class="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-lg font-semibold transition-all shadow-lg flex items-center space-x-2 animate-pulse hover:animate-none" 
+                                               title="Validate Transactions">
+                                                <i class="fas fa-check-circle"></i>
+                                                <span class="hidden lg:inline">Validate</span>
+                                                <span class="px-2 py-0.5 bg-white/20 rounded-full text-xs">{{ $unverifiedCount }}</span>
+                                            </a>
+                                        @else
+                                            <a href="{{ route('bank-statements.validate', $statement) }}" 
+                                               class="px-4 py-2 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white rounded-lg font-semibold transition-all flex items-center space-x-2" 
+                                               title="View Validated Transactions">
+                                                <i class="fas fa-check-double"></i>
+                                                <span class="hidden lg:inline">Validated</span>
+                                            </a>
+                                        @endif
+                                    @endif
+
+                                    <a href="{{ route('bank-statements.show', $statement) }}" 
+                                       class="p-3 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white rounded-lg transition-all" 
+                                       title="View Details">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                     
                                     @if($statement->ocr_status === 'completed')
-                                        <button onclick="processMatching({{ $statement->id }})" class="p-3 bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white rounded-lg transition-all" title="Process Matching">
+                                        <button onclick="processMatching({{ $statement->id }})" 
+                                                class="p-3 bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white rounded-lg transition-all" 
+                                                title="Process Matching">
                                             <i class="fas fa-sync-alt"></i>
                                         </button>
                                     @endif
 
                                     @if($statement->ocr_status === 'failed')
-                                        <button onclick="reprocessOCR({{ $statement->id }})" class="p-3 bg-orange-600/20 text-orange-400 hover:bg-orange-600 hover:text-white rounded-lg transition-all" title="Retry OCR">
+                                        <button onclick="reprocessOCR({{ $statement->id }})" 
+                                                class="p-3 bg-orange-600/20 text-orange-400 hover:bg-orange-600 hover:text-white rounded-lg transition-all" 
+                                                title="Retry OCR">
                                             <i class="fas fa-redo"></i>
                                         </button>
                                     @endif
                                     
-                                    <a href="{{ route('bank-statements.download', $statement) }}" class="p-3 bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white rounded-lg transition-all" title="Download PDF">
+                                    <a href="{{ route('bank-statements.download', $statement) }}" 
+                                       class="p-3 bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white rounded-lg transition-all" 
+                                       title="Download PDF">
                                         <i class="fas fa-download"></i>
                                     </a>
                                     
-                                    <button onclick="confirmDelete({{ $statement->id }}, '{{ $statement->original_filename }}')" class="p-3 bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white rounded-lg transition-all" title="Delete">
+                                    <button onclick="confirmDelete({{ $statement->id }}, '{{ $statement->original_filename }}')" 
+                                            class="p-3 bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white rounded-lg transition-all" 
+                                            title="Delete">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>

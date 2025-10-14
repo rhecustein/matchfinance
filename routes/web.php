@@ -212,7 +212,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     /*
     |--------------------------------------------------------------------------
     | Bank Statements Management
-    | ✅ FIXED: Proper route ordering to avoid conflicts
+    | ✅ FIXED: Proper route ordering + Validation Feature Routes
     |--------------------------------------------------------------------------
     */
     
@@ -229,6 +229,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Statistics (static route)
         Route::get('/stats/summary', [BankStatementController::class, 'statistics'])->name('statistics');
         
+        // 🆕 VALIDATION FEATURE - Search Keywords for Select2 (AJAX)
+        // ⚠️ MUST be before dynamic routes to avoid conflict
+        Route::get('/keywords/search', [BankStatementController::class, 'searchKeywords'])
+            ->name('keywords.search');
+        
         // List
         Route::get('/', [BankStatementController::class, 'index'])->name('index');
         Route::post('/', [BankStatementController::class, 'store'])->name('store');
@@ -238,6 +243,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // ===================================
         Route::get('/{bankStatement}/edit', [BankStatementController::class, 'edit'])->name('edit');
         Route::get('/{bankStatement}/download', [BankStatementController::class, 'download'])->name('download');
+        
+        // 🆕 VALIDATION FEATURE - Show validation view
+        Route::get('/{bankStatement}/validate', [BankStatementController::class, 'validateView'])
+            ->name('validate');
         
         // OCR Operations
         Route::post('/{bankStatement}/reprocess', [BankStatementController::class, 'reprocess'])->name('reprocess');
@@ -263,6 +272,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{bankStatement}', [BankStatementController::class, 'show'])->name('show');
         Route::put('/{bankStatement}', [BankStatementController::class, 'update'])->name('update');
         Route::delete('/{bankStatement}', [BankStatementController::class, 'destroy'])->name('destroy');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | 🆕 Statement Transactions Validation Actions (AJAX)
+    | Separate prefix untuk avoid conflict dengan bank-statements routes
+    |--------------------------------------------------------------------------
+    */
+    
+    Route::prefix('statement-transactions')->name('statement-transactions.')->group(function () {
+        // 🆕 Approve auto suggestion (AJAX)
+        Route::post('/{transaction}/approve', [BankStatementController::class, 'approveTransaction'])
+            ->name('approve');
+        
+        // 🆕 Set keyword manually (AJAX)
+        Route::post('/{transaction}/set-keyword', [BankStatementController::class, 'setKeywordManually'])
+            ->name('set-keyword');
     });
 
     /*
