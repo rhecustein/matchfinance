@@ -257,9 +257,9 @@
                                     <div class="px-4 py-2 bg-slate-900/50">
                                         <p class="text-xs font-semibold text-gray-400 uppercase">Master Data</p>
                                     </div>
-                                    <a href="{{ route('banks.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
+                                    <!-- <a href="{{ route('banks.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
                                         <i class="fas fa-university mr-3 text-blue-500 w-5"></i>Banks
-                                    </a>
+                                    </a> -->
                                     <a href="{{ route('types.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
                                         <i class="fas fa-tags mr-3 text-purple-500 w-5"></i>Types
                                     </a>

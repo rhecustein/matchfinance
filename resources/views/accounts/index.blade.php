@@ -9,19 +9,21 @@
                 <h2 class="text-2xl font-bold text-white mb-2">Account Management</h2>
                 <p class="text-gray-400">Manage chart of accounts and keywords</p>
             </div>
-            <a href="{{ route('accounts.create') }}" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg flex items-center space-x-2">
-                <i class="fas fa-plus"></i>
-                <span>Add Account</span>
-            </a>
+            @if(auth()->user()->hasAdminAccess())
+                <a href="{{ route('accounts.create') }}" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg flex items-center space-x-2">
+                    <i class="fas fa-plus"></i>
+                    <span>Add Account</span>
+                </a>
+            @endif
         </div>
 
         {{-- Statistics Cards --}}
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-slate-700 shadow-xl hover:scale-105 transition-transform">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-400 text-sm mb-1">Total Accounts</p>
-                        <p class="text-white text-3xl font-bold">{{ $accounts->total() }}</p>
+                        <p class="text-white text-3xl font-bold">{{ $stats['total'] }}</p>
                     </div>
                     <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
                         <i class="fas fa-chart-pie text-white text-xl"></i>
@@ -33,7 +35,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-400 text-sm mb-1">Active Accounts</p>
-                        <p class="text-white text-3xl font-bold">{{ $accounts->where('is_active', true)->count() }}</p>
+                        <p class="text-white text-3xl font-bold">{{ $stats['active'] }}</p>
                     </div>
                     <div class="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center">
                         <i class="fas fa-check-circle text-white text-xl"></i>
@@ -44,23 +46,11 @@
             <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-slate-700 shadow-xl hover:scale-105 transition-transform">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-gray-400 text-sm mb-1">Account Types</p>
-                        <p class="text-white text-3xl font-bold">{{ $accountTypes->count() }}</p>
+                        <p class="text-gray-400 text-sm mb-1">Inactive Accounts</p>
+                        <p class="text-white text-3xl font-bold">{{ $stats['inactive'] }}</p>
                     </div>
-                    <div class="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center">
-                        <i class="fas fa-layer-group text-white text-xl"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-slate-700 shadow-xl hover:scale-105 transition-transform">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-400 text-sm mb-1">Total Keywords</p>
-                        <p class="text-white text-3xl font-bold">{{ $accounts->sum(function($acc) { return $acc->keywords->count(); }) }}</p>
-                    </div>
-                    <div class="w-12 h-12 bg-pink-600 rounded-xl flex items-center justify-center">
-                        <i class="fas fa-key text-white text-xl"></i>
+                    <div class="w-12 h-12 bg-gray-600 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-times-circle text-white text-xl"></i>
                     </div>
                 </div>
             </div>
@@ -73,6 +63,20 @@
                     <label class="block text-gray-400 text-sm mb-2">Search</label>
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Code, name, description..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white focus:border-blue-500 focus:outline-none">
                 </div>
+
+                @if(auth()->user()->isSuperAdmin())
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2">Company</label>
+                    <select name="company_id" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white focus:border-blue-500 focus:outline-none">
+                        <option value="">All Companies</option>
+                        @foreach(\App\Models\Company::orderBy('name')->get() as $company)
+                            <option value="{{ $company->id }}" {{ request('company_id') == $company->id ? 'selected' : '' }}>
+                                {{ $company->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
 
                 <div>
                     <label class="block text-gray-400 text-sm mb-2">Status</label>
@@ -87,13 +91,15 @@
                     <label class="block text-gray-400 text-sm mb-2">Account Type</label>
                     <select name="account_type" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white focus:border-blue-500 focus:outline-none">
                         <option value="">All Types</option>
-                        @foreach($accountTypes as $type)
-                            <option value="{{ $type }}" {{ request('account_type') === $type ? 'selected' : '' }}>{{ $type }}</option>
-                        @endforeach
+                        <option value="asset" {{ request('account_type') === 'asset' ? 'selected' : '' }}>Asset</option>
+                        <option value="liability" {{ request('account_type') === 'liability' ? 'selected' : '' }}>Liability</option>
+                        <option value="equity" {{ request('account_type') === 'equity' ? 'selected' : '' }}>Equity</option>
+                        <option value="revenue" {{ request('account_type') === 'revenue' ? 'selected' : '' }}>Revenue</option>
+                        <option value="expense" {{ request('account_type') === 'expense' ? 'selected' : '' }}>Expense</option>
                     </select>
                 </div>
 
-                <div class="flex items-end space-x-2">
+                <div class="flex items-end space-x-2 {{ auth()->user()->isSuperAdmin() ? '' : 'md:col-span-2' }}">
                     <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-semibold transition-all">
                         <i class="fas fa-search mr-2"></i>Filter
                     </button>
@@ -122,13 +128,20 @@
                                         
                                         {{-- Account Info --}}
                                         <div>
-                                            <div class="flex items-center space-x-3">
+                                            <div class="flex items-center space-x-3 flex-wrap">
                                                 <h3 class="text-xl font-bold text-white">{{ $account->name }}</h3>
                                                 @if($account->code)
                                                     <span class="px-3 py-1 bg-slate-700 text-gray-300 rounded-full text-xs font-semibold">{{ $account->code }}</span>
                                                 @endif
                                                 @if($account->account_type)
-                                                    <span class="px-3 py-1 bg-purple-600/20 text-purple-400 rounded-full text-xs font-semibold">{{ $account->account_type }}</span>
+                                                    <span class="px-3 py-1 bg-purple-600/20 text-purple-400 rounded-full text-xs font-semibold">
+                                                        {{ ucfirst($account->account_type) }}
+                                                    </span>
+                                                @endif
+                                                @if(auth()->user()->isSuperAdmin() && $account->company)
+                                                    <span class="px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full text-xs font-semibold">
+                                                        {{ $account->company->name }}
+                                                    </span>
                                                 @endif
                                             </div>
                                             @if($account->description)
@@ -138,14 +151,14 @@
                                     </div>
 
                                     {{-- Stats --}}
-                                    <div class="flex items-center space-x-6 mt-4">
+                                    <div class="flex items-center space-x-6 mt-4 flex-wrap gap-2">
                                         <div class="flex items-center space-x-2">
                                             <i class="fas fa-key text-blue-400"></i>
-                                            <span class="text-gray-400 text-sm">{{ $account->keywords->count() }} Keywords</span>
+                                            <span class="text-gray-400 text-sm">{{ $account->keywords_count ?? 0 }} Keywords</span>
                                         </div>
                                         <div class="flex items-center space-x-2">
-                                            <i class="fas fa-check-circle text-green-400"></i>
-                                            <span class="text-gray-400 text-sm">{{ $account->keywords->where('is_active', true)->count() }} Active</span>
+                                            <i class="fas fa-exchange-alt text-green-400"></i>
+                                            <span class="text-gray-400 text-sm">{{ $account->transactions_count ?? 0 }} Transactions</span>
                                         </div>
                                         <div class="flex items-center space-x-2">
                                             <i class="fas fa-signal text-yellow-400"></i>
@@ -161,7 +174,7 @@
                                     </div>
 
                                     {{-- Keywords Preview --}}
-                                    @if($account->keywords->isNotEmpty())
+                                    @if($account->keywords && $account->keywords->isNotEmpty())
                                         <div class="mt-4 flex flex-wrap gap-2">
                                             @foreach($account->keywords->take(5) as $keyword)
                                                 <span class="px-3 py-1 bg-blue-600/10 text-blue-400 rounded-lg text-xs border border-blue-600/30">
@@ -182,35 +195,40 @@
                                     <a href="{{ route('accounts.show', $account) }}" class="p-3 bg-teal-600/20 text-teal-400 hover:bg-teal-600 hover:text-white rounded-lg transition-all" title="View Details">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('accounts.edit', $account) }}" class="p-3 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white rounded-lg transition-all" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
                                     
-                                    {{-- Toggle Status --}}
-                                    <form action="{{ route('accounts.toggle-status', $account) }}" method="POST" class="inline">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="p-3 bg-yellow-600/20 text-yellow-400 hover:bg-yellow-600 hover:text-white rounded-lg transition-all" title="Toggle Status">
-                                            <i class="fas fa-power-off"></i>
-                                        </button>
-                                    </form>
+                                    @if(auth()->user()->hasAdminAccess())
+                                        <a href="{{ route('accounts.edit', $account) }}" class="p-3 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white rounded-lg transition-all" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        
+                                        {{-- Toggle Status --}}
+                                        <form action="{{ route('accounts.toggle-status', $account) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" class="p-3 bg-yellow-600/20 text-yellow-400 hover:bg-yellow-600 hover:text-white rounded-lg transition-all" title="Toggle Status">
+                                                <i class="fas fa-power-off"></i>
+                                            </button>
+                                        </form>
 
-                                    {{-- Rematch --}}
-                                    <form action="{{ route('accounts.rematch', $account) }}" method="POST" class="inline">
-                                        @csrf
-                                        <button type="submit" class="p-3 bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white rounded-lg transition-all" title="Rematch Transactions">
-                                            <i class="fas fa-sync-alt"></i>
-                                        </button>
-                                    </form>
+                                        {{-- Rematch --}}
+                                        <form action="{{ route('accounts.rematch', $account) }}" method="POST" class="inline">
+                                            @csrf
+                                            <button type="submit" class="p-3 bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white rounded-lg transition-all" title="Rematch Transactions">
+                                                <i class="fas fa-sync-alt"></i>
+                                            </button>
+                                        </form>
 
-                                    {{-- Delete --}}
-                                    <button onclick="confirmDelete({{ $account->id }}, '{{ $account->name }}')" class="p-3 bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white rounded-lg transition-all" title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                    <form id="delete-form-{{ $account->id }}" action="{{ route('accounts.destroy', $account) }}" method="POST" class="hidden">
-                                        @csrf
-                                        @method('DELETE')
-                                    </form>
+                                        {{-- Delete --}}
+                                        @if(auth()->user()->isSuperAdmin() || auth()->user()->isOwner())
+                                            <button onclick="confirmDelete({{ $account->id }}, '{{ $account->name }}')" class="p-3 bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white rounded-lg transition-all" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            <form id="delete-form-{{ $account->id }}" action="{{ route('accounts.destroy', $account) }}" method="POST" class="hidden">
+                                                @csrf
+                                                @method('DELETE')
+                                            </form>
+                                        @endif
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -254,6 +272,7 @@
         </div>
     </div>
 
+    @push('scripts')
     <script>
         let deleteFormId = null;
 
@@ -273,5 +292,13 @@
                 document.getElementById('delete-form-' + deleteFormId).submit();
             }
         }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeDeleteModal();
+            }
+        });
     </script>
+    @endpush
 </x-app-layout>
