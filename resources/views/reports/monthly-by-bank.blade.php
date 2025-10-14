@@ -60,8 +60,8 @@
                             @foreach($banks as $bank)
                                 <th class="px-6 py-4 text-center text-white font-bold border-b border-slate-700 min-w-[200px]">
                                     <div class="flex flex-col items-center space-y-1">
-                                        @if($bank->logo_url)
-                                            <img src="{{ $bank->logo_url }}" alt="{{ $bank->name }}" class="h-8 object-contain">
+                                        @if($bank->logo)
+                                            <img src="{{ Storage::url($bank->logo) }}" alt="{{ $bank->name }}" class="h-8 object-contain">
                                         @endif
                                         <span>{{ $bank->name }}</span>
                                     </div>
@@ -82,7 +82,7 @@
                                     @php
                                         $bankData = $monthData['banks'][$bank->id] ?? ['total' => 0, 'count' => 0];
                                     @endphp
-                                    <td class="px-6 py-4 text-center">
+                                    <td class="px-6 py-4 text-center group relative">
                                         <div class="flex flex-col space-y-1">
                                             <span class="text-white font-bold">
                                                 Rp {{ number_format($bankData['total'], 0, ',', '.') }}
@@ -91,6 +91,23 @@
                                                 {{ number_format($bankData['count']) }} txn
                                             </span>
                                         </div>
+                                        
+                                        {{-- Detail Link (muncul on hover) --}}
+                                        @if($bankData['count'] > 0)
+                                            <a href="{{ route('reports.monthly-detail', [
+                                                'year' => $year,
+                                                'month' => $monthData['month_number'],
+                                                'bank_id' => $bank->id,
+                                                'transaction_type' => $transactionType,
+                                                'company_id' => $selectedCompanyId ?? null
+                                            ]) }}"
+                                                class="absolute inset-0 bg-blue-600/0 hover:bg-blue-600/20 transition opacity-0 group-hover:opacity-100 flex items-center justify-center"
+                                                title="View transaction details">
+                                                <span class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-semibold shadow-lg">
+                                                    <i class="fas fa-eye mr-1"></i> View Details
+                                                </span>
+                                            </a>
+                                        @endif
                                     </td>
                                 @endforeach
                                 <td class="px-6 py-4 text-center bg-blue-900/20">

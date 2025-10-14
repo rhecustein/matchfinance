@@ -358,6 +358,9 @@ Route::middleware(['auth', 'verified', 'company.member'])->group(function () {
         Route::get('/trends', [ReportController::class, 'trends'])->name('trends');
         Route::post('/export', [ReportController::class, 'export'])->name('export');
         Route::post('/generate-pdf', [ReportController::class, 'generatePdf'])->name('generate-pdf');
+
+        // ✨ NEW: Get monthly transaction details (AJAX)
+        Route::get('/monthly-detail', [ReportController::class, 'MonthlyDetail'])->name('monthly-detail');
     });
 });
 
