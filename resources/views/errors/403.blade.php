@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Access Denied • {{ config('app.name', 'MatchFinance') }}</title>
+    <title>Akses Ditolak • {{ config('app.name', 'MatchFinance') }}</title>
     @vite(['resources/css/app.css'])
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
@@ -55,8 +55,8 @@
                 <h1 class="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-500 mb-4">
                     403
                 </h1>
-                <h2 class="text-2xl font-bold text-white mb-2">Access Denied</h2>
-                <p class="text-gray-400">{{ $exception->getMessage() ?: 'You do not have permission to access this resource.' }}</p>
+                <h2 class="text-2xl font-bold text-white mb-2">Akses Ditolak</h2>
+                <p class="text-gray-400">{{ $exception->getMessage() ?: 'Anda tidak memiliki izin untuk mengakses resource ini.' }}</p>
             </div>
 
             <!-- Divider -->
@@ -67,6 +67,28 @@
                 @php
                     $user = auth()->user();
                     $company = $user->company;
+                    
+                    // Status colors mapping
+                    $statusColors = [
+                        'active' => 'bg-green-500/20 text-green-400',
+                        'inactive' => 'bg-red-500/20 text-red-400',
+                        'suspended' => 'bg-yellow-500/20 text-yellow-400',
+                        'cancelled' => 'bg-gray-500/20 text-gray-400',
+                    ];
+                    
+                    $statusBgBorder = [
+                        'active' => 'bg-green-500/10 border-green-500/30',
+                        'inactive' => 'bg-red-500/10 border-red-500/30',
+                        'suspended' => 'bg-yellow-500/10 border-yellow-500/30',
+                        'cancelled' => 'bg-gray-500/10 border-gray-500/30',
+                    ];
+                    
+                    $statusIconColor = [
+                        'active' => 'green',
+                        'inactive' => 'red',
+                        'suspended' => 'yellow',
+                        'cancelled' => 'gray',
+                    ];
                 @endphp
 
                 <div class="space-y-4 mb-6">
@@ -99,13 +121,13 @@
 
                     <!-- Company Status (if applicable) -->
                     @if($company)
-                        <div class="p-4 rounded-lg border {{ $company->status === 'active' ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30' }}">
+                        <div class="p-4 rounded-lg border {{ $statusBgBorder[$company->status] ?? 'bg-gray-500/10 border-gray-500/30' }}">
                             <div class="flex items-center justify-between mb-2">
                                 <div class="flex items-center space-x-2">
-                                    <i class="fas fa-building text-{{ $company->status === 'active' ? 'green' : 'red' }}-500"></i>
+                                    <i class="fas fa-building text-{{ $statusIconColor[$company->status] ?? 'gray' }}-500"></i>
                                     <span class="text-sm font-semibold text-white">{{ $company->name }}</span>
                                 </div>
-                                <span class="px-3 py-1 text-xs font-bold rounded-full {{ $company->status === 'active' ? 'bg-green-500/20 text-green-400' : $company->status === 'inactive' ? 'bg-red-500/20 text-red-400' : ($company->status === 'suspended' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-500/20 text-gray-400') }}">
+                                <span class="px-3 py-1 text-xs font-bold rounded-full {{ $statusColors[$company->status] ?? 'bg-gray-500/20 text-gray-400' }}">
                                     {{ strtoupper($company->status) }}
                                 </span>
                             </div>
@@ -114,16 +136,22 @@
                                 <div class="mt-3 p-3 bg-slate-900/50 rounded-lg border border-slate-700">
                                     <p class="text-sm text-gray-300 mb-2">
                                         <i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>
-                                        @if($company->status === 'inactive')
-                                            <strong>Company Account Inactive:</strong> Your company account is currently inactive. 
-                                        @elseif($company->status === 'suspended')
-                                            <strong>Company Account Suspended:</strong> Your company account has been suspended.
-                                        @elseif($company->status === 'cancelled')
-                                            <strong>Company Account Cancelled:</strong> Your company account has been cancelled.
-                                        @endif
+                                        @switch($company->status)
+                                            @case('inactive')
+                                                <strong>Akun Company Tidak Aktif:</strong> Akun company Anda saat ini tidak aktif.
+                                                @break
+                                            @case('suspended')
+                                                <strong>Akun Company Di-suspend:</strong> Akun company Anda telah di-suspend.
+                                                @break
+                                            @case('cancelled')
+                                                <strong>Akun Company Dibatalkan:</strong> Akun company Anda telah dibatalkan.
+                                                @break
+                                            @default
+                                                <strong>Status Company:</strong> Akun company Anda dalam status {{ $company->status }}.
+                                        @endswitch
                                     </p>
                                     <p class="text-xs text-gray-400">
-                                        Please contact your administrator or support team for assistance.
+                                        Silakan hubungi administrator atau tim support untuk bantuan.
                                     </p>
                                 </div>
                             @endif
@@ -136,20 +164,20 @@
                             <div class="flex items-start space-x-2">
                                 <i class="fas fa-user-slash text-yellow-500 mt-1"></i>
                                 <div>
-                                    <p class="text-sm font-semibold text-yellow-400 mb-1">Your Account Status</p>
+                                    <p class="text-sm font-semibold text-yellow-400 mb-1">Status Akun Anda</p>
                                     <ul class="text-xs text-gray-300 space-y-1">
                                         @if(!$user->is_active)
-                                            <li>• Account is not active</li>
+                                            <li>• Akun tidak aktif</li>
                                         @endif
                                         @if($user->is_suspended)
-                                            <li>• Account is suspended
+                                            <li>• Akun di-suspend
                                                 @if($user->suspension_reason)
                                                     <span class="text-gray-400">({{ $user->suspension_reason }})</span>
                                                 @endif
                                             </li>
                                         @endif
                                         @if($user->isLocked())
-                                            <li>• Account is temporarily locked until {{ $user->locked_until->format('d M Y H:i') }}</li>
+                                            <li>• Akun terkunci sementara hingga {{ $user->locked_until->format('d M Y H:i') }}</li>
                                         @endif
                                     </ul>
                                 </div>
@@ -163,35 +191,35 @@
             <div class="mb-6">
                 <h3 class="text-sm font-semibold text-white mb-3 flex items-center">
                     <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
-                    What can you do?
+                    Apa yang bisa Anda lakukan?
                 </h3>
                 <ul class="space-y-2 text-sm text-gray-300">
                     @auth
                         @if($user->company && $user->company->status !== 'active')
                             <li class="flex items-start space-x-2">
                                 <i class="fas fa-chevron-right text-blue-500 mt-1 text-xs"></i>
-                                <span>Contact your company administrator to activate the account</span>
+                                <span>Hubungi administrator company Anda untuk mengaktifkan akun</span>
                             </li>
                         @endif
                         @if(!$user->isActive())
                             <li class="flex items-start space-x-2">
                                 <i class="fas fa-chevron-right text-blue-500 mt-1 text-xs"></i>
-                                <span>Contact your account administrator to activate your user account</span>
+                                <span>Hubungi administrator untuk mengaktifkan akun user Anda</span>
                             </li>
                         @endif
                         <li class="flex items-start space-x-2">
                             <i class="fas fa-chevron-right text-blue-500 mt-1 text-xs"></i>
-                            <span>Return to dashboard and try accessing a different resource</span>
+                            <span>Kembali ke dashboard dan coba akses resource yang berbeda</span>
                         </li>
                     @else
                         <li class="flex items-start space-x-2">
                             <i class="fas fa-chevron-right text-blue-500 mt-1 text-xs"></i>
-                            <span>Login with an authorized account</span>
+                            <span>Login dengan akun yang memiliki akses</span>
                         </li>
                     @endauth
                     <li class="flex items-start space-x-2">
                         <i class="fas fa-chevron-right text-blue-500 mt-1 text-xs"></i>
-                        <span>Contact support if you believe this is an error</span>
+                        <span>Hubungi support jika Anda yakin ini adalah kesalahan sistem</span>
                     </li>
                 </ul>
             </div>
@@ -201,16 +229,16 @@
                 @auth
                     @if($user->isSuperAdmin())
                         <a href="{{ route('admin.dashboard') }}" class="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:shadow-xl transition text-center">
-                            <i class="fas fa-tachometer-alt mr-2"></i>Go to Admin Dashboard
+                            <i class="fas fa-tachometer-alt mr-2"></i>Ke Admin Dashboard
                         </a>
                     @else
                         <a href="{{ route('dashboard') }}" class="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:shadow-xl transition text-center">
-                            <i class="fas fa-home mr-2"></i>Go to Dashboard
+                            <i class="fas fa-home mr-2"></i>Ke Dashboard
                         </a>
                     @endif
                     
                     <a href="mailto:support@matchfinance.com" class="flex-1 px-6 py-3 bg-slate-700 text-white rounded-lg font-semibold hover:bg-slate-600 transition text-center border border-slate-600">
-                        <i class="fas fa-envelope mr-2"></i>Contact Support
+                        <i class="fas fa-envelope mr-2"></i>Hubungi Support
                     </a>
                 @else
                     <a href="{{ route('login') }}" class="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:shadow-xl transition text-center">
@@ -223,7 +251,7 @@
         <!-- Footer -->
         <div class="text-center mt-8">
             <p class="text-sm text-gray-500">
-                Need help? Visit our <a href="#" class="text-blue-400 hover:text-blue-300 transition underline">Help Center</a>
+                Butuh bantuan? Kunjungi <a href="#" class="text-blue-400 hover:text-blue-300 transition underline">Help Center</a> kami
             </p>
         </div>
     </div>

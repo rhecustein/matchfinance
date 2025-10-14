@@ -11,9 +11,9 @@
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-full mx-auto sm:px-6 lg:px-8 space-y-6">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
-            {{-- Messages --}}
+            {{-- Flash Messages --}}
             @if(session('success'))
                 <div class="bg-green-600/20 border border-green-600 text-green-400 px-6 py-3 rounded-lg flex items-center">
                     <i class="fas fa-check-circle mr-2"></i>
@@ -28,25 +28,25 @@
                 </div>
             @endif
 
-            {{-- Header Info --}}
+            {{-- Header Info Card --}}
             <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-5 border border-slate-700 shadow-xl">
-                <div class="flex items-start justify-between mb-4">
+                <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-4">
                     <div class="flex items-center space-x-3">
                         @if($bankStatement->bank->logo)
-                            <div class="w-12 h-12 bg-slate-700 rounded-lg flex items-center justify-center">
+                            <div class="w-12 h-12 bg-slate-700 rounded-lg flex items-center justify-center flex-shrink-0">
                                 <img src="{{ asset('storage/' . $bankStatement->bank->logo) }}" 
                                      alt="{{ $bankStatement->bank->name }}" 
                                      class="w-10 h-10 object-contain">
                             </div>
                         @else
-                            <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                            <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
                                 <i class="fas fa-university text-white text-xl"></i>
                             </div>
                         @endif
                         
-                        <div>
-                            <h3 class="text-xl font-bold text-white">{{ $bankStatement->bank->name }}</h3>
-                            <p class="text-gray-400 text-sm">{{ $bankStatement->original_filename }}</p>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="text-xl font-bold text-white truncate">{{ $bankStatement->bank->name }}</h3>
+                            <p class="text-gray-400 text-sm truncate">{{ $bankStatement->original_filename }}</p>
                             @if($bankStatement->account_holder_name)
                                 <p class="text-gray-500 text-xs mt-1">
                                     <i class="fas fa-user mr-1"></i>{{ $bankStatement->account_holder_name }}
@@ -55,7 +55,7 @@
                             
                             {{-- Company Info (Super Admin Only) --}}
                             @if(auth()->user()->isSuperAdmin() && $bankStatement->company)
-                                <div class="mt-2 flex items-center space-x-2">
+                                <div class="mt-2 flex flex-wrap items-center gap-2">
                                     <span class="inline-flex items-center px-2.5 py-1 bg-purple-600/20 text-purple-400 border border-purple-600/50 rounded text-xs font-semibold">
                                         <i class="fas fa-building mr-1.5"></i>
                                         {{ $bankStatement->company->name }}
@@ -68,8 +68,8 @@
                         </div>
                     </div>
                     
-                    <div class="text-right space-y-1">
-                        <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold
+                    <div class="flex flex-wrap gap-2 justify-end">
+                        <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap
                             {{ $bankStatement->ocr_status === 'completed' ? 'bg-green-600/20 text-green-400 border border-green-600' : '' }}
                             {{ $bankStatement->ocr_status === 'processing' ? 'bg-yellow-600/20 text-yellow-400 border border-yellow-600' : '' }}
                             {{ $bankStatement->ocr_status === 'failed' ? 'bg-red-600/20 text-red-400 border border-red-600' : '' }}
@@ -77,14 +77,14 @@
                             <i class="fas fa-circle mr-1"></i>OCR: {{ ucfirst($bankStatement->ocr_status) }}
                         </span>
                         @if($bankStatement->is_reconciled)
-                            <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold bg-purple-600/20 text-purple-400 border border-purple-600">
+                            <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold bg-purple-600/20 text-purple-400 border border-purple-600 whitespace-nowrap">
                                 <i class="fas fa-check-double mr-1"></i>Reconciled
                             </span>
                         @endif
                     </div>
                 </div>
 
-                {{-- Statement Details --}}
+                {{-- Statement Details Grid --}}
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
                     <div class="bg-slate-900/50 rounded-lg p-3 border border-slate-700">
                         <p class="text-xs text-gray-400 mb-1">Period</p>
@@ -130,7 +130,7 @@
             </div>
 
             {{-- Statistics Cards --}}
-            <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                 <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-3 border border-blue-500/50 shadow-lg">
                     <div class="flex items-center justify-between">
                         <div>
@@ -308,7 +308,7 @@
                 </div>
             @endif
 
-            {{-- Transactions List with Complete Filters --}}
+            {{-- Transactions List --}}
             <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl border border-slate-700 shadow-xl overflow-hidden">
                 <div class="p-4 border-b border-slate-700">
                     <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
@@ -320,7 +320,7 @@
                         </div>
                     </div>
 
-                    {{-- Status Filters --}}
+                    {{-- Quick Filters --}}
                     <div class="mb-3">
                         <p class="text-xs text-gray-400 mb-2 font-semibold">Quick Filters:</p>
                         <div class="flex flex-wrap items-center gap-2">
@@ -351,112 +351,45 @@
                         </div>
                     </div>
 
-                    {{-- Advanced Filters --}}
-                    <div>
-                        <p class="text-xs text-gray-400 mb-2 font-semibold">Advanced Filters:</p>
-                        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                    {{-- Advanced Filters (Collapsible) --}}
+                    <div x-data="{ showAdvanced: false }" class="mt-3">
+                        <button @click="showAdvanced = !showAdvanced" class="text-xs text-gray-400 hover:text-white font-semibold mb-2 flex items-center">
+                            <i :class="showAdvanced ? 'fas fa-chevron-down' : 'fas fa-chevron-right'" class="mr-1"></i>
+                            Advanced Filters
+                        </button>
+                        
+                        <div x-show="showAdvanced" x-transition class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
                             {{-- Amount Sorting --}}
-                            @php
-                                $params = request()->all();
-                                $params['sort'] = 'amount-desc';
-                            @endphp
+                            @php $params = request()->all(); $params['sort'] = 'amount-desc'; @endphp
                             <a href="{{ route('bank-statements.show', $bankStatement) }}?{{ http_build_query($params) }}" 
                                class="bg-gradient-to-r from-red-600/20 to-red-700/20 text-red-400 hover:from-red-600 hover:to-red-700 hover:text-white px-3 py-2 rounded-lg text-xs font-semibold transition border border-red-700/50 text-center">
                                 <i class="fas fa-arrow-up mr-1"></i>Highest
                             </a>
                             
-                            @php
-                                $params = request()->all();
-                                $params['sort'] = 'amount-asc';
-                            @endphp
+                            @php $params = request()->all(); $params['sort'] = 'amount-asc'; @endphp
                             <a href="{{ route('bank-statements.show', $bankStatement) }}?{{ http_build_query($params) }}" 
                                class="bg-gradient-to-r from-green-600/20 to-green-700/20 text-green-400 hover:from-green-600 hover:to-green-700 hover:text-white px-3 py-2 rounded-lg text-xs font-semibold transition border border-green-700/50 text-center">
                                 <i class="fas fa-arrow-down mr-1"></i>Lowest
                             </a>
                             
-                            {{-- Date Sorting --}}
-                            @php
-                                $params = request()->all();
-                                $params['sort'] = 'date-desc';
-                            @endphp
-                            <a href="{{ route('bank-statements.show', $bankStatement) }}?{{ http_build_query($params) }}" 
-                               class="bg-gradient-to-r from-blue-600/20 to-blue-700/20 text-blue-400 hover:from-blue-600 hover:to-blue-700 hover:text-white px-3 py-2 rounded-lg text-xs font-semibold transition border border-blue-700/50 text-center">
-                                <i class="fas fa-calendar mr-1"></i>Newest
-                            </a>
-                            
-                            @php
-                                $params = request()->all();
-                                $params['sort'] = 'date-asc';
-                            @endphp
-                            <a href="{{ route('bank-statements.show', $bankStatement) }}?{{ http_build_query($params) }}" 
-                               class="bg-gradient-to-r from-purple-600/20 to-purple-700/20 text-purple-400 hover:from-purple-600 hover:to-purple-700 hover:text-white px-3 py-2 rounded-lg text-xs font-semibold transition border border-purple-700/50 text-center">
-                                <i class="fas fa-calendar mr-1"></i>Oldest
-                            </a>
-                            
                             {{-- Type Filters --}}
-                            @php
-                                $params = request()->all();
-                                $params['type'] = 'credit';
-                            @endphp
+                            @php $params = request()->all(); $params['type'] = 'credit'; @endphp
                             <a href="{{ route('bank-statements.show', $bankStatement) }}?{{ http_build_query($params) }}" 
                                class="bg-gradient-to-r from-green-600/20 to-green-700/20 text-green-400 hover:from-green-600 hover:to-green-700 hover:text-white px-3 py-2 rounded-lg text-xs font-semibold transition border border-green-700/50 text-center">
                                 <i class="fas fa-plus mr-1"></i>Credit Only
                             </a>
                             
-                            @php
-                                $params = request()->all();
-                                $params['type'] = 'debit';
-                            @endphp
+                            @php $params = request()->all(); $params['type'] = 'debit'; @endphp
                             <a href="{{ route('bank-statements.show', $bankStatement) }}?{{ http_build_query($params) }}" 
                                class="bg-gradient-to-r from-red-600/20 to-red-700/20 text-red-400 hover:from-red-600 hover:to-red-700 hover:text-white px-3 py-2 rounded-lg text-xs font-semibold transition border border-red-700/50 text-center">
                                 <i class="fas fa-minus mr-1"></i>Debit Only
                             </a>
                             
                             {{-- Amount Range --}}
-                            @php
-                                $params = request()->all();
-                                $params['amount_range'] = 'large';
-                            @endphp
+                            @php $params = request()->all(); $params['amount_range'] = 'large'; @endphp
                             <a href="{{ route('bank-statements.show', $bankStatement) }}?{{ http_build_query($params) }}" 
                                class="bg-gradient-to-r from-indigo-600/20 to-indigo-700/20 text-indigo-400 hover:from-indigo-600 hover:to-indigo-700 hover:text-white px-3 py-2 rounded-lg text-xs font-semibold transition border border-indigo-700/50 text-center">
                                 <i class="fas fa-fire mr-1"></i>Large (>1M)
-                            </a>
-                            
-                            @php
-                                $params = request()->all();
-                                $params['amount_range'] = 'medium';
-                            @endphp
-                            <a href="{{ route('bank-statements.show', $bankStatement) }}?{{ http_build_query($params) }}" 
-                               class="bg-gradient-to-r from-cyan-600/20 to-cyan-700/20 text-cyan-400 hover:from-cyan-600 hover:to-cyan-700 hover:text-white px-3 py-2 rounded-lg text-xs font-semibold transition border border-cyan-700/50 text-center">
-                                <i class="fas fa-dollar-sign mr-1"></i>Medium (100K-1M)
-                            </a>
-                            
-                            @php
-                                $params = request()->all();
-                                $params['amount_range'] = 'small';
-                            @endphp
-                            <a href="{{ route('bank-statements.show', $bankStatement) }}?{{ http_build_query($params) }}" 
-                               class="bg-gradient-to-r from-teal-600/20 to-teal-700/20 text-teal-400 hover:from-teal-600 hover:to-teal-700 hover:text-white px-3 py-2 rounded-lg text-xs font-semibold transition border border-teal-700/50 text-center">
-                                <i class="fas fa-coins mr-1"></i>Small (<100K)
-                            </a>
-                            
-                            {{-- Special Filters --}}
-                            @php
-                                $params = request()->all();
-                                $params['special'] = 'round';
-                            @endphp
-                            <a href="{{ route('bank-statements.show', $bankStatement) }}?{{ http_build_query($params) }}" 
-                               class="bg-gradient-to-r from-yellow-600/20 to-yellow-700/20 text-yellow-400 hover:from-yellow-600 hover:to-yellow-700 hover:text-white px-3 py-2 rounded-lg text-xs font-semibold transition border border-yellow-700/50 text-center">
-                                <i class="fas fa-circle mr-1"></i>Round Numbers
-                            </a>
-                            
-                            @php
-                                $params = request()->all();
-                                $params['special'] = 'manual';
-                            @endphp
-                            <a href="{{ route('bank-statements.show', $bankStatement) }}?{{ http_build_query($params) }}" 
-                               class="bg-gradient-to-r from-pink-600/20 to-pink-700/20 text-pink-400 hover:from-pink-600 hover:to-pink-700 hover:text-white px-3 py-2 rounded-lg text-xs font-semibold transition border border-pink-700/50 text-center">
-                                <i class="fas fa-hand-paper mr-1"></i>Manual Entry
                             </a>
                             
                             {{-- Clear Filters --}}
@@ -470,9 +403,8 @@
 
                 <div class="overflow-x-auto">
                     @if($transactions->count() > 0)
-                        {{-- Bank Statement Style Table --}}
                         <table class="w-full text-xs">
-                            <thead class="bg-slate-900/80 border-b-2 border-slate-600 sticky top-0">
+                            <thead class="bg-slate-900/80 border-b-2 border-slate-600 sticky top-0 z-10">
                                 <tr>
                                     <th class="px-2 py-2 text-left font-bold text-gray-300 w-24">Date</th>
                                     <th class="px-2 py-2 text-left font-bold text-gray-300">Description</th>
@@ -489,7 +421,6 @@
                                 @php $runningBalance = $bankStatement->opening_balance ?? 0; @endphp
                                 @foreach($transactions as $transaction)
                                     @php
-                                        // Calculate running balance
                                         if ($transaction->transaction_type === 'credit') {
                                             $runningBalance += $transaction->credit_amount;
                                         } else {
@@ -497,7 +428,6 @@
                                         }
                                     @endphp
                                     <tr class="hover:bg-slate-800/40 transition {{ $transaction->is_verified ? 'bg-green-900/5' : '' }}">
-                                        {{-- Date --}}
                                         <td class="px-2 py-2 whitespace-nowrap">
                                             <div class="font-medium text-white">{{ $transaction->transaction_date->format('d/m/Y') }}</div>
                                             @if($transaction->transaction_time)
@@ -505,7 +435,6 @@
                                             @endif
                                         </td>
                                         
-                                        {{-- Description --}}
                                         <td class="px-2 py-2">
                                             <div class="font-medium text-white max-w-md truncate" title="{{ $transaction->description }}">
                                                 {{ $transaction->description }}
@@ -515,7 +444,6 @@
                                             @endif
                                         </td>
                                         
-                                        {{-- Category --}}
                                         <td class="px-2 py-2">
                                             @if($transaction->subCategory)
                                                 <div class="text-blue-400 font-medium">{{ $transaction->subCategory->name }}</div>
@@ -531,7 +459,6 @@
                                             @endif
                                         </td>
                                         
-                                        {{-- Account --}}
                                         <td class="px-2 py-2">
                                             @if($transaction->account)
                                                 <div class="text-cyan-400 font-medium">{{ $transaction->account->code }}</div>
@@ -543,7 +470,6 @@
                                             @endif
                                         </td>
                                         
-                                        {{-- Debit --}}
                                         <td class="px-2 py-2 text-right whitespace-nowrap">
                                             @if($transaction->debit_amount > 0)
                                                 <span class="font-bold text-red-400">
@@ -554,7 +480,6 @@
                                             @endif
                                         </td>
                                         
-                                        {{-- Credit --}}
                                         <td class="px-2 py-2 text-right whitespace-nowrap">
                                             @if($transaction->credit_amount > 0)
                                                 <span class="font-bold text-green-400">
@@ -565,14 +490,12 @@
                                             @endif
                                         </td>
                                         
-                                        {{-- Balance --}}
                                         <td class="px-2 py-2 text-right whitespace-nowrap">
                                             <span class="font-bold {{ $runningBalance >= 0 ? 'text-blue-400' : 'text-red-400' }}">
                                                 {{ number_format($runningBalance, 0, ',', '.') }}
                                             </span>
                                         </td>
                                         
-                                        {{-- Status --}}
                                         <td class="px-2 py-2">
                                             <div class="flex justify-center items-center gap-1">
                                                 @if($transaction->is_verified)
@@ -588,7 +511,6 @@
                                             </div>
                                         </td>
                                         
-                                        {{-- Action --}}
                                         <td class="px-2 py-2 text-center">
                                             <a href="{{ route('transactions.show', $transaction) }}" 
                                                class="inline-flex items-center justify-center w-7 h-7 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white rounded transition">
@@ -599,7 +521,6 @@
                                 @endforeach
                             </tbody>
                             
-                            {{-- Footer Totals --}}
                             <tfoot class="bg-slate-900/80 border-t-2 border-slate-600 font-bold">
                                 <tr>
                                     <td colspan="4" class="px-2 py-2 text-right text-gray-300">
@@ -627,7 +548,6 @@
                     @endif
                 </div>
 
-                {{-- Pagination --}}
                 @if($transactions->hasPages())
                     <div class="p-3 border-t border-slate-700 bg-slate-900/30">
                         {{ $transactions->appends(request()->query())->links() }}
@@ -637,4 +557,20 @@
 
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        // Auto-hide flash messages after 5 seconds
+        setTimeout(() => {
+            const flashMessages = document.querySelectorAll('[class*="bg-green-600"], [class*="bg-red-600"]');
+            flashMessages.forEach(msg => {
+                if (msg.parentElement.classList.contains('space-y-6')) {
+                    msg.style.transition = 'opacity 0.5s';
+                    msg.style.opacity = '0';
+                    setTimeout(() => msg.remove(), 500);
+                }
+            });
+        }, 5000);
+    </script>
+    @endpush
 </x-app-layout>

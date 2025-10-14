@@ -174,53 +174,6 @@
                                 <i class="fas fa-folder-tree"></i>
                                 <span>Collections</span>
                             </a>
-
-                            {{-- Master Data Dropdown (Admin+) --}}
-                            @if(auth()->user()->hasAdminAccess())
-                                <div class="relative" x-data="{ open: false }">
-                                    <button @click="open = !open" class="nav-link {{ request()->routeIs(['banks.*', 'types.*', 'categories.*', 'sub-categories.*', 'keywords.*', 'accounts.*']) ? 'active' : '' }} px-3 py-2 text-sm font-medium text-gray-300 hover:text-white transition flex items-center space-x-2">
-                                        <i class="fas fa-database"></i>
-                                        <span>Master Data</span>
-                                        <i class="fas fa-chevron-down text-xs transition-transform" :class="{ 'rotate-180': open }"></i>
-                                    </button>
-                                    
-                                    <div x-show="open" 
-                                         @click.away="open = false" 
-                                         x-transition:enter="transition ease-out duration-200"
-                                         x-transition:enter-start="opacity-0 transform scale-95"
-                                         x-transition:enter-end="opacity-100 transform scale-100"
-                                         x-transition:leave="transition ease-in duration-150"
-                                         x-transition:leave-start="opacity-100 transform scale-100"
-                                         x-transition:leave-end="opacity-0 transform scale-95"
-                                         class="dropdown-menu absolute left-0 mt-2 w-56 bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden">
-                                        <div class="px-4 py-2 bg-slate-900/50 border-b border-slate-700">
-                                            <p class="text-xs font-semibold text-gray-400 uppercase">Category Hierarchy</p>
-                                        </div>
-                                        <a href="{{ route('banks.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
-                                            <i class="fas fa-university mr-2 text-blue-500 w-5"></i>Banks
-                                        </a>
-                                        <a href="{{ route('types.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
-                                            <i class="fas fa-tags mr-2 text-purple-500 w-5"></i>Types
-                                        </a>
-                                        <a href="{{ route('categories.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
-                                            <i class="fas fa-folder mr-2 text-pink-500 w-5"></i>Categories
-                                        </a>
-                                        <a href="{{ route('sub-categories.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
-                                            <i class="fas fa-folder-open mr-2 text-teal-500 w-5"></i>Sub Categories
-                                        </a>
-                                        <a href="{{ route('keywords.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
-                                            <i class="fas fa-key mr-2 text-yellow-500 w-5"></i>Keywords
-                                        </a>
-                                        <div class="border-t border-slate-700"></div>
-                                        <div class="px-4 py-2 bg-slate-900/50">
-                                            <p class="text-xs font-semibold text-gray-400 uppercase">Accounting</p>
-                                        </div>
-                                        <a href="{{ route('accounts.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
-                                            <i class="fas fa-wallet mr-2 text-indigo-500 w-5"></i>Accounts
-                                        </a>
-                                    </div>
-                                </div>
-                            @endif
                         @endif
                     </div>
                 </div>
@@ -228,48 +181,15 @@
                 <!-- Right: Actions & Profile -->
                 <div class="flex items-center space-x-3">
                     
-                    {{-- Quick Actions (Admin Only) --}}
+                    {{-- Quick Upload Button (Admin Only) --}}
                     @if(auth()->user()->hasAdminAccess() && !auth()->user()->isSuperAdmin())
                         <a href="{{ route('bank-statements.create') }}" class="hidden lg:flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-lg hover:shadow-xl">
                             <i class="fas fa-upload"></i>
                             <span>Upload</span>
                         </a>
-
-                        {{-- Admin Dropdown --}}
-                        <div class="hidden lg:block relative" x-data="{ open: false }">
-                            <button @click="open = !open" class="flex items-center space-x-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition">
-                                <i class="fas fa-user-shield"></i>
-                                <span class="text-sm font-medium">Admin</span>
-                                <i class="fas fa-chevron-down text-xs transition-transform" :class="{ 'rotate-180': open }"></i>
-                            </button>
-                            
-                            <div x-show="open" 
-                                 @click.away="open = false" 
-                                 x-transition:enter="transition ease-out duration-200"
-                                 x-transition:enter-start="opacity-0 transform scale-95"
-                                 x-transition:enter-end="opacity-100 transform scale-100"
-                                 x-transition:leave="transition ease-in duration-150"
-                                 x-transition:leave-start="opacity-100 transform scale-100"
-                                 x-transition:leave-end="opacity-0 transform scale-95"
-                                 class="dropdown-menu absolute right-0 mt-2 w-48 bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden">
-                                <a href="{{ route('users.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
-                                    <i class="fas fa-users mr-2 text-blue-500 w-5"></i>Users
-                                </a>
-                                <a href="{{ route('settings.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
-                                    <i class="fas fa-sliders-h mr-2 text-gray-500 w-5"></i>Settings
-                                </a>
-                                <div class="border-t border-slate-700"></div>
-                                <form method="POST" action="{{ route('dashboard.clear-cache') }}">
-                                    @csrf
-                                    <button type="submit" class="w-full text-left block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
-                                        <i class="fas fa-trash mr-2 text-red-500 w-5"></i>Clear Cache
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
                     @endif
 
-                    <!-- User Profile -->
+                    <!-- User Profile Dropdown - UPDATED SECTION -->
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" class="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition">
                             <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center ring-2 ring-purple-500/20">
@@ -295,14 +215,16 @@
                         </button>
 
                         <div x-show="open" 
-                             @click.away="open = false" 
-                             x-transition:enter="transition ease-out duration-200"
-                             x-transition:enter-start="opacity-0 transform scale-95"
-                             x-transition:enter-end="opacity-100 transform scale-100"
-                             x-transition:leave="transition ease-in duration-150"
-                             x-transition:leave-start="opacity-100 transform scale-100"
-                             x-transition:leave-end="opacity-0 transform scale-95"
-                             class="dropdown-menu absolute right-0 mt-2 w-64 bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden">
+                            @click.away="open = false" 
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 transform scale-95"
+                            x-transition:enter-end="opacity-100 transform scale-100"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 transform scale-100"
+                            x-transition:leave-end="opacity-0 transform scale-95"
+                            class="dropdown-menu absolute right-0 mt-2 w-64 bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden">
+                            
+                            <!-- User Info Header -->
                             <div class="px-4 py-3 border-b border-slate-700 bg-slate-900/50">
                                 <p class="text-sm font-semibold text-white">{{ auth()->user()->name }}</p>
                                 <p class="text-xs text-gray-400 mt-0.5">{{ auth()->user()->email }}</p>
@@ -313,31 +235,74 @@
                                 @endif
                             </div>
                             
+                            <!-- Profile -->
                             <div class="py-1">
                                 <a href="{{ route('profile.edit') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
                                     <i class="fas fa-user mr-3 text-blue-500 w-5"></i>Profile
                                 </a>
-                                
-                                @if(auth()->user()->isSuperAdmin())
-                                    <div class="border-t border-slate-700 mt-1"></div>
-                                    <a href="{{ route('admin.dashboard') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
-                                        <i class="fas fa-tachometer-alt mr-3 text-red-500 w-5"></i>Admin Panel
-                                    </a>
-                                @endif
+                            </div>
 
-                                @if(auth()->user()->hasAdminAccess() && !auth()->user()->isSuperAdmin())
-                                    <div class="border-t border-slate-700 mt-1 lg:hidden"></div>
-                                    <a href="{{ route('users.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition lg:hidden">
+                            @if(!auth()->user()->isSuperAdmin())
+                                <!-- Subscription (ALL Company Members can VIEW) -->
+                                <div class="border-t border-slate-700"></div>
+                                <div class="py-1">
+                                    <a href="{{ route('subscription.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition {{ request()->routeIs('subscription.*') ? 'bg-slate-700 text-white' : '' }}">
+                                        <i class="fas fa-credit-card mr-3 text-green-500 w-5"></i>Subscription & Plan
+                                    </a>
+                                </div>
+
+                                <!-- Master Data (Admin Only) -->
+                                @if(auth()->user()->hasAdminAccess())
+                                    <div class="border-t border-slate-700"></div>
+                                    <div class="px-4 py-2 bg-slate-900/50">
+                                        <p class="text-xs font-semibold text-gray-400 uppercase">Master Data</p>
+                                    </div>
+                                    <a href="{{ route('banks.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
+                                        <i class="fas fa-university mr-3 text-blue-500 w-5"></i>Banks
+                                    </a>
+                                    <a href="{{ route('types.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
+                                        <i class="fas fa-tags mr-3 text-purple-500 w-5"></i>Types
+                                    </a>
+                                    <a href="{{ route('categories.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
+                                        <i class="fas fa-folder mr-3 text-pink-500 w-5"></i>Categories
+                                    </a>
+                                    <a href="{{ route('sub-categories.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
+                                        <i class="fas fa-folder-open mr-3 text-teal-500 w-5"></i>Sub Categories
+                                    </a>
+                                    <a href="{{ route('keywords.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
+                                        <i class="fas fa-key mr-3 text-yellow-500 w-5"></i>Keywords
+                                    </a>
+                                    <a href="{{ route('accounts.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
+                                        <i class="fas fa-wallet mr-3 text-indigo-500 w-5"></i>Accounts
+                                    </a>
+                                    
+                                    <!-- Users & Settings -->
+                                    <div class="border-t border-slate-700 mt-1"></div>
+                                    <a href="{{ route('users.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
                                         <i class="fas fa-users-cog mr-3 text-blue-500 w-5"></i>Manage Users
                                     </a>
-                                    <a href="{{ route('settings.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition lg:hidden">
+                                    <a href="{{ route('settings.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
                                         <i class="fas fa-cog mr-3 text-gray-500 w-5"></i>Settings
                                     </a>
+                                    
+                                    <!-- Clear Cache -->
+                                    <form method="POST" action="{{ route('dashboard.clear-cache') }}">
+                                        @csrf
+                                        <button type="submit" class="w-full text-left block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
+                                            <i class="fas fa-trash mr-3 text-red-500 w-5"></i>Clear Cache
+                                        </button>
+                                    </form>
                                 @endif
-                            </div>
+                            @else
+                                <!-- Super Admin Panel Link -->
+                                <div class="border-t border-slate-700"></div>
+                                <a href="{{ route('admin.dashboard') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition">
+                                    <i class="fas fa-tachometer-alt mr-3 text-red-500 w-5"></i>Admin Panel
+                                </a>
+                            @endif
                             
+                            <!-- Logout -->
                             <div class="border-t border-slate-700"></div>
-                            
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-slate-700 hover:text-red-300 transition">
@@ -355,15 +320,15 @@
             </div>
         </div>
 
-        <!-- Mobile Menu -->
+      <!-- Mobile Menu - UPDATED SECTION -->
         <div x-show="mobileMenu" 
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 transform -translate-y-4"
-             x-transition:enter-end="opacity-100 transform translate-y-0"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100 transform translate-y-0"
-             x-transition:leave-end="opacity-0 transform -translate-y-4"
-             class="mobile-menu lg:hidden bg-slate-900 border-t border-slate-700">
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 transform -translate-y-4"
+            x-transition:enter-end="opacity-100 transform translate-y-0"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 transform translate-y-0"
+            x-transition:leave-end="opacity-0 transform -translate-y-4"
+            class="mobile-menu lg:hidden bg-slate-900 border-t border-slate-700">
             <div class="px-4 py-3 space-y-1 max-h-[calc(100vh-4rem)] overflow-y-auto">
                 
                 @if(auth()->user()->isSuperAdmin())
@@ -409,6 +374,24 @@
                     </a>
                     
                     @if(auth()->user()->hasAdminAccess())
+                        <!-- Upload Button -->
+                        <div class="pt-4">
+                            <a href="{{ route('bank-statements.create') }}" class="block px-4 py-3 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition font-semibold text-center">
+                                <i class="fas fa-upload mr-2"></i>Upload Statement
+                            </a>
+                        </div>
+                    @endif
+
+                    <!-- Subscription - ALL Company Members -->
+                    <div class="pt-4 pb-2 px-4 border-t border-slate-700 mt-2">
+                        <p class="text-xs font-semibold text-green-400 uppercase tracking-wider">Subscription</p>
+                    </div>
+                    <a href="{{ route('subscription.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-800 hover:text-white rounded-lg transition {{ request()->routeIs('subscription.*') ? 'bg-slate-800 text-white' : '' }}">
+                        <i class="fas fa-credit-card mr-2 w-5"></i>My Plan & Billing
+                    </a>
+
+                    @if(auth()->user()->hasAdminAccess())
+                        <!-- Master Data -->
                         <div class="pt-4 pb-2 px-4 border-t border-slate-700 mt-2">
                             <p class="text-xs font-semibold text-blue-400 uppercase tracking-wider">Master Data</p>
                         </div>
@@ -430,12 +413,6 @@
                         <a href="{{ route('accounts.index') }}" class="block px-4 py-3 text-sm text-gray-300 hover:bg-slate-800 hover:text-white rounded-lg transition">
                             <i class="fas fa-wallet mr-2 w-5"></i>Accounts
                         </a>
-
-                        <div class="pt-4">
-                            <a href="{{ route('bank-statements.create') }}" class="block px-4 py-3 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition font-semibold text-center">
-                                <i class="fas fa-upload mr-2"></i>Upload Statement
-                            </a>
-                        </div>
                     @endif
                 @endif
             </div>

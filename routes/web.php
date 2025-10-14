@@ -17,6 +17,7 @@ use App\Http\Controllers\DocumentCollectionController;
 use App\Http\Controllers\DocumentItemController;
 use App\Http\Controllers\ChatSessionController;
 use App\Http\Controllers\ChatMessageController;
+use App\Http\Controllers\CompanySubscriptionController; // NEW
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\CompanyManagementController;
@@ -242,8 +243,18 @@ Route::middleware(['auth', 'verified', 'company.member'])->group(function () {
     */
     
     Route::prefix('statement-transactions')->name('statement-transactions.')->middleware('company.admin')->group(function () {
-        Route::post('/{transaction}/approve', [BankStatementController::class, 'approveTransaction'])->name('approve');
-        Route::post('/{transaction}/set-keyword', [BankStatementController::class, 'setKeywordManually'])->name('set-keyword');
+      // Approve AI suggestion
+        Route::post('/{transaction}/approve', [BankStatementController::class, 'approveTransaction'])
+            ->name('approve');
+        
+        // Manual keyword assignment
+        Route::post('/{transaction}/set-keyword', [BankStatementController::class, 'setKeywordManually'])
+            ->name('set-keyword');
+        
+        // Search keywords for Select2
+        Route::get('/search-keywords', [BankStatementController::class, 'searchKeywords'])
+            ->name('search-keywords');
+
     });
 
     /*
@@ -358,11 +369,33 @@ Route::middleware(['auth', 'verified', 'company.member'])->group(function () {
 | Middleware: auth, verified, company.admin
 */
 
+ Route::middleware(['auth', 'verified'])->prefix('subscription')->name('subscription.')->group(function () {
+        
+        // View routes - ALL members
+        Route::get('/', [CompanySubscriptionController::class, 'index'])->name('index');
+        Route::get('/plans', [CompanySubscriptionController::class, 'plans'])->name('plans');
+        Route::get('/billing-history', [CompanySubscriptionController::class, 'billingHistory'])->name('billing-history');
+        
+        // Action routes - Owner only
+        Route::middleware('company.owner')->group(function () {
+            Route::post('/change-plan', [CompanySubscriptionController::class, 'changePlan'])->name('change-plan');
+            Route::post('/cancel', [CompanySubscriptionController::class, 'cancel'])->name('cancel');
+            Route::post('/resume', [CompanySubscriptionController::class, 'resume'])->name('resume');
+        });
+    });
+
 Route::middleware(['auth', 'verified', 'company.admin'])->group(function () {
     
     // Clear Dashboard Cache
     Route::post('/dashboard/clear-cache', [DashboardController::class, 'clearCache'])->name('dashboard.clear-cache');
     
+    /*
+    |--------------------------------------------------------------------------
+    | Company Subscription Management (Admin+)
+    |--------------------------------------------------------------------------
+    | NEW: Company admins can view and manage their own subscription
+    */
+        
     // User Management (Company Admin)
     Route::prefix('users')->name('users.')->group(function () {
         Route::get('/', [UserManagementController::class, 'index'])->name('index');
@@ -469,16 +502,11 @@ Route::middleware(['auth', 'verified', 'company.admin'])->group(function () {
         Route::get('/general', function () {
             return view('settings.general');
         })->name('general');
-        
-        Route::get('/subscription', function () {
-            return view('settings.subscription');
-        })->name('subscription');
-        
-        Route::get('/billing', function () {
-            return view('settings.billing');
-        })->name('billing');
     });
 });
+
+
+
 
 /*
 |--------------------------------------------------------------------------

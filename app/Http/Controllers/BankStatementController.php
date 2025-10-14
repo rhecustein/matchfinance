@@ -22,6 +22,39 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+/**
+ * BankStatementController
+ * 
+ * Controller untuk mengelola Bank Statement dan transaksi
+ * 
+ * ==========================================
+ * AKSES KONTROL
+ * ==========================================
+ * 
+ * SEMUA COMPANY MEMBER (owner, admin, manager, staff, user):
+ * ✅ Upload bank statement (create, store)
+ * ✅ View bank statements (index, show, download)
+ * ✅ Edit/Update bank statement (edit, update)
+ * ✅ Delete bank statement (destroy)
+ * ✅ Reprocess OCR (reprocess, retryOCR)
+ * ✅ Transaction matching (matchTransactions, rematchAll)
+ * ✅ Account matching (matchAccounts, rematchAccounts)
+ * ✅ Validation (validateView, approveTransaction, rejectTransaction)
+ * ✅ Reconciliation (reconcile, unreconcile)
+ * ✅ Bulk operations (verifyAllMatched, verifyHighConfidence, bulkApprove)
+ * ✅ Statistics (statistics)
+ * ✅ SEMUA operasi terkait bank statement
+ * 
+ * SUPER ADMIN:
+ * ✅ Akses ke semua company
+ * ✅ Dapat memilih company context
+ * 
+ * CATATAN PENTING:
+ * - User Management (create, edit, delete user) = HANYA Owner/Admin
+ * - Master Data (banks, types, categories, keywords) = HANYA Owner/Admin
+ * - Subscription Management = HANYA Owner/Admin
+ * - Bank Statement & Transaksi = SEMUA user company
+ */
 class BankStatementController extends Controller
 {
     protected TransactionMatchingService $matchingService;
@@ -36,17 +69,19 @@ class BankStatementController extends Controller
     }
 
     // ========================================
-    // MAIN CRUD METHODS
+    // METODE CRUD UTAMA
     // ========================================
 
     /**
-     * Display listing of bank statements with filters
+     * Tampilkan daftar bank statements dengan filter
+     * 
+     * AKSES: Semua company member
      */
     public function index(Request $request)
     {
         $user = auth()->user();
 
-        // SUPER ADMIN: Can see all statements from all companies
+        // SUPER ADMIN: Bisa lihat semua statement dari semua company
         if ($user->isSuperAdmin()) {
             $query = BankStatement::with([
                 'bank' => function($q) {
@@ -56,12 +91,12 @@ class BankStatementController extends Controller
                 'company:id,name'
             ])->latest('uploaded_at');
 
-            // Filter by company (super admin only)
+            // Filter berdasarkan company (khusus super admin)
             if ($request->filled('company_id')) {
                 $query->where('company_id', $request->company_id);
             }
         } else {
-            // COMPANY SCOPED QUERY (regular users)
+            // COMPANY SCOPED QUERY (user biasa)
             $query = BankStatement::where('company_id', $user->company_id)
                 ->with([
                     'bank' => function($q) {
@@ -72,27 +107,27 @@ class BankStatementController extends Controller
                 ->latest('uploaded_at');
         }
 
-        // Filter by bank
+        // Filter berdasarkan bank
         if ($request->filled('bank_id')) {
             $query->where('bank_id', $request->bank_id);
         }
 
-        // Filter by OCR status
+        // Filter berdasarkan status OCR
         if ($request->filled('ocr_status')) {
             $query->where('ocr_status', $request->ocr_status);
         }
 
-        // Filter by reconciliation status
+        // Filter berdasarkan status rekonsiliasi
         if ($request->filled('is_reconciled')) {
             $query->where('is_reconciled', $request->boolean('is_reconciled'));
         }
 
-        // Filter by uploaded user
+        // Filter berdasarkan user yang upload
         if ($request->filled('user_id')) {
             $query->where('user_id', $request->user_id);
         }
 
-        // Filter by date range (period)
+        // Filter berdasarkan rentang tanggal (periode)
         if ($request->filled('date_from')) {
             $query->where('period_from', '>=', $request->date_from);
         }
@@ -101,7 +136,7 @@ class BankStatementController extends Controller
             $query->where('period_to', '<=', $request->date_to);
         }
 
-        // Search by filename, account number, or holder name
+        // Pencarian berdasarkan filename, nomor rekening, atau nama pemegang
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -111,34 +146,34 @@ class BankStatementController extends Controller
             });
         }
 
-        // Get paginated results
+        // Dapatkan hasil dengan pagination
         $statements = $query->paginate(20)->withQueryString();
 
-        // Get global banks (no company restriction)
+        // Dapatkan daftar bank global (tanpa pembatasan company)
         $banks = Bank::withoutGlobalScopes()
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'code', 'logo']);
         
-        // Companies (Super Admin only)
+        // Companies (Khusus Super Admin)
         $companies = $user->isSuperAdmin() 
             ? Company::where('status', '!=', 'cancelled')
                 ->orderBy('name')
                 ->get(['id', 'name'])
             : null;
 
-        // Users for filter (within company scope)
+        // Users untuk filter (dalam scope company)
         $users = $this->getUsersForFilter($user, $request);
 
-        // OCR Status options
+        // Opsi status OCR
         $ocrStatuses = [
-            'pending' => 'Pending',
-            'processing' => 'Processing',
-            'completed' => 'Completed',
-            'failed' => 'Failed'
+            'pending' => 'Menunggu',
+            'processing' => 'Diproses',
+            'completed' => 'Selesai',
+            'failed' => 'Gagal'
         ];
 
-        // Calculate statistics
+        // Hitung statistik
         $stats = $this->calculateStatistics($user, $request);
 
         return view('bank-statements.index', compact(
@@ -152,14 +187,16 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Show company selection form (Super Admin Only)
+     * Tampilkan form pemilihan company (Khusus Super Admin)
+     * 
+     * AKSES: Super Admin only
      */
     public function selectCompany()
     {
         $user = auth()->user();
         
-        // Only super admin can access
-        abort_unless($user->isSuperAdmin(), 403);
+        // Hanya super admin yang bisa akses
+        abort_unless($user->isSuperAdmin(), 403, 'Akses ditolak. Hanya Super Admin yang dapat memilih company.');
         
         $companies = Company::where('status', 'active')
             ->orderBy('name')
@@ -169,19 +206,21 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Show the form for creating a new bank statement
+     * Tampilkan form untuk upload bank statement baru
+     * 
+     * AKSES: Semua company member
      */
     public function create(Request $request)
     {
         $user = auth()->user();
 
-        // SUPER ADMIN: Must have company context
+        // SUPER ADMIN: Harus punya company context
         if ($user->isSuperAdmin()) {
             $companyId = $request->input('company_id');
             
             if (!$companyId) {
                 return redirect()->route('bank-statements.select-company')
-                    ->with('info', 'Please select a company first.');
+                    ->with('info', 'Silakan pilih company terlebih dahulu.');
             }
             
             $company = Company::findOrFail($companyId);
@@ -193,7 +232,7 @@ class BankStatementController extends Controller
             
             if ($banks->isEmpty()) {
                 return redirect()->route('bank-statements.select-company')
-                    ->with('error', 'No active banks available in the system. Please add banks first.');
+                    ->with('error', 'Tidak ada bank aktif di sistem. Silakan tambahkan bank terlebih dahulu.');
             }
             
             return view('bank-statements.create', compact('banks', 'company'));
@@ -202,7 +241,7 @@ class BankStatementController extends Controller
         // REGULAR USER: Company scoped
         if (!$user->company_id) {
             return redirect()->route('dashboard')
-                ->with('error', 'You are not assigned to any company. Please contact administrator.');
+                ->with('error', 'Anda belum terdaftar di company manapun. Silakan hubungi administrator.');
         }
         
         $banks = Bank::withoutGlobalScopes()
@@ -212,20 +251,22 @@ class BankStatementController extends Controller
         
         if ($banks->isEmpty()) {
             return redirect()->route('bank-statements.index')
-                ->with('error', 'No banks available in the system. Please contact administrator.');
+                ->with('error', 'Tidak ada bank tersedia di sistem. Silakan hubungi administrator.');
         }
         
         return view('bank-statements.create', compact('banks'));
     }
 
     /**
-     * Store a newly created bank statement
+     * Simpan bank statement baru
+     * 
+     * AKSES: Semua company member
      */
     public function store(Request $request)
     {
         $user = auth()->user();
 
-        // Validation
+        // Validasi
         $rules = [
             'bank_id' => 'required|exists:banks,id',
             'files' => 'required|array|min:1|max:10',
@@ -238,14 +279,14 @@ class BankStatementController extends Controller
         
         $validated = $request->validate($rules);
 
-        // Determine company_id
+        // Tentukan company_id
         $companyId = $user->isSuperAdmin() 
             ? $validated['company_id'] 
             : $user->company_id;
         
         if (!$companyId) {
             return back()
-                ->with('error', 'No company context found.')
+                ->with('error', 'Company context tidak ditemukan.')
                 ->withInput();
         }
 
@@ -264,7 +305,7 @@ class BankStatementController extends Controller
                 try {
                     $fileHash = hash_file('sha256', $file->getRealPath());
 
-                    // Check for existing file (COMPANY SCOPED)
+                    // Cek file yang sudah ada (COMPANY SCOPED)
                     $existingStatement = BankStatement::withTrashed()
                         ->where('company_id', $companyId)
                         ->where('file_hash', $fileHash)
@@ -280,14 +321,14 @@ class BankStatementController extends Controller
                     );
 
                     if (!Storage::disk('local')->exists($path)) {
-                        throw new \Exception("Failed to store file: {$originalName}");
+                        throw new \Exception("Gagal menyimpan file: {$originalName}");
                     }
 
                     if ($existingStatement) {
                         $this->replaceExistingStatement($existingStatement, $file, $path, $fileHash, $originalName, $filename, $bank, $companyId);
                         $replacedCount++;
 
-                        Log::info('Bank statement REPLACED', [
+                        Log::info('Bank statement DIGANTI', [
                             'id' => $existingStatement->id,
                             'company_id' => $companyId,
                             'user_id' => $user->id,
@@ -298,7 +339,7 @@ class BankStatementController extends Controller
                         $bankStatement = $this->createNewStatement($bank, $file, $path, $fileHash, $originalName, $companyId);
                         $uploadedCount++;
 
-                        Log::info('Bank statement UPLOADED', [
+                        Log::info('Bank statement DIUPLOAD', [
                             'id' => $bankStatement->id,
                             'company_id' => $companyId,
                             'user_id' => $user->id,
@@ -308,7 +349,7 @@ class BankStatementController extends Controller
                     }
 
                 } catch (\Exception $e) {
-                    Log::error('Failed to upload individual file', [
+                    Log::error('Gagal upload file individual', [
                         'company_id' => $companyId,
                         'filename' => $originalName,
                         'error' => $e->getMessage(),
@@ -332,25 +373,27 @@ class BankStatementController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             
-            Log::error('Bank statement upload failed', [
+            Log::error('Upload bank statement gagal', [
                 'company_id' => $companyId,
                 'error' => $e->getMessage(),
             ]);
             
             return back()
-                ->with('error', 'Upload failed: ' . $e->getMessage())
+                ->with('error', 'Upload gagal: ' . $e->getMessage())
                 ->withInput();
         }
     }
 
     /**
-     * Display the specified bank statement
+     * Tampilkan detail bank statement
+     * 
+     * AKSES: Semua company member
      */
     public function show(BankStatement $bankStatement)
     {
         $user = auth()->user();
         
-        // ACCESS CONTROL
+        // KONTROL AKSES
         if ($user->isSuperAdmin()) {
             $bankStatement->load([
                 'bank' => function($q) {
@@ -361,8 +404,9 @@ class BankStatementController extends Controller
                 'company:id,name'
             ]);
         } else {
+            // Pastikan user hanya bisa akses bank statement company-nya sendiri
             abort_unless($bankStatement->company_id === $user->company_id, 403, 
-                'You do not have permission to view this bank statement.');
+                'Anda tidak memiliki izin untuk melihat bank statement ini.');
             
             $bankStatement->load([
                 'bank' => function($q) {
@@ -373,7 +417,7 @@ class BankStatementController extends Controller
             ]);
         }
 
-        // BUILD QUERY WITH RELATIONSHIPS
+        // BUILD QUERY DENGAN RELATIONSHIPS
         $query = $bankStatement->transactions()
             ->with([
                 'type:id,name',
@@ -383,7 +427,7 @@ class BankStatementController extends Controller
                 'verifiedBy:id,name'
             ]);
 
-        // APPLY FILTERS
+        // TERAPKAN FILTER
         $this->applyTransactionFilters($query, request());
 
         // SORTING
@@ -391,28 +435,30 @@ class BankStatementController extends Controller
 
         $transactions = $query->paginate(20);
 
-        // STATISTICS
+        // STATISTIK
         $statistics = $this->calculateTransactionStatistics($bankStatement);
 
         return view('bank-statements.show', compact('bankStatement', 'statistics', 'transactions'));
     }
 
     // ========================================
-    // 🎯 SUGGESTION SYSTEM METHODS (NEW)
+    // 🎯 METODE VALIDATION SYSTEM
     // ========================================
 
     /**
-     * Show validation view with keyword suggestions
+     * Tampilkan halaman validasi dengan keyword suggestions
+     * 
+     * AKSES: Semua company member
      */
     public function validateView(BankStatement $bankStatement)
     {
         $user = auth()->user();
         
-        // COMPANY OWNERSHIP CHECK
+        // KONTROL AKSES - Semua company member bisa validasi
         abort_unless(
             $user->isSuperAdmin() || $bankStatement->company_id === $user->company_id, 
             403,
-            'You do not have permission to validate this bank statement.'
+            'Anda tidak memiliki izin untuk memvalidasi bank statement ini.'
         );
         
         // Load bank statement relationships
@@ -423,7 +469,7 @@ class BankStatementController extends Controller
             'user:id,name'
         ]);
         
-        // Proper eager loading sesuai model relationships
+        // Eager loading sesuai model relationships
         $query = $bankStatement->transactions()
             ->with([
                 // Category matching relationships (denormalized)
@@ -444,7 +490,7 @@ class BankStatementController extends Controller
                 'approvedBy:id,name',
                 'rejectedBy:id,name',
                 
-                // Matching logs with full hierarchy
+                // Matching logs dengan full hierarchy
                 'matchingLogs' => function($q) {
                     $q->orderByDesc('confidence_score')->limit(5);
                 },
@@ -454,7 +500,7 @@ class BankStatementController extends Controller
                 'matchingLogs.keyword.subCategory.category.type',
             ]);
         
-        // Apply filter
+        // Terapkan filter
         $filter = request('filter', 'all');
         
         switch ($filter) {
@@ -485,12 +531,12 @@ class BankStatementController extends Controller
                 break;
         }
         
-        // Get transactions
+        // Dapatkan transaksi
         $transactions = $query->orderBy('transaction_date')
                               ->orderBy('transaction_time')
                               ->get();
         
-        // Calculate statistics
+        // Hitung statistik
         $stats = $this->calculateValidationStatistics($bankStatement, $transactions);
         
         return view('bank-statements.validate', compact('bankStatement', 'transactions', 'stats'));
@@ -498,37 +544,40 @@ class BankStatementController extends Controller
 
     /**
      * Approve auto suggestion (AJAX)
+     * 
+     * AKSES: Semua company member
      */
     public function approveTransaction(StatementTransaction $transaction)
     {
         $user = auth()->user();
         
-        // COMPANY OWNERSHIP CHECK
+        // KONTROL AKSES - Semua company member bisa approve
         abort_unless(
             $user->isSuperAdmin() || $transaction->company_id === $user->company_id,
-            403
+            403,
+            'Anda tidak memiliki izin untuk meng-approve transaksi ini.'
         );
         
-        // Validate ada suggestion
+        // Validasi ada suggestion
         if (!$transaction->matched_keyword_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'No keyword suggestion found for this transaction'
+                'message' => 'Tidak ada keyword suggestion untuk transaksi ini'
             ], 400);
         }
         
-        // Check if already verified
+        // Cek jika sudah verified
         if ($transaction->is_verified) {
             return response()->json([
                 'success' => false,
-                'message' => 'Transaction already verified'
+                'message' => 'Transaksi sudah diverifikasi sebelumnya'
             ], 400);
         }
         
         DB::beginTransaction();
         
         try {
-            // Get old values for logging
+            // Simpan nilai lama untuk logging
             $oldKeywordId = $transaction->matched_keyword_id;
             $oldConfidence = $transaction->confidence_score;
             
@@ -541,15 +590,15 @@ class BankStatementController extends Controller
                 'verified_at' => now(),
                 'is_manual_category' => false,
                 'feedback_status' => 'correct',
-                'feedback_notes' => 'User approved primary suggestion',
+                'feedback_notes' => 'User meng-approve primary suggestion',
                 'feedback_by' => $user->id,
                 'feedback_at' => now(),
             ]);
             
-            // Update bank statement statistics
+            // Update statistik bank statement
             $transaction->bankStatement->increment('verified_transactions');
             
-            // LEARNING: Update keyword performance
+            // LEARNING: Update performa keyword
             $this->learningService->updateKeywordStats($oldKeywordId, 'approved', [
                 'transaction_id' => $transaction->id,
                 'confidence_score' => $oldConfidence,
@@ -567,7 +616,7 @@ class BankStatementController extends Controller
                 'verifiedBy:id,name'
             ]);
             
-            Log::info('Transaction approved', [
+            Log::info('Transaksi di-approve', [
                 'transaction_id' => $transaction->id,
                 'statement_id' => $transaction->bank_statement_id,
                 'user_id' => $user->id,
@@ -578,7 +627,7 @@ class BankStatementController extends Controller
             
             return response()->json([
                 'success' => true,
-                'message' => 'Transaction approved successfully',
+                'message' => 'Transaksi berhasil di-approve',
                 'data' => [
                     'id' => $transaction->id,
                     'is_verified' => true,
@@ -602,7 +651,7 @@ class BankStatementController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             
-            Log::error('Failed to approve transaction', [
+            Log::error('Gagal approve transaksi', [
                 'transaction_id' => $transaction->id,
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
@@ -610,50 +659,53 @@ class BankStatementController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to approve transaction: ' . $e->getMessage()
+                'message' => 'Gagal approve transaksi: ' . $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Reject transaction and show suggestions (AJAX)
+     * Reject transaksi dan tampilkan suggestions (AJAX)
+     * 
+     * AKSES: Semua company member
      */
     public function rejectTransaction(StatementTransaction $transaction)
     {
         $user = auth()->user();
         
-        // COMPANY OWNERSHIP CHECK
+        // KONTROL AKSES - Semua company member bisa reject
         abort_unless(
             $user->isSuperAdmin() || $transaction->company_id === $user->company_id,
-            403
+            403,
+            'Anda tidak memiliki izin untuk me-reject transaksi ini.'
         );
         
-        // Validate ada primary match
+        // Validasi ada primary match
         if (!$transaction->matched_keyword_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'No primary match found to reject'
+                'message' => 'Tidak ada primary match untuk di-reject'
             ], 400);
         }
         
         DB::beginTransaction();
         
         try {
-            // Get old values for learning
+            // Simpan nilai lama untuk learning
             $rejectedKeywordId = $transaction->matched_keyword_id;
             $rejectedConfidence = $transaction->confidence_score;
             
-            // Update rejection status
+            // Update status rejection
             $transaction->update([
                 'is_rejected' => true,
                 'rejected_by' => $user->id,
                 'rejected_at' => now(),
                 'feedback_status' => 'incorrect',
-                'feedback_notes' => 'User rejected primary suggestion',
+                'feedback_notes' => 'User me-reject primary suggestion',
                 'feedback_by' => $user->id,
                 'feedback_at' => now(),
                 
-                // Keep the match data for reference, but mark as rejected
+                // Simpan data match untuk referensi, tapi tandai sebagai rejected
                 'is_verified' => false,
                 'is_approved' => false,
             ]);
@@ -665,10 +717,10 @@ class BankStatementController extends Controller
                 'user_id' => $user->id,
             ]);
             
-            // Get alternative suggestions
+            // Dapatkan alternative suggestions
             $alternatives = $transaction->alternative_categories['suggestions'] ?? [];
             
-            // Filter out the rejected primary suggestion (rank 1)
+            // Filter out rejected primary suggestion (rank 1)
             $availableSuggestions = collect($alternatives)
                 ->filter(fn($suggestion) => $suggestion['rank'] > 1)
                 ->values()
@@ -676,7 +728,7 @@ class BankStatementController extends Controller
             
             DB::commit();
             
-            Log::info('Transaction rejected', [
+            Log::info('Transaksi di-reject', [
                 'transaction_id' => $transaction->id,
                 'statement_id' => $transaction->bank_statement_id,
                 'user_id' => $user->id,
@@ -686,7 +738,7 @@ class BankStatementController extends Controller
             
             return response()->json([
                 'success' => true,
-                'message' => 'Transaction rejected. Please select correct category from suggestions.',
+                'message' => 'Transaksi di-reject. Silakan pilih kategori yang benar dari suggestions.',
                 'data' => [
                     'transaction_id' => $transaction->id,
                     'rejected_keyword_id' => $rejectedKeywordId,
@@ -699,7 +751,7 @@ class BankStatementController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             
-            Log::error('Failed to reject transaction', [
+            Log::error('Gagal reject transaksi', [
                 'transaction_id' => $transaction->id,
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
@@ -707,13 +759,15 @@ class BankStatementController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to reject transaction: ' . $e->getMessage()
+                'message' => 'Gagal reject transaksi: ' . $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Apply selected suggestion (AJAX)
+     * Terapkan selected suggestion (AJAX)
+     * 
+     * AKSES: Semua company member
      */
     public function applySuggestion(StatementTransaction $transaction, Request $request)
     {
@@ -724,56 +778,57 @@ class BankStatementController extends Controller
         
         $user = auth()->user();
         
-        // COMPANY OWNERSHIP CHECK
+        // KONTROL AKSES - Semua company member bisa terapkan suggestion
         abort_unless(
             $user->isSuperAdmin() || $transaction->company_id === $user->company_id,
-            403
+            403,
+            'Anda tidak memiliki izin untuk menerapkan suggestion ini.'
         );
         
         DB::beginTransaction();
         
         try {
-            // Get alternative suggestions
+            // Dapatkan alternative suggestions
             $alternatives = $transaction->alternative_categories['suggestions'] ?? [];
             
             if (empty($alternatives)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No suggestions available for this transaction'
+                    'message' => 'Tidak ada suggestions tersedia untuk transaksi ini'
                 ], 404);
             }
             
-            // Find selected suggestion
+            // Cari selected suggestion
             $selectedSuggestion = collect($alternatives)
                 ->firstWhere('rank', $validated['suggestion_rank']);
             
             if (!$selectedSuggestion) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Suggestion not found'
+                    'message' => 'Suggestion tidak ditemukan'
                 ], 404);
             }
             
-            // Verify keyword_id matches
+            // Verifikasi keyword_id cocok
             if ($selectedSuggestion['keyword_id'] != $validated['keyword_id']) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Keyword ID mismatch'
+                    'message' => 'Keyword ID tidak cocok'
                 ], 400);
             }
             
-            // Verify keyword belongs to company
+            // Verifikasi keyword milik company
             $keyword = Keyword::where('id', $validated['keyword_id'])
                 ->where('company_id', $transaction->company_id)
                 ->where('is_active', true)
                 ->firstOrFail();
             
-            // Store original values for learning
+            // Simpan nilai original untuk learning
             $originalKeywordId = $transaction->matched_keyword_id;
             $wasRejected = $transaction->is_rejected;
             $wasVerified = $transaction->is_verified;
             
-            // Apply suggestion
+            // Terapkan suggestion
             $transaction->update([
                 'matched_keyword_id' => $selectedSuggestion['keyword_id'],
                 'sub_category_id' => $selectedSuggestion['sub_category_id'],
@@ -793,18 +848,18 @@ class BankStatementController extends Controller
                 
                 // Feedback
                 'feedback_status' => 'correct',
-                'feedback_notes' => "User selected suggestion rank #{$validated['suggestion_rank']} (was " . 
-                                   ($wasRejected ? "rejected" : "not primary") . ")",
+                'feedback_notes' => "User memilih suggestion rank #{$validated['suggestion_rank']} (sebelumnya " . 
+                                   ($wasRejected ? "di-reject" : "bukan primary") . ")",
                 'feedback_by' => $user->id,
                 'feedback_at' => now(),
                 
                 // Matching metadata
                 'is_manual_category' => false,
                 'match_method' => 'user_selected_suggestion',
-                'matching_reason' => "User selected alternative suggestion (rank #{$validated['suggestion_rank']})",
+                'matching_reason' => "User memilih alternative suggestion (rank #{$validated['suggestion_rank']})",
             ]);
             
-            // Update bank statement statistics (if not previously verified)
+            // Update statistik bank statement (jika belum verified sebelumnya)
             if (!$wasVerified) {
                 $transaction->bankStatement->increment('verified_transactions');
             }
@@ -821,7 +876,7 @@ class BankStatementController extends Controller
                 ]
             );
             
-            // LEARNING: Penalize original keyword (if different)
+            // LEARNING: Penalize original keyword (jika berbeda)
             if ($originalKeywordId && $originalKeywordId != $selectedSuggestion['keyword_id']) {
                 $this->learningService->updateKeywordStats(
                     $originalKeywordId,
@@ -845,7 +900,7 @@ class BankStatementController extends Controller
                 'verifiedBy:id,name'
             ]);
             
-            Log::info('Suggestion applied', [
+            Log::info('Suggestion diterapkan', [
                 'transaction_id' => $transaction->id,
                 'statement_id' => $transaction->bank_statement_id,
                 'user_id' => $user->id,
@@ -857,7 +912,7 @@ class BankStatementController extends Controller
             
             return response()->json([
                 'success' => true,
-                'message' => 'Suggestion applied successfully',
+                'message' => 'Suggestion berhasil diterapkan',
                 'data' => [
                     'transaction' => [
                         'id' => $transaction->id,
@@ -890,7 +945,7 @@ class BankStatementController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             
-            Log::error('Failed to apply suggestion', [
+            Log::error('Gagal apply suggestion', [
                 'transaction_id' => $transaction->id,
                 'user_id' => $user->id,
                 'suggestion_rank' => $validated['suggestion_rank'] ?? null,
@@ -900,19 +955,21 @@ class BankStatementController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to apply suggestion: ' . $e->getMessage()
+                'message' => 'Gagal apply suggestion: ' . $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Get alternative suggestions for a transaction (AJAX)
+     * Dapatkan alternative suggestions untuk transaksi (AJAX)
+     * 
+     * AKSES: Semua company member
      */
     public function getSuggestions(StatementTransaction $transaction)
     {
         $user = auth()->user();
         
-        // COMPANY OWNERSHIP CHECK
+        // KONTROL AKSES
         abort_unless(
             $user->isSuperAdmin() || $transaction->company_id === $user->company_id,
             403
@@ -921,7 +978,7 @@ class BankStatementController extends Controller
         try {
             $alternatives = $transaction->alternative_categories['suggestions'] ?? [];
             
-            // Filter out primary (rank 1) if transaction is rejected
+            // Filter out primary (rank 1) jika transaksi di-reject
             if ($transaction->is_rejected && !empty($alternatives)) {
                 $alternatives = collect($alternatives)
                     ->filter(fn($s) => $s['rank'] > 1)
@@ -929,7 +986,7 @@ class BankStatementController extends Controller
                     ->toArray();
             }
             
-            Log::info('Suggestions retrieved', [
+            Log::info('Suggestions diambil', [
                 'transaction_id' => $transaction->id,
                 'user_id' => $user->id,
                 'suggestions_count' => count($alternatives),
@@ -955,7 +1012,7 @@ class BankStatementController extends Controller
             ]);
             
         } catch (\Exception $e) {
-            Log::error('Failed to get suggestions', [
+            Log::error('Gagal get suggestions', [
                 'transaction_id' => $transaction->id,
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
@@ -963,19 +1020,21 @@ class BankStatementController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve suggestions: ' . $e->getMessage()
+                'message' => 'Gagal mengambil suggestions: ' . $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Set keyword manually via Select2 (AJAX)
+     * Set keyword secara manual via Select2 (AJAX)
+     * 
+     * AKSES: Semua company member
      */
     public function setKeywordManually(Request $request, StatementTransaction $transaction)
     {
         $user = auth()->user();
         
-        // COMPANY OWNERSHIP CHECK
+        // KONTROL AKSES
         abort_unless(
             $user->isSuperAdmin() || $transaction->company_id === $user->company_id,
             403
@@ -994,10 +1053,10 @@ class BankStatementController extends Controller
                 ->where('is_active', true)
                 ->findOrFail($validated['keyword_id']);
             
-            // Check if already verified
+            // Cek jika sudah verified
             $wasVerified = $transaction->is_verified;
             
-            // Update transaction dengan keyword baru
+            // Update transaksi dengan keyword baru
             $transaction->update([
                 'matched_keyword_id' => $keyword->id,
                 'sub_category_id' => $keyword->sub_category_id,
@@ -1008,10 +1067,10 @@ class BankStatementController extends Controller
                 'verified_by' => $user->id,
                 'verified_at' => now(),
                 'is_manual_category' => true,
-                'matching_reason' => 'Manually assigned by user: ' . $user->name,
+                'matching_reason' => 'Ditetapkan manual oleh user: ' . $user->name,
             ]);
             
-            // Update bank statement statistics (hanya jika belum verified sebelumnya)
+            // Update statistik bank statement (hanya jika belum verified sebelumnya)
             if (!$wasVerified) {
                 $transaction->bankStatement->increment('verified_transactions');
             }
@@ -1022,7 +1081,7 @@ class BankStatementController extends Controller
             
             DB::commit();
             
-            Log::info('Transaction manually assigned', [
+            Log::info('Transaksi ditetapkan secara manual', [
                 'transaction_id' => $transaction->id,
                 'statement_id' => $transaction->bank_statement_id,
                 'user_id' => $user->id,
@@ -1032,7 +1091,7 @@ class BankStatementController extends Controller
             
             return response()->json([
                 'success' => true,
-                'message' => 'Keyword assigned successfully',
+                'message' => 'Keyword berhasil ditetapkan',
                 'data' => [
                     'id' => $transaction->id,
                     'keyword_id' => $keyword->id,
@@ -1055,7 +1114,7 @@ class BankStatementController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             
-            Log::error('Failed to set keyword manually', [
+            Log::error('Gagal set keyword manual', [
                 'transaction_id' => $transaction->id,
                 'user_id' => $user->id,
                 'keyword_id' => $validated['keyword_id'] ?? null,
@@ -1064,13 +1123,15 @@ class BankStatementController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to assign keyword: ' . $e->getMessage()
+                'message' => 'Gagal menetapkan keyword: ' . $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Search keywords for Select2 (AJAX)
+     * Cari keywords untuk Select2 (AJAX)
+     * 
+     * AKSES: Semua company member
      */
     public function searchKeywords(Request $request)
     {
@@ -1136,7 +1197,7 @@ class BankStatementController extends Controller
             ]);
             
         } catch (\Exception $e) {
-            Log::error('Failed to search keywords', [
+            Log::error('Gagal search keywords', [
                 'user_id' => $user->id,
                 'search' => $search,
                 'error' => $e->getMessage(),
@@ -1154,7 +1215,9 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Bulk approve transactions (AJAX)
+     * Bulk approve transaksi (AJAX)
+     * 
+     * AKSES: Semua company member
      */
     public function bulkApprove(Request $request)
     {
@@ -1177,7 +1240,7 @@ class BankStatementController extends Controller
             if ($transactions->isEmpty()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No eligible transactions found to approve'
+                    'message' => 'Tidak ada transaksi yang memenuhi syarat untuk di-approve'
                 ], 400);
             }
             
@@ -1193,7 +1256,7 @@ class BankStatementController extends Controller
                         'approved_by' => $user->id,
                         'verified_at' => now(),
                         'feedback_status' => 'correct',
-                        'feedback_notes' => 'Bulk approved by user',
+                        'feedback_notes' => 'Bulk approved oleh user',
                         'feedback_by' => $user->id,
                         'feedback_at' => now(),
                     ]);
@@ -1208,7 +1271,7 @@ class BankStatementController extends Controller
                     $approvedCount++;
                     
                 } catch (\Exception $e) {
-                    Log::warning('Failed to approve transaction in bulk', [
+                    Log::warning('Gagal approve transaksi dalam bulk', [
                         'transaction_id' => $transaction->id,
                         'error' => $e->getMessage(),
                     ]);
@@ -1216,7 +1279,7 @@ class BankStatementController extends Controller
                 }
             }
             
-            // Update bank statement statistics
+            // Update statistik bank statement
             if ($approvedCount > 0) {
                 $statementIds = $transactions->pluck('bank_statement_id')->unique();
                 BankStatement::whereIn('id', $statementIds)
@@ -1227,7 +1290,7 @@ class BankStatementController extends Controller
             
             DB::commit();
             
-            Log::info('Bulk approval completed', [
+            Log::info('Bulk approval selesai', [
                 'user_id' => $user->id,
                 'approved' => $approvedCount,
                 'skipped' => $skippedCount,
@@ -1235,8 +1298,8 @@ class BankStatementController extends Controller
             
             return response()->json([
                 'success' => true,
-                'message' => "{$approvedCount} transaction(s) approved successfully" . 
-                            ($skippedCount > 0 ? ", {$skippedCount} skipped" : ""),
+                'message' => "{$approvedCount} transaksi berhasil di-approve" . 
+                            ($skippedCount > 0 ? ", {$skippedCount} dilewati" : ""),
                 'data' => [
                     'approved' => $approvedCount,
                     'skipped' => $skippedCount,
@@ -1247,30 +1310,33 @@ class BankStatementController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             
-            Log::error('Bulk approval failed', [
+            Log::error('Bulk approval gagal', [
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
             ]);
             
             return response()->json([
                 'success' => false,
-                'message' => 'Bulk approval failed: ' . $e->getMessage()
+                'message' => 'Bulk approval gagal: ' . $e->getMessage()
             ], 500);
         }
     }
 
     // ========================================
-    // EXISTING METHODS
+    // METODE LAINNYA
     // ========================================
 
     /**
-     * Show the form for editing
+     * Tampilkan form edit
+     * 
+     * AKSES: Semua company member
      */
     public function edit(BankStatement $bankStatement)
     {
         abort_unless(
             auth()->user()->isSuperAdmin() || $bankStatement->company_id === auth()->user()->company_id,
-            403
+            403,
+            'Anda tidak memiliki izin untuk mengedit bank statement ini.'
         );
 
         $banks = Bank::withoutGlobalScopes()
@@ -1282,13 +1348,16 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Update the specified bank statement
+     * Update bank statement
+     * 
+     * AKSES: Semua company member
      */
     public function update(Request $request, BankStatement $bankStatement)
     {
         abort_unless(
             auth()->user()->isSuperAdmin() || $bankStatement->company_id === auth()->user()->company_id,
-            403
+            403,
+            'Anda tidak memiliki izin untuk mengupdate bank statement ini.'
         );
 
         $validated = $request->validate([
@@ -1300,54 +1369,60 @@ class BankStatementController extends Controller
         $bankStatement->update($validated);
 
         return redirect()->route('bank-statements.show', $bankStatement)
-            ->with('success', 'Bank statement updated successfully.');
+            ->with('success', 'Bank statement berhasil diupdate.');
     }
 
     /**
-     * Remove the specified bank statement
+     * Hapus bank statement
+     * 
+     * AKSES: Semua company member
      */
     public function destroy(BankStatement $bankStatement)
     {
         abort_unless(
             auth()->user()->isSuperAdmin() || $bankStatement->company_id === auth()->user()->company_id,
-            403
+            403,
+            'Anda tidak memiliki izin untuk menghapus bank statement ini.'
         );
 
         try {
             $bankStatement->delete();
 
-            Log::info('Bank statement deleted', [
+            Log::info('Bank statement dihapus', [
                 'id' => $bankStatement->id,
                 'company_id' => $bankStatement->company_id,
                 'user_id' => auth()->id(),
             ]);
 
             return redirect()->route('bank-statements.index')
-                ->with('success', 'Bank statement deleted successfully.');
+                ->with('success', 'Bank statement berhasil dihapus.');
 
         } catch (\Exception $e) {
-            Log::error('Failed to delete bank statement', [
+            Log::error('Gagal hapus bank statement', [
                 'id' => $bankStatement->id,
                 'company_id' => $bankStatement->company_id,
                 'error' => $e->getMessage()
             ]);
 
-            return back()->with('error', 'Failed to delete bank statement.');
+            return back()->with('error', 'Gagal menghapus bank statement.');
         }
     }
 
     /**
      * Download bank statement PDF
+     * 
+     * AKSES: Semua company member
      */
     public function download(BankStatement $bankStatement)
     {
         abort_unless(
             auth()->user()->isSuperAdmin() || $bankStatement->company_id === auth()->user()->company_id,
-            403
+            403,
+            'Anda tidak memiliki izin untuk mendownload bank statement ini.'
         );
 
         if (!Storage::disk('local')->exists($bankStatement->file_path)) {
-            abort(404, 'File not found.');
+            abort(404, 'File tidak ditemukan.');
         }
 
         return Storage::disk('local')->download(
@@ -1358,12 +1433,15 @@ class BankStatementController extends Controller
 
     /**
      * Reprocess OCR
+     * 
+     * AKSES: Semua company member
      */
     public function reprocess(BankStatement $bankStatement)
     {
         abort_unless(
             auth()->user()->isSuperAdmin() || $bankStatement->company_id === auth()->user()->company_id,
-            403
+            403,
+            'Anda tidak memiliki izin untuk reprocess OCR bank statement ini.'
         );
 
         $bankStatement->update([
@@ -1387,39 +1465,45 @@ class BankStatementController extends Controller
         ProcessBankStatementOCR::dispatch($bankStatement, $bankStatement->bank->slug)
             ->onQueue('ocr-processing');
 
-        Log::info('OCR reprocessing queued', [
+        Log::info('OCR reprocessing di-queue', [
             'statement_id' => $bankStatement->id,
             'company_id' => $bankStatement->company_id,
             'user_id' => auth()->id(),
         ]);
 
-        return back()->with('success', 'OCR processing has been queued again.');
+        return back()->with('success', 'Proses OCR telah di-queue kembali.');
     }
 
     /**
-     * Match transactions
+     * Match transaksi
+     * 
+     * AKSES: Semua company member
      */
     public function matchTransactions(BankStatement $bankStatement)
     {
         abort_unless(
             auth()->user()->isSuperAdmin() || $bankStatement->company_id === auth()->user()->company_id,
-            403
+            403,
+            'Anda tidak memiliki izin untuk melakukan matching transaksi.'
         );
 
         ProcessTransactionMatching::dispatch($bankStatement)
             ->onQueue('matching');
 
-        return back()->with('success', 'Transaction matching has been queued.');
+        return back()->with('success', 'Transaction matching telah di-queue.');
     }
 
     /**
-     * Rematch all transactions
+     * Rematch semua transaksi
+     * 
+     * AKSES: Semua company member
      */
     public function rematchAll(BankStatement $bankStatement)
     {
         abort_unless(
             auth()->user()->isSuperAdmin() || $bankStatement->company_id === auth()->user()->company_id,
-            403
+            403,
+            'Anda tidak memiliki izin untuk rematch semua transaksi.'
         );
 
         $bankStatement->transactions()->update([
@@ -1440,39 +1524,45 @@ class BankStatementController extends Controller
         ProcessTransactionMatching::dispatch($bankStatement)
             ->onQueue('matching');
 
-        Log::info('All transactions rematching queued', [
+        Log::info('Semua transaksi rematch di-queue', [
             'statement_id' => $bankStatement->id,
             'company_id' => $bankStatement->company_id,
             'user_id' => auth()->id(),
         ]);
 
-        return back()->with('success', 'All transactions will be re-matched.');
+        return back()->with('success', 'Semua transaksi akan di-match ulang.');
     }
 
     /**
      * Match accounts
+     * 
+     * AKSES: Semua company member
      */
     public function matchAccounts(BankStatement $bankStatement)
     {
         abort_unless(
             auth()->user()->isSuperAdmin() || $bankStatement->company_id === auth()->user()->company_id,
-            403
+            403,
+            'Anda tidak memiliki izin untuk matching accounts.'
         );
 
         ProcessAccountMatching::dispatch($bankStatement)
             ->onQueue('matching');
 
-        return back()->with('success', 'Account matching has been queued.');
+        return back()->with('success', 'Account matching telah di-queue.');
     }
 
     /**
-     * Rematch all accounts
+     * Rematch semua accounts
+     * 
+     * AKSES: Semua company member
      */
     public function rematchAccounts(BankStatement $bankStatement)
     {
         abort_unless(
             auth()->user()->isSuperAdmin() || $bankStatement->company_id === auth()->user()->company_id,
-            403
+            403,
+            'Anda tidak memiliki izin untuk rematch semua accounts.'
         );
 
         $bankStatement->transactions()->update([
@@ -1489,23 +1579,26 @@ class BankStatementController extends Controller
         ProcessAccountMatching::dispatch($bankStatement, $forceRematch = true)
             ->onQueue('matching');
 
-        Log::info('All accounts rematching queued', [
+        Log::info('Semua accounts rematch di-queue', [
             'statement_id' => $bankStatement->id,
             'company_id' => $bankStatement->company_id,
             'user_id' => auth()->id(),
         ]);
 
-        return back()->with('success', 'All accounts will be re-matched.');
+        return back()->with('success', 'Semua accounts akan di-match ulang.');
     }
 
     /**
-     * Verify all matched transactions
+     * Verify semua transaksi yang sudah matched
+     * 
+     * AKSES: Semua company member
      */
     public function verifyAllMatched(BankStatement $bankStatement)
     {
         abort_unless(
             auth()->user()->isSuperAdmin() || $bankStatement->company_id === auth()->user()->company_id,
-            403
+            403,
+            'Anda tidak memiliki izin untuk verify transaksi.'
         );
 
         $updated = $bankStatement->transactions()
@@ -1519,24 +1612,27 @@ class BankStatementController extends Controller
 
         $bankStatement->updateStatistics();
 
-        Log::info('Bulk verification performed', [
+        Log::info('Bulk verification dilakukan', [
             'statement_id' => $bankStatement->id,
             'company_id' => $bankStatement->company_id,
             'count' => $updated,
             'user_id' => auth()->id(),
         ]);
 
-        return back()->with('success', "{$updated} transaction(s) verified.");
+        return back()->with('success', "{$updated} transaksi berhasil diverifikasi.");
     }
 
     /**
-     * Verify high confidence transactions
+     * Verify transaksi dengan confidence tinggi
+     * 
+     * AKSES: Semua company member
      */
     public function verifyHighConfidence(BankStatement $bankStatement, Request $request)
     {
         abort_unless(
             auth()->user()->isSuperAdmin() || $bankStatement->company_id === auth()->user()->company_id,
-            403
+            403,
+            'Anda tidak memiliki izin untuk verify transaksi.'
         );
 
         $threshold = $request->input('threshold', 80);
@@ -1552,57 +1648,65 @@ class BankStatementController extends Controller
 
         $bankStatement->updateStatistics();
 
-        return back()->with('success', "{$updated} high confidence transaction(s) verified.");
+        return back()->with('success', "{$updated} transaksi high confidence berhasil diverifikasi.");
     }
 
     /**
      * Reconcile bank statement
+     * 
+     * AKSES: Semua company member
      */
     public function reconcile(BankStatement $bankStatement)
     {
         abort_unless(
             auth()->user()->isSuperAdmin() || $bankStatement->company_id === auth()->user()->company_id,
-            403
+            403,
+            'Anda tidak memiliki izin untuk melakukan rekonsiliasi.'
         );
 
         if (!$bankStatement->is_fully_verified) {
-            return back()->with('error', 'All transactions must be verified before reconciliation.');
+            return back()->with('error', 'Semua transaksi harus diverifikasi sebelum rekonsiliasi.');
         }
 
         $bankStatement->markAsReconciled();
 
-        Log::info('Bank statement reconciled', [
+        Log::info('Bank statement direkonsiliasi', [
             'statement_id' => $bankStatement->id,
             'company_id' => $bankStatement->company_id,
             'user_id' => auth()->id(),
         ]);
 
-        return back()->with('success', 'Bank statement reconciled successfully.');
+        return back()->with('success', 'Bank statement berhasil direkonsiliasi.');
     }
 
     /**
      * Unreconcile bank statement
+     * 
+     * AKSES: Semua company member
      */
     public function unreconcile(BankStatement $bankStatement)
     {
         abort_unless(
             auth()->user()->isSuperAdmin() || $bankStatement->company_id === auth()->user()->company_id,
-            403
+            403,
+            'Anda tidak memiliki izin untuk membatalkan rekonsiliasi.'
         );
 
         $bankStatement->unmarkReconciliation();
 
-        Log::info('Bank statement unreconciled', [
+        Log::info('Rekonsiliasi bank statement dibatalkan', [
             'statement_id' => $bankStatement->id,
             'company_id' => $bankStatement->company_id,
             'user_id' => auth()->id(),
         ]);
 
-        return back()->with('success', 'Bank statement unreconciled.');
+        return back()->with('success', 'Rekonsiliasi bank statement berhasil dibatalkan.');
     }
 
     /**
-     * Get statistics
+     * Dapatkan statistik
+     * 
+     * AKSES: Semua company member
      */
     public function statistics(Request $request)
     {
@@ -1643,7 +1747,7 @@ class BankStatementController extends Controller
     }
 
     // ========================================
-    // API Methods - Multi-Bank Upload
+    // API METHODS - MULTI-BANK UPLOAD
     // ========================================
 
     public function uploadMandiri(Request $request)
@@ -1677,7 +1781,7 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Core upload method for API
+     * Core upload method untuk API
      */
     private function uploadBankStatement(Request $request, string $bankSlug)
     {
@@ -1726,7 +1830,7 @@ class BankStatementController extends Controller
                     );
 
                     if (!Storage::disk('local')->exists($path)) {
-                        throw new \Exception("Failed to store file: {$originalName}");
+                        throw new \Exception("Gagal menyimpan file: {$originalName}");
                     }
 
                     if ($existingStatement) {
@@ -1750,7 +1854,7 @@ class BankStatementController extends Controller
                     }
 
                 } catch (\Exception $e) {
-                    Log::error("Failed to upload file via API", [
+                    Log::error("Gagal upload file via API", [
                         'company_id' => $companyId,
                         'filename' => $originalName,
                         'error' => $e->getMessage(),
@@ -1798,19 +1902,20 @@ class BankStatementController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation failed.','errors' => $e->errors(),
+                'message' => 'Validasi gagal.',
+                'errors' => $e->errors(),
             ], 422);
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'success' => false,
-                'message' => "Bank '{$bankSlug}' not found or not active.",
+                'message' => "Bank '{$bankSlug}' tidak ditemukan atau tidak aktif.",
             ], 404);
 
         } catch (\Exception $e) {
             DB::rollBack();
 
-            Log::error("Bank statement upload failed via API", [
+            Log::error("Upload bank statement via API gagal", [
                 'company_id' => $user->company_id,
                 'bank' => $bankSlug,
                 'error' => $e->getMessage(),
@@ -1818,13 +1923,13 @@ class BankStatementController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Upload failed: ' . $e->getMessage(),
+                'message' => 'Upload gagal: ' . $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Get upload status
+     * Dapatkan status upload
      */
     public function getStatus(BankStatement $bankStatement)
     {
@@ -1840,7 +1945,7 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Retry failed OCR
+     * Retry OCR yang gagal
      */
     public function retryOCR(BankStatement $bankStatement)
     {
@@ -1852,7 +1957,7 @@ class BankStatementController extends Controller
         if ($bankStatement->ocr_status !== 'failed') {
             return response()->json([
                 'success' => false,
-                'message' => 'Only failed statements can be retried.',
+                'message' => 'Hanya statement yang gagal yang bisa di-retry.',
             ], 400);
         }
 
@@ -1866,7 +1971,7 @@ class BankStatementController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'OCR processing has been queued again.',
+            'message' => 'Proses OCR telah di-queue kembali.',
         ]);
     }
 
@@ -1875,7 +1980,7 @@ class BankStatementController extends Controller
     // ========================================
 
     /**
-     * Get users for filter dropdown
+     * Dapatkan users untuk dropdown filter
      */
     private function getUsersForFilter(User $user, Request $request): ?object
     {
@@ -1886,7 +1991,7 @@ class BankStatementController extends Controller
                 ->get(['id', 'name']);
         }
         
-        if ($user->isAdmin()) {
+        if ($user->hasAdminAccess()) {
             return User::where('company_id', $user->company_id)
                 ->where('is_active', true)
                 ->orderBy('name')
@@ -1897,13 +2002,13 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Calculate statistics for index page
+     * Hitung statistik untuk halaman index
      */
     private function calculateStatistics(User $user, Request $request): array
     {
         $statsQuery = BankStatement::query();
         
-        // Apply company scope
+        // Terapkan scope company
         if ($user->isSuperAdmin()) {
             if ($request->filled('company_id')) {
                 $statsQuery->where('company_id', $request->company_id);
@@ -1912,7 +2017,7 @@ class BankStatementController extends Controller
             $statsQuery->where('company_id', $user->company_id);
         }
 
-        // Apply all filters
+        // Terapkan semua filter
         if ($request->filled('bank_id')) {
             $statsQuery->where('bank_id', $request->bank_id);
         }
@@ -1942,7 +2047,7 @@ class BankStatementController extends Controller
             });
         }
 
-        // Calculate stats
+        // Hitung stats
         return [
             'total' => (clone $statsQuery)->count(),
             'pending' => (clone $statsQuery)->where('ocr_status', 'pending')->count(),
@@ -1953,7 +2058,7 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Apply transaction filters to query
+     * Terapkan filter transaksi ke query
      */
     private function applyTransactionFilters($query, Request $request): void
     {
@@ -1987,7 +2092,7 @@ class BankStatementController extends Controller
                 break;
         }
 
-        // TYPE FILTER
+        // FILTER TIPE
         $type = $request->get('type');
         if ($type === 'credit') {
             $query->where('transaction_type', 'credit');
@@ -1995,7 +2100,7 @@ class BankStatementController extends Controller
             $query->where('transaction_type', 'debit');
         }
 
-        // AMOUNT RANGE FILTER
+        // FILTER RENTANG AMOUNT
         $amountRange = $request->get('amount_range');
         switch ($amountRange) {
             case 'large':
@@ -2009,7 +2114,7 @@ class BankStatementController extends Controller
                 break;
         }
 
-        // SPECIAL FILTERS
+        // FILTER KHUSUS
         $special = $request->get('special');
         switch ($special) {
             case 'round':
@@ -2028,7 +2133,7 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Apply transaction sorting to query
+     * Terapkan sorting transaksi ke query
      */
     private function applyTransactionSorting($query, string $sort): void
     {
@@ -2052,7 +2157,7 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Calculate transaction statistics for show page
+     * Hitung statistik transaksi untuk halaman show
      */
     private function calculateTransactionStatistics(BankStatement $bankStatement): array
     {
@@ -2072,7 +2177,7 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Calculate validation statistics
+     * Hitung statistik validasi
      */
     private function calculateValidationStatistics(BankStatement $bankStatement, $transactions): array
     {
@@ -2103,7 +2208,7 @@ class BankStatementController extends Controller
             'rejected' => $transactions->where('is_rejected', true)->count(),
         ];
         
-        // Calculate progress percentage
+        // Hitung persentase progress
         $stats['progress'] = $bankStatement->total_transactions > 0 
             ? round(($stats['verified'] / $bankStatement->total_transactions) * 100, 1)
             : 0;
@@ -2112,7 +2217,7 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Generate unique filename for uploaded file
+     * Generate filename unik untuk file yang diupload
      */
     private function generateUniqueFilename(string $originalName): string
     {
@@ -2134,7 +2239,7 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Replace existing bank statement
+     * Replace bank statement yang sudah ada
      */
     private function replaceExistingStatement(
         BankStatement $existingStatement,
@@ -2146,20 +2251,20 @@ class BankStatementController extends Controller
         Bank $bank,
         int $companyId
     ): void {
-        // Delete old file if exists
+        // Hapus file lama jika ada
         if ($existingStatement->file_path && Storage::disk('local')->exists($existingStatement->file_path)) {
             Storage::disk('local')->delete($existingStatement->file_path);
         }
 
-        // Delete existing transactions
+        // Hapus transaksi yang ada
         $existingStatement->transactions()->delete();
 
-        // Restore if soft deleted
+        // Restore jika soft deleted
         if ($existingStatement->trashed()) {
             $existingStatement->restore();
         }
 
-        // Update existing statement
+        // Update statement yang ada
         $existingStatement->update([
             'user_id' => auth()->id(),
             'file_path' => $path,
@@ -2196,7 +2301,7 @@ class BankStatementController extends Controller
             'notes' => null,
         ]);
 
-        // Keep or create document collection
+        // Pertahankan atau buat document collection
         if ($existingStatement->documentItem) {
             $existingStatement->documentItem->update([
                 'knowledge_status' => 'pending',
@@ -2204,7 +2309,7 @@ class BankStatementController extends Controller
                 'processed_at' => null,
             ]);
 
-            Log::info('Document collection kept for replaced statement', [
+            Log::info('Document collection dipertahankan untuk statement yang diganti', [
                 'statement_id' => $existingStatement->id,
                 'collection_id' => $existingStatement->documentItem->document_collection_id,
             ]);
@@ -2212,13 +2317,13 @@ class BankStatementController extends Controller
             $this->createDocumentCollection($existingStatement);
         }
 
-        // Queue OCR processing
+        // Queue proses OCR
         ProcessBankStatementOCR::dispatch($existingStatement, $bank->slug)
             ->onQueue('ocr-processing');
     }
 
     /**
-     * Create new bank statement
+     * Buat bank statement baru
      */
     private function createNewStatement(
         Bank $bank,
@@ -2251,7 +2356,7 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Create document collection for bank statement
+     * Buat document collection untuk bank statement
      */
     private function createDocumentCollection(BankStatement $bankStatement): void
     {
@@ -2265,7 +2370,7 @@ class BankStatementController extends Controller
                 'company_id' => $bankStatement->company_id,
                 'user_id' => $bankStatement->user_id,
                 'name' => $collectionName,
-                'description' => "Auto-created from: {$bankStatement->original_filename}",
+                'description' => "Dibuat otomatis dari: {$bankStatement->original_filename}",
                 'color' => $this->getRandomColor(),
                 'icon' => 'document-text',
                 'document_count' => 1,
@@ -2285,7 +2390,7 @@ class BankStatementController extends Controller
                 'knowledge_status' => 'pending',
             ]);
 
-            Log::info('Document collection auto-created', [
+            Log::info('Document collection dibuat otomatis', [
                 'collection_id' => $collection->id,
                 'collection_name' => $collection->name,
                 'statement_id' => $bankStatement->id,
@@ -2293,7 +2398,7 @@ class BankStatementController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Failed to create document collection', [
+            Log::error('Gagal membuat document collection', [
                 'statement_id' => $bankStatement->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -2302,7 +2407,7 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Get random color for collection
+     * Dapatkan warna random untuk collection
      */
     private function getRandomColor(): string
     {
@@ -2315,35 +2420,35 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Build upload message
+     * Bangun pesan upload
      */
     private function buildUploadMessage(int $uploaded, int $replaced, int $errors): string
     {
         $messages = [];
 
         if ($uploaded > 0) {
-            $messages[] = "{$uploaded} new file(s) uploaded";
+            $messages[] = "{$uploaded} file baru berhasil diupload";
         }
 
         if ($replaced > 0) {
-            $messages[] = "{$replaced} file(s) replaced";
+            $messages[] = "{$replaced} file berhasil diganti";
         }
 
         if ($errors > 0) {
-            $messages[] = "{$errors} file(s) failed";
+            $messages[] = "{$errors} file gagal";
         }
 
         $message = implode(', ', $messages);
         
         if ($uploaded > 0 || $replaced > 0) {
-            $message .= ' and queued for OCR processing';
+            $message .= ' dan telah di-queue untuk proses OCR';
         }
 
         return $message . '.';
     }
 
     /**
-     * Format bytes to human readable format
+     * Format bytes ke format yang mudah dibaca
      */
     private function formatBytes(int $bytes, int $precision = 2): string
     {
@@ -2355,4 +2460,4 @@ class BankStatementController extends Controller
 
         return round($bytes, $precision) . ' ' . $units[$i];
     }
-}
+}   

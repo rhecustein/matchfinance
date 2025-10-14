@@ -7,24 +7,31 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * CheckActiveSubscription Middleware - FIXED VERSION
+ * 
+ * Memastikan company memiliki status yang aktif dan subscription yang valid
+ * 
+ * Company Status (enum):
+ * - 'active': Company dengan subscription aktif
+ * - 'trial': Company dalam masa trial
+ * - 'suspended': Company di-suspend (tidak bisa akses)
+ * - 'cancelled': Company dibatalkan (tidak bisa akses)
+ */
 class CheckActiveSubscription
 {
     /**
+     * Routes yang diperbolehkan akses tanpa subscription check
+     */
+    protected array $allowedRoutes = [
+        'dashboard',
+        'subscription.*',
+        'profile.*',
+        'logout',
+    ];
+
+    /**
      * Handle an incoming request.
-     * Ensure company has active subscription
-     * 
-     * This middleware blocks access to the application if:
-     * - Company subscription has expired
-     * - Company trial has ended
-     * - Company is suspended or cancelled
-     * 
-     * Bypass conditions:
-     * - Super Admin (always has access)
-     * - Specific routes (dashboard, subscription pages)
-     * 
-     * Usage:
-     * - Apply globally in Kernel or specific route groups
-     * - Route::middleware('subscription')->group(...);
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -52,14 +59,7 @@ class CheckActiveSubscription
         }
 
         // Allow access to certain routes even without active subscription
-        $allowedRoutes = [
-            'dashboard',
-            'subscription.*',
-            'profile.*',
-            'logout',
-        ];
-
-        if ($this->isRouteAllowed($request, $allowedRoutes)) {
+        if ($this->isRouteAllowed($request)) {
             return $next($request);
         }
 
@@ -85,13 +85,16 @@ class CheckActiveSubscription
             abort(500, 'Company not found. Please contact support.');
         }
 
-        // Check company status - Suspended
+        // ========================================================================
+        // COMPANY STATUS CHECKS (berdasarkan field 'status', bukan 'is_active')
+        // ========================================================================
+
+        // 1. Check if company is SUSPENDED
         if ($company->status === 'suspended') {
             Log::warning('Suspended company access attempt', [
                 'user_id' => $user->id,
                 'company_id' => $company->id,
                 'company_name' => $company->name,
-                'suspended_at' => $company->suspended_at,
                 'route' => $request->path(),
             ]);
 
@@ -99,13 +102,12 @@ class CheckActiveSubscription
                 ->with('error', 'Your company account is suspended. Please contact support at support@matchfinance.com.');
         }
 
-        // Check company status - Cancelled
+        // 2. Check if company is CANCELLED
         if ($company->status === 'cancelled') {
             Log::warning('Cancelled company access attempt', [
                 'user_id' => $user->id,
                 'company_id' => $company->id,
                 'company_name' => $company->name,
-                'cancelled_at' => $company->cancelled_at,
                 'route' => $request->path(),
             ]);
 
@@ -113,20 +115,12 @@ class CheckActiveSubscription
                 ->with('error', 'Your company account has been cancelled. Please contact support to reactivate.');
         }
 
-        // Check if company is inactive
-        if (!$company->is_active) {
-            Log::warning('Inactive company access attempt', [
-                'user_id' => $user->id,
-                'company_id' => $company->id,
-                'route' => $request->path(),
-            ]);
+        // ========================================================================
+        // TRIAL STATUS CHECKS
+        // ========================================================================
 
-            return redirect()->route('dashboard')
-                ->with('error', 'Your company account is currently inactive. Please contact support.');
-        }
-
-        // Check Trial Status
         if ($company->status === 'trial') {
+            // Check if trial expired
             if ($company->isTrialExpired()) {
                 Log::info('Trial expired - redirecting to subscription', [
                     'user_id' => $user->id,
@@ -135,36 +129,45 @@ class CheckActiveSubscription
                     'route' => $request->path(),
                 ]);
 
-                return redirect()->route('subscription.expired')
+                return redirect()->route('subscription.plans')
                     ->with('error', 'Your trial period has expired. Please subscribe to continue using MatchFinance.');
-            } else {
-                // Trial is still active - show warning if approaching expiration
-                $daysLeft = now()->diffInDays($company->trial_ends_at);
+            }
+
+            // Trial is still active - show warning if approaching expiration
+            if ($company->trial_ends_at) {
+                $daysLeft = now()->diffInDays($company->trial_ends_at, false);
+                $daysLeft = max(0, (int) $daysLeft);
                 
-                if ($daysLeft <= 3) {
+                if ($daysLeft <= 3 && $daysLeft > 0) {
                     session()->flash('warning', "Your trial expires in {$daysLeft} days. Subscribe now to avoid service interruption.");
                 }
-
-                return $next($request);
             }
+
+            return $next($request);
         }
 
-        // Check Active Subscription
+        // ========================================================================
+        // ACTIVE SUBSCRIPTION CHECKS
+        // ========================================================================
+
+        // Check if company has active subscription
         if (!$company->hasActiveSubscription()) {
             Log::warning('No active subscription - access denied', [
                 'user_id' => $user->id,
                 'company_id' => $company->id,
-                'last_subscription_ended' => $company->activeSubscription->ends_at ?? null,
+                'company_status' => $company->status,
+                'last_subscription_ended' => optional($company->activeSubscription)->ends_at,
                 'route' => $request->path(),
             ]);
 
-            return redirect()->route('subscription.expired')
+            return redirect()->route('subscription.plans')
                 ->with('error', 'Your subscription has expired. Please renew to continue using MatchFinance.');
         }
 
-        // Validate subscription status
+        // Get subscription
         $subscription = $company->activeSubscription;
 
+        // Validate subscription status
         if (!$subscription->isActive()) {
             Log::warning('Inactive subscription detected', [
                 'company_id' => $company->id,
@@ -173,14 +176,18 @@ class CheckActiveSubscription
                 'ends_at' => $subscription->ends_at,
             ]);
 
-            return redirect()->route('subscription.expired')
+            return redirect()->route('subscription.plans')
                 ->with('error', 'Your subscription is not active. Please renew to continue.');
         }
 
         // Check if subscription is about to expire (within 7 days)
-        if ($subscription->ends_at && $subscription->ends_at->diffInDays(now()) <= 7) {
-            $daysLeft = $subscription->ends_at->diffInDays(now());
-            session()->flash('warning', "Your subscription expires in {$daysLeft} days. Renew now to avoid service interruption.");
+        if ($subscription->ends_at) {
+            $daysLeft = now()->diffInDays($subscription->ends_at, false);
+            $daysLeft = max(0, (int) $daysLeft);
+            
+            if ($daysLeft <= 7 && $daysLeft > 0) {
+                session()->flash('warning', "Your subscription expires in {$daysLeft} days. Renew now to avoid service interruption.");
+            }
         }
 
         // Check if subscription is past due (grace period)
@@ -198,24 +205,13 @@ class CheckActiveSubscription
     }
 
     /**
-     * Check if route is allowed without active subscription
+     * Check if current route is in allowed list
      */
-    private function isRouteAllowed(Request $request, array $allowedRoutes): bool
+    protected function isRouteAllowed(Request $request): bool
     {
-        $currentRoute = $request->route()->getName();
-
-        foreach ($allowedRoutes as $pattern) {
-            if (str_contains($pattern, '*')) {
-                // Wildcard pattern
-                $pattern = str_replace('*', '', $pattern);
-                if (str_starts_with($currentRoute, $pattern)) {
-                    return true;
-                }
-            } else {
-                // Exact match
-                if ($currentRoute === $pattern) {
-                    return true;
-                }
+        foreach ($this->allowedRoutes as $pattern) {
+            if ($request->routeIs($pattern)) {
+                return true;
             }
         }
 

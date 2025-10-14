@@ -13,20 +13,20 @@
                         </div>
                         <div class="flex-1">
                             <h4 class="font-bold text-white text-lg mb-2">
-                                Upload Successful!
+                                Upload Berhasil!
                             </h4>
                             <div class="space-y-2 text-sm">
                                 @if(session('uploaded_count') > 0)
                                     <div class="flex items-center text-green-300">
                                         <i class="fas fa-plus-circle mr-2"></i>
-                                        <span><strong>{{ session('uploaded_count') }}</strong> new file(s) uploaded and queued</span>
+                                        <span><strong>{{ session('uploaded_count') }}</strong> file baru berhasil diupload dan di-queue</span>
                                     </div>
                                 @endif
                                 
                                 @if(session('replaced_count') > 0)
                                     <div class="flex items-center text-blue-300">
                                         <i class="fas fa-sync-alt mr-2"></i>
-                                        <span><strong>{{ session('replaced_count') }}</strong> file(s) replaced (duplicate detected, old data cleared)</span>
+                                        <span><strong>{{ session('replaced_count') }}</strong> file berhasil diganti (duplikat terdeteksi, data lama dibersihkan)</span>
                                     </div>
                                 @endif
                                 
@@ -34,7 +34,7 @@
                                     <div class="flex items-start text-red-300">
                                         <i class="fas fa-times-circle mr-2 mt-0.5"></i>
                                         <div>
-                                            <span><strong>{{ count(session('failed_files')) }}</strong> file(s) failed:</span>
+                                            <span><strong>{{ count(session('failed_files')) }}</strong> file gagal:</span>
                                             <ul class="list-disc list-inside ml-4 mt-1 text-xs">
                                                 @foreach(session('failed_files') as $failedFile)
                                                     <li>{{ $failedFile }}</li>
@@ -51,10 +51,10 @@
                         <div class="flex items-center justify-between text-sm mb-3">
                             <div class="flex items-center text-blue-200">
                                 <i class="fas fa-cog fa-spin mr-2"></i>
-                                <span>OCR processing will start automatically...</span>
+                                <span>Proses OCR akan dimulai secara otomatis...</span>
                             </div>
                             <a href="{{ route('bank-statements.index') }}" class="text-blue-400 hover:text-blue-300 font-semibold transition">
-                                View Progress <i class="fas fa-arrow-right ml-1"></i>
+                                Lihat Progress <i class="fas fa-arrow-right ml-1"></i>
                             </a>
                         </div>
                         <div class="bg-slate-800 rounded-full h-2.5 overflow-hidden">
@@ -62,14 +62,14 @@
                         </div>
                         <p class="text-xs text-gray-400 mt-2">
                             <i class="fas fa-info-circle mr-1"></i>
-                            Processing time varies based on PDF size and complexity (usually 30s - 2min per file)
+                            Waktu proses bervariasi tergantung ukuran dan kompleksitas PDF (biasanya 30 detik - 2 menit per file)
                         </p>
                         
                         @if(session('replaced_count') > 0)
                             <div class="mt-3 bg-yellow-600/20 border border-yellow-500/30 rounded-lg p-3">
                                 <p class="text-xs text-yellow-300">
                                     <i class="fas fa-exclamation-triangle mr-1"></i>
-                                    <strong>Note:</strong> Replaced files will overwrite existing data. Previous transactions and OCR results have been cleared.
+                                    <strong>Catatan:</strong> File yang diganti akan menimpa data yang ada. Transaksi dan hasil OCR sebelumnya telah dibersihkan.
                                 </p>
                             </div>
                         @endif
@@ -99,11 +99,19 @@
                     <p class="font-semibold">{{ session('error') }}</p>
                 </div>
             @endif
+            
+            {{-- INFO MESSAGE --}}
+            @if(session('info'))
+                <div class="bg-blue-600/20 border border-blue-600 text-blue-400 px-6 py-4 rounded-lg flex items-center space-x-3">
+                    <i class="fas fa-info-circle text-2xl"></i>
+                    <p class="font-semibold">{{ session('info') }}</p>
+                </div>
+            @endif
 
             {{-- VALIDATION ERRORS --}}
             @if($errors->any())
                 <div class="bg-red-600/20 border border-red-600 text-red-400 px-6 py-4 rounded-lg">
-                    <h4 class="font-semibold mb-2"><i class="fas fa-exclamation-triangle mr-2"></i>Validation Errors:</h4>
+                    <h4 class="font-semibold mb-2"><i class="fas fa-exclamation-triangle mr-2"></i>Kesalahan Validasi:</h4>
                     <ul class="list-disc list-inside space-y-1">
                         @foreach($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -116,18 +124,18 @@
             <div class="flex justify-between items-center">
                 <div>
                     <h2 class="text-2xl font-bold text-white mb-2">Upload Bank Statement</h2>
-                    <p class="text-gray-400">Upload bank statement PDF files (Max 10 files at once)</p>
+                    <p class="text-gray-400">Upload file PDF bank statement (Maksimal 10 file sekaligus)</p>
                 </div>
                 <a href="{{ route('bank-statements.index') }}" 
                    class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-semibold transition">
-                    <i class="fas fa-arrow-left mr-2"></i>Back to List
+                    <i class="fas fa-arrow-left mr-2"></i>Kembali ke Daftar
                 </a>
             </div>
 
             {{-- Upload Form --}}
             <div id="uploadSection" class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-slate-700 shadow-xl">
                 <h3 class="text-xl font-bold text-white mb-6">
-                    <i class="fas fa-upload mr-2"></i>Upload Bank Statement File(s)
+                    <i class="fas fa-upload mr-2"></i>Upload File Bank Statement
                 </h3>
                 
                 <form action="{{ route('bank-statements.store') }}" method="POST" enctype="multipart/form-data" id="uploadForm" class="space-y-6">
@@ -139,7 +147,7 @@
                         <div class="bg-blue-600/20 border border-blue-500 rounded-lg p-4 mb-4">
                             <p class="text-sm text-blue-300">
                                 <i class="fas fa-building mr-2"></i>
-                                Uploading for company: <strong class="text-white">{{ $company->name }}</strong>
+                                Upload untuk company: <strong class="text-white">{{ $company->name }}</strong>
                             </p>
                         </div>
                     @endif
@@ -147,41 +155,41 @@
                     {{-- Bank Selection --}}
                     <div>
                         <label for="bank_id" class="block text-sm font-semibold text-gray-300 mb-2">
-                            <i class="fas fa-university mr-1"></i>Select Bank <span class="text-red-400">*</span>
+                            <i class="fas fa-university mr-1"></i>Pilih Bank <span class="text-red-400">*</span>
                         </label>
                         <select id="bank_id" name="bank_id" required
                             class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="">-- Select Bank --</option>
+                            <option value="">-- Pilih Bank --</option>
                             @forelse($banks as $bank)
                                 <option value="{{ $bank->id }}" {{ old('bank_id') == $bank->id ? 'selected' : '' }}>
                                     {{ $bank->name }} @if($bank->code)({{ $bank->code }})@endif
                                 </option>
                             @empty
-                                <option value="" disabled>No banks available</option>
+                                <option value="" disabled>Tidak ada bank tersedia</option>
                             @endforelse
                         </select>
                         @error('bank_id')
                             <p class="mt-2 text-sm text-red-400">{{ $message }}</p>
                         @enderror
                         <p class="mt-2 text-sm text-gray-400">
-                            <i class="fas fa-info-circle mr-1"></i>Make sure the selected bank matches the statement file(s)
+                            <i class="fas fa-info-circle mr-1"></i>Pastikan bank yang dipilih sesuai dengan file statement
                         </p>
                     </div>
 
                     {{-- Multi-File Upload --}}
                     <div>
                         <label for="files" class="block text-sm font-semibold text-gray-300 mb-2">
-                            <i class="fas fa-file-pdf mr-1"></i>PDF File(s) <span class="text-red-400">*</span>
-                            <span class="text-gray-500 font-normal">(Max 10 files, 10MB each)</span>
+                            <i class="fas fa-file-pdf mr-1"></i>File PDF <span class="text-red-400">*</span>
+                            <span class="text-gray-500 font-normal">(Maks 10 file, 10MB per file)</span>
                         </label>
                         <div class="flex items-center justify-center w-full">
                             <label for="files" class="flex flex-col items-center justify-center w-full h-56 border-2 border-slate-600 border-dashed rounded-xl cursor-pointer bg-slate-900/30 hover:bg-slate-900/50 hover:border-blue-500 transition">
                                 <div class="flex flex-col items-center justify-center pt-5 pb-6">
                                     <i class="fas fa-cloud-upload-alt text-6xl text-slate-500 mb-4"></i>
                                     <p class="mb-2 text-sm text-gray-300">
-                                        <span class="font-semibold">Click to upload</span> or drag and drop
+                                        <span class="font-semibold">Klik untuk upload</span> atau drag and drop
                                     </p>
-                                    <p class="text-xs text-gray-500">PDF only (MAX. 10 files, 10MB each)</p>
+                                    <p class="text-xs text-gray-500">PDF saja (MAKS. 10 file, 10MB per file)</p>
                                 </div>
                                 <input id="files" name="files[]" type="file" class="hidden" accept=".pdf" multiple required />
                             </label>
@@ -201,11 +209,11 @@
                     <div class="flex gap-3">
                         <button type="submit" id="uploadBtn"
                             class="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition flex items-center justify-center">
-                            <i class="fas fa-upload mr-2"></i>Upload & Process
+                            <i class="fas fa-upload mr-2"></i>Upload & Proses
                         </button>
                         <a href="{{ route('bank-statements.index') }}"
                             class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-6 rounded-lg text-center transition">
-                            <i class="fas fa-times mr-2"></i>Cancel
+                            <i class="fas fa-times mr-2"></i>Batal
                         </a>
                     </div>
                 </form>
@@ -214,42 +222,64 @@
             {{-- Information Card --}}
             <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-slate-700 shadow-xl">
                 <h3 class="text-lg font-bold text-white mb-4">
-                    <i class="fas fa-info-circle mr-2 text-blue-400"></i>Upload Guidelines
+                    <i class="fas fa-info-circle mr-2 text-blue-400"></i>Panduan Upload
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-300">
                     <div class="flex items-start space-x-3">
                         <i class="fas fa-check-circle text-green-400 mt-1"></i>
                         <div>
-                            <p class="font-semibold text-white">Supported Format</p>
-                            <p class="text-gray-400">PDF files only</p>
+                            <p class="font-semibold text-white">Format yang Didukung</p>
+                            <p class="text-gray-400">Hanya file PDF</p>
                         </div>
                     </div>
                     <div class="flex items-start space-x-3">
                         <i class="fas fa-check-circle text-green-400 mt-1"></i>
                         <div>
-                            <p class="font-semibold text-white">File Size</p>
-                            <p class="text-gray-400">Maximum 10MB per file</p>
+                            <p class="font-semibold text-white">Ukuran File</p>
+                            <p class="text-gray-400">Maksimal 10MB per file</p>
                         </div>
                     </div>
                     <div class="flex items-start space-x-3">
                         <i class="fas fa-check-circle text-green-400 mt-1"></i>
                         <div>
-                            <p class="font-semibold text-white">Multiple Upload</p>
-                            <p class="text-gray-400">Up to 10 files at once</p>
+                            <p class="font-semibold text-white">Upload Banyak File</p>
+                            <p class="text-gray-400">Hingga 10 file sekaligus</p>
                         </div>
                     </div>
                     <div class="flex items-start space-x-3">
                         <i class="fas fa-check-circle text-green-400 mt-1"></i>
                         <div>
-                            <p class="font-semibold text-white">Auto Processing</p>
-                            <p class="text-gray-400">OCR extraction starts automatically</p>
+                            <p class="font-semibold text-white">Proses Otomatis</p>
+                            <p class="text-gray-400">Ekstraksi OCR dimulai otomatis</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <i class="fas fa-users text-purple-400 mt-1"></i>
+                        <div>
+                            <p class="font-semibold text-white">Akses Upload</p>
+                            <p class="text-gray-400">Semua user company dapat upload</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <i class="fas fa-lock text-yellow-400 mt-1"></i>
+                        <div>
+                            <p class="font-semibold text-white">Data Privat</p>
+                            <p class="text-gray-400">Hanya terlihat oleh company Anda</p>
                         </div>
                     </div>
                 </div>
                 <div class="mt-4 p-4 bg-blue-600/10 border border-blue-500/30 rounded-lg">
                     <p class="text-sm text-blue-300">
                         <i class="fas fa-lightbulb mr-2"></i>
-                        <strong>Tip:</strong> For duplicate files (same bank, same hash), the system will automatically replace the old data with new upload, clearing all previous transactions and OCR results.
+                        <strong>Tips:</strong> Untuk file duplikat (bank sama, hash sama), sistem akan otomatis mengganti data lama dengan upload baru, menghapus semua transaksi dan hasil OCR sebelumnya.
+                    </p>
+                </div>
+                
+                {{-- Additional Info for All Users --}}
+                <div class="mt-4 p-4 bg-green-600/10 border border-green-500/30 rounded-lg">
+                    <p class="text-sm text-green-300">
+                        <i class="fas fa-user-check mr-2"></i>
+                        <strong>Informasi:</strong> Semua user di company dapat mengupload bank statement. Upload yang dilakukan akan tercatat dengan nama user yang melakukan upload.
                     </p>
                 </div>
             </div>
@@ -270,7 +300,7 @@
             
             // Validate max 10 files
             if (files.length > 10) {
-                showAlert('Maximum 10 files allowed at once!', 'error');
+                showAlert('Maksimal 10 file sekaligus!', 'error');
                 filesInput.value = '';
                 return;
             }
@@ -301,7 +331,7 @@
                         <div class="flex-1 min-w-0">
                             <p class="text-white font-semibold truncate">${file.name}</p>
                             <p class="text-sm ${isValid ? 'text-gray-400' : 'text-red-400'}">
-                                ${fileSize} MB ${!isValid ? '- TOO LARGE!' : ''}
+                                ${fileSize} MB ${!isValid ? '- TERLALU BESAR!' : ''}
                             </p>
                         </div>
                     </div>
@@ -317,7 +347,7 @@
             uploadBtn.disabled = hasInvalidFile;
             
             if (hasInvalidFile) {
-                showAlert('One or more files exceed 10MB limit!', 'error');
+                showAlert('Satu atau lebih file melebihi batas 10MB!', 'error');
             }
         }
 
@@ -339,19 +369,19 @@
 
             if (!bankId) {
                 e.preventDefault();
-                showAlert('Please select a bank!', 'error');
+                showAlert('Silakan pilih bank!', 'error');
                 return;
             }
 
             if (files.length === 0) {
                 e.preventDefault();
-                showAlert('Please select at least one PDF file!', 'error');
+                showAlert('Silakan pilih minimal satu file PDF!', 'error');
                 return;
             }
 
             if (files.length > 10) {
                 e.preventDefault();
-                showAlert('Maximum 10 files allowed!', 'error');
+                showAlert('Maksimal 10 file diperbolehkan!', 'error');
                 return;
             }
 
@@ -359,14 +389,14 @@
             for (let file of files) {
                 if (file.size > 10 * 1024 * 1024) {
                     e.preventDefault();
-                    showAlert(`File "${file.name}" exceeds 10MB limit!`, 'error');
+                    showAlert(`File "${file.name}" melebihi batas 10MB!`, 'error');
                     return;
                 }
             }
 
             // Show loading state
             uploadBtn.disabled = true;
-            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading & Processing...';
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mengupload & Memproses...';
         });
 
         // Show Alert Function
@@ -401,8 +431,8 @@
 
         // Auto-hide success/error messages after 10 seconds
         setTimeout(() => {
-            document.querySelectorAll('.bg-green-600\\/20, .bg-red-600\\/20').forEach(el => {
-                if (el.textContent.includes('successfully') || el.textContent.includes('failed')) {
+            document.querySelectorAll('.bg-green-600\\/20, .bg-red-600\\/20, .bg-blue-600\\/20').forEach(el => {
+                if (!el.closest('#uploadSection')) {
                     el.style.transition = 'opacity 0.5s';
                     el.style.opacity = '0';
                     setTimeout(() => el.remove(), 500);
