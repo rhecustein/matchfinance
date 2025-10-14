@@ -31,72 +31,73 @@ class TypeSeeder extends Seeder
         // ============================================
         // STANDARD TRANSACTION TYPES
         // Type categories untuk klasifikasi transaksi
+        // Disesuaikan dengan data CSV yang dianalisis
         // ============================================
         
         $standardTypes = [
             [
-                'name' => 'Outlet',
-                'description' => 'Transaksi di outlet fisik atau toko retail (Apotek, minimarket, supermarket, dll)',
+                'name' => 'Pemasukan',
+                'description' => 'Semua transaksi uang masuk (Setoran, transfer masuk, penerimaan)',
                 'sort_order' => 1,
             ],
             [
-                'name' => 'Transaksi Perbankan',
-                'description' => 'Jenis-jenis transaksi perbankan umum (Setor tunai, tarik tunai, kliring)',
+                'name' => 'Pengeluaran',
+                'description' => 'Semua transaksi uang keluar (Pembayaran, biaya, pembelian)',
                 'sort_order' => 2,
             ],
             [
-                'name' => 'Transfer',
-                'description' => 'Transfer dana antar rekening atau antar bank (Transfer online, ATM, mobile banking)',
+                'name' => 'Transfer Internal',
+                'description' => 'Transfer antar rekening internal atau antar cabang',
                 'sort_order' => 3,
             ],
             [
-                'name' => 'Pembayaran',
-                'description' => 'Pembayaran tagihan dan layanan (Listrik, air, telepon, internet, BPJS, pajak)',
+                'name' => 'Biaya Operasional',
+                'description' => 'Biaya operasional perusahaan (BOP, utilitas, sewa)',
                 'sort_order' => 4,
             ],
             [
-                'name' => 'E-Commerce',
-                'description' => 'Transaksi belanja online di marketplace atau toko online',
+                'name' => 'Payroll',
+                'description' => 'Transaksi gaji, tunjangan, dan benefit karyawan',
                 'sort_order' => 5,
             ],
             [
-                'name' => 'E-Wallet',
-                'description' => 'Transaksi menggunakan dompet digital (GoPay, OVO, DANA, ShopeePay, LinkAja)',
+                'name' => 'Vendor & Supplier',
+                'description' => 'Transaksi dengan vendor dan supplier (Kimia Farma, distributor obat)',
                 'sort_order' => 6,
             ],
             [
-                'name' => 'Investasi',
-                'description' => 'Transaksi investasi dan sekuritas (Saham, reksadana, obligasi, emas)',
+                'name' => 'Transaksi Bank',
+                'description' => 'Transaksi perbankan (Transfer fee, admin bank, kliring)',
                 'sort_order' => 7,
             ],
             [
-                'name' => 'Pinjaman',
-                'description' => 'Transaksi terkait pinjaman (Cicilan, angsuran, pelunasan)',
+                'name' => 'Cash Transaction',
+                'description' => 'Transaksi tunai (COD, setoran tunai, penarikan)',
                 'sort_order' => 8,
             ],
             [
-                'name' => 'Biaya Bank',
-                'description' => 'Biaya administrasi dan layanan perbankan (Admin bulanan, biaya transfer, biaya ATM)',
+                'name' => 'Pinjaman & Piutang',
+                'description' => 'Transaksi pinjaman, piutang, dan bon karyawan',
                 'sort_order' => 9,
             ],
             [
-                'name' => 'Pajak',
-                'description' => 'Pembayaran dan pemotongan pajak (PPh, PPN, pajak bunga, pajak lainnya)',
+                'name' => 'Asuransi',
+                'description' => 'Transaksi terkait asuransi (Klaim, premi)',
                 'sort_order' => 10,
             ],
             [
-                'name' => 'Gaji & Tunjangan',
-                'description' => 'Penerimaan gaji, tunjangan, dan benefit karyawan',
+                'name' => 'Pajak',
+                'description' => 'Pembayaran dan pemotongan pajak',
                 'sort_order' => 11,
             ],
             [
-                'name' => 'Operasional',
-                'description' => 'Biaya operasional bisnis (Sewa, utilitas, pemeliharaan, ATK)',
+                'name' => 'Outlet & Cabang',
+                'description' => 'Transaksi dari outlet, apotek, dan cabang',
                 'sort_order' => 12,
             ],
             [
-                'name' => 'Transportasi',
-                'description' => 'Biaya transportasi dan logistik (Bensin, tol, parkir, pengiriman)',
+                'name' => 'Pembelian',
+                'description' => 'Pembelian obat, alat kesehatan, dan inventaris',
                 'sort_order' => 13,
             ],
             [
@@ -135,21 +136,21 @@ class TypeSeeder extends Seeder
             $this->command->info("   Types per company: " . count($standardTypes));
             
             $this->command->newLine();
-            $this->command->info('📊 Type Categories:');
-            $this->command->info('   1. Outlet - Transaksi retail fisik');
-            $this->command->info('   2. Transaksi Perbankan - Operasi perbankan umum');
-            $this->command->info('   3. Transfer - Transfer dana');
-            $this->command->info('   4. Pembayaran - Pembayaran tagihan');
-            $this->command->info('   5. E-Commerce - Belanja online');
-            $this->command->info('   6. E-Wallet - Dompet digital');
-            $this->command->info('   7. Investasi - Investasi & sekuritas');
-            $this->command->info('   8. Pinjaman - Cicilan & angsuran');
-            $this->command->info('   9. Biaya Bank - Administrasi bank');
-            $this->command->info('   10. Pajak - Pembayaran pajak');
-            $this->command->info('   11. Gaji & Tunjangan - Payroll');
-            $this->command->info('   12. Operasional - Biaya operasional');
-            $this->command->info('   13. Transportasi - Logistik & transport');
-            $this->command->info('   14. Lain-lain - Uncategorized');
+            $this->command->info('📊 Type Categories Created:');
+            $this->command->info('   1. Pemasukan - All incoming transactions');
+            $this->command->info('   2. Pengeluaran - All outgoing transactions');
+            $this->command->info('   3. Transfer Internal - Internal transfers');
+            $this->command->info('   4. Biaya Operasional - Operational costs');
+            $this->command->info('   5. Payroll - Employee salaries');
+            $this->command->info('   6. Vendor & Supplier - Vendor payments');
+            $this->command->info('   7. Transaksi Bank - Banking transactions');
+            $this->command->info('   8. Cash Transaction - Cash operations');
+            $this->command->info('   9. Pinjaman & Piutang - Loans & receivables');
+            $this->command->info('   10. Asuransi - Insurance');
+            $this->command->info('   11. Pajak - Tax payments');
+            $this->command->info('   12. Outlet & Cabang - Branch transactions');
+            $this->command->info('   13. Pembelian - Purchases');
+            $this->command->info('   14. Lain-lain - Others');
         } else {
             $this->command->warn('⚠️  No types created. Check if companies exist.');
         }

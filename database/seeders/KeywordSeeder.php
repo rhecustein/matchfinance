@@ -13,413 +13,291 @@ class KeywordSeeder extends Seeder
      * Run the database seeds.
      * 
      * Note: Seeder ini membutuhkan:
-     * - Companies table sudah terisi (CompanySeeder)
-     * - Types table sudah terisi (TypeSeeder)
-     * - Categories table sudah terisi (CategorySeeder)
      * - SubCategories table sudah terisi (SubCategorySeeder)
      */
     public function run(): void
     {
-        $this->command->info('🔑 Seeding Keywords...');
+        // Get all sub-categories with their names
+        $subCategories = DB::table('sub_categories')
+            ->select('id', 'company_id', 'name')
+            ->orderBy('company_id')
+            ->orderBy('priority', 'desc')
+            ->get();
         
-        $now = Carbon::now();
-        
-        // Ambil semua companies
-        $companies = DB::table('companies')->get();
-        
-        if ($companies->isEmpty()) {
-            $this->command->warn('⚠️  No companies found! Please run CompanySeeder first.');
+        if ($subCategories->isEmpty()) {
+            $this->command->warn('⚠️  No sub-categories found! Please run SubCategorySeeder first.');
             return;
         }
 
+        $now = Carbon::now();
         $allKeywords = [];
-        $stats = [];
-
-        // ============================================
-        // GENERATE KEYWORDS PER COMPANY
-        // ============================================
-        foreach ($companies as $company) {
-            $this->command->info("   Processing: {$company->name}");
+        
+        // Keywords mapping per sub-category name (based on actual transaction patterns from CSV)
+        $keywordMappings = [
+            // SETORAN Keywords
+            'Setoran LIPH' => [
+                ['keyword' => 'LIPH', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false],
+                ['keyword' => 'setor tunai.*LIPH', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true],
+                ['keyword' => 'setoran tunai.*LIPH', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true],
+            ],
+            'Setoran Apotek' => [
+                ['keyword' => 'setor tunai.*apotek', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true],
+                ['keyword' => 'setoran.*apotek', 'match_type' => 'regex', 'priority' => 9, 'is_regex' => true],
+                ['keyword' => 'PTUGBKS', 'match_type' => 'contains', 'priority' => 8, 'is_regex' => false],
+            ],
+            'Setoran Klinik' => [
+                ['keyword' => 'setor tunai.*klinik', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true],
+                ['keyword' => 'setoran.*klinik', 'match_type' => 'regex', 'priority' => 9, 'is_regex' => true],
+                ['keyword' => 'klinik', 'match_type' => 'contains', 'priority' => 6, 'is_regex' => false],
+            ],
+            'Setoran Cabang Bekasi' => [
+                ['keyword' => 'setor.*bekasi', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true],
+                ['keyword' => 'bekasi.*setor', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true],
+                ['keyword' => 'MG3 BEKASI', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false],
+            ],
+            'Setoran Wisma Asri' => [
+                ['keyword' => 'setor.*wisma', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true],
+                ['keyword' => 'wisma.*asri.*setor', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true],
+                ['keyword' => 'wisma asri', 'match_type' => 'contains', 'priority' => 8, 'is_regex' => false],
+            ],
             
-            // Ambil categories untuk company ini
-            $categories = DB::table('categories')
-                ->where('company_id', $company->id)
-                ->get();
+            // TRANSFER BANK Keywords
+            'Transfer BCA' => [
+                ['keyword' => 'CENAIDJA', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false],
+                ['keyword' => 'BCANIDJA', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false],
+            ],
+            'Transfer BNI' => [
+                ['keyword' => 'BNINIDJA', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false],
+            ],
+            'Transfer BSI' => [
+                ['keyword' => 'BSI DR', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false],
+                ['keyword' => 'BSIIIDJA', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false],
+            ],
             
-            if ($categories->isEmpty()) {
-                $this->command->warn("   ⚠️  No categories found for {$company->name}");
-                continue;
+            // PENERIMAAN OPERASIONAL Keywords
+            'COD' => [
+                ['keyword' => 'COD', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false],
+                ['keyword' => 'cod ke', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false],
+                ['keyword' => 'cash on delivery', 'match_type' => 'contains', 'priority' => 8, 'is_regex' => false],
+            ],
+            'Klaim Asuransi' => [
+                ['keyword' => 'asuransi', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false],
+                ['keyword' => 'klaim.*asuransi', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true],
+            ],
+            
+            // PEMBAYARAN VENDOR Keywords
+            'Kimia Farma Apotek' => [
+                ['keyword' => 'KIMIA FARMA APOTEK', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false],
+                ['keyword' => 'DARI KIMIA FARMA', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false],
+                ['keyword' => 'KE KIMIA FARMA', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false],
+                ['keyword' => 'kimia farma', 'match_type' => 'contains', 'priority' => 8, 'is_regex' => false],
+            ],
+            'PT Penta Valent' => [
+                ['keyword' => 'PENTA VALENT TBK PT', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false],
+                ['keyword' => 'PENTA VALENT', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false],
+            ],
+            
+            // BIAYA ADMIN Keywords
+            'Transfer Fee' => [
+                ['keyword' => 'Transfer Fee', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false],
+                ['keyword' => 'fee99102', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false],
+            ],
+            
+            // PEMBELIAN Keywords
+            'Pembelian Medicine' => [
+                ['keyword' => 'pemb.*medicine', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true],
+                ['keyword' => 'pemb.*box.*medicine', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true],
+                ['keyword' => 'medicine', 'match_type' => 'contains', 'priority' => 7, 'is_regex' => false],
+            ],
+            'Pembelian Alkes' => [
+                ['keyword' => 'pemb.*alkes', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true],
+                ['keyword' => 'alat kesehatan', 'match_type' => 'contains', 'priority' => 8, 'is_regex' => false],
+            ],
+            
+            // TRANSFER INTERNAL Keywords
+            'MCM InhouseTrf DARI' => [
+                ['keyword' => 'MCM InhouseTrf DARI', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false],
+                ['keyword' => 'InhouseTrf DARI', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false],
+            ],
+            'MCM InhouseTrf KE' => [
+                ['keyword' => 'MCM InhouseTrf KE', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false],
+                ['keyword' => 'InhouseTrf KE', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false],
+            ],
+            
+            // BOP Keywords
+            'BOP Februari' => [
+                ['keyword' => 'BOP FEBRUARI 2025', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false],
+                ['keyword' => 'BOP FEBRUARI', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false],
+            ],
+            'BOP Januari' => [
+                ['keyword' => 'BOP JANUARI', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false],
+            ],
+            'BOP Maret' => [
+                ['keyword' => 'BOP MARET', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false],
+            ],
+            
+            // PAYROLL Keywords - based on actual names in transactions
+            'Gaji Staff' => [
+                ['keyword' => 'LISA ANGGRAINI', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false],
+                ['keyword' => 'RIRIS MEGASARI RAJAGUKGU', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false],
+                ['keyword' => 'RINI RISNAWATI', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false],
+                ['keyword' => 'SHERLY LENGGOGENY', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false],
+                ['keyword' => 'KRISTINA UTAMI', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false],
+                ['keyword' => 'ARINI RIANTI', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false],
+                ['keyword' => 'gaji', 'match_type' => 'contains', 'priority' => 8, 'is_regex' => false],
+                ['keyword' => 'payroll', 'match_type' => 'contains', 'priority' => 8, 'is_regex' => false],
+            ],
+            
+            // POTONGAN Keywords
+            'Potongan Koperasi' => [
+                ['keyword' => 'POT KOP', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false],
+                ['keyword' => 'potongan koperasi', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false],
+            ],
+            
+            // BON KARYAWAN Keywords
+            'Bon Sementara' => [
+                ['keyword' => 'bon sementara', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false],
+                ['keyword' => 'bon.*sementara', 'match_type' => 'regex', 'priority' => 9, 'is_regex' => true],
+            ],
+            
+            // OUTLET Keywords
+            'Apotek Bekasi' => [
+                ['keyword' => 'apotek.*bekasi', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true],
+                ['keyword' => 'bekasi.*apotek', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true],
+            ],
+            'Apotek Wisma Asri' => [
+                ['keyword' => 'apotek.*wisma', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true],
+                ['keyword' => 'wisma.*apotek', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true],
+            ],
+            'Apotek Kranggan' => [
+                ['keyword' => 'kf kranggan', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false],
+                ['keyword' => 'apotek.*kranggan', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true],
+            ],
+        ];
+        
+        $totalKeywords = 0;
+        
+        // Generate keywords for each sub-category
+        foreach ($subCategories as $subCategory) {
+            $subCategoryName = $subCategory->name;
+            
+            // Check if we have keywords for this sub-category
+            if (isset($keywordMappings[$subCategoryName])) {
+                foreach ($keywordMappings[$subCategoryName] as $keyword) {
+                    $allKeywords[] = [
+                        'uuid' => Str::uuid(),
+                        'company_id' => $subCategory->company_id,
+                        'sub_category_id' => $subCategory->id,
+                        'keyword' => $keyword['keyword'],
+                        'is_regex' => $keyword['is_regex'],
+                        'case_sensitive' => false,
+                        'match_type' => $keyword['match_type'],
+                        'pattern_description' => "Pattern for matching {$subCategoryName} transactions",
+                        'priority' => $keyword['priority'],
+                        'is_active' => true,
+                        'match_count' => 0,
+                        'last_matched_at' => null,
+                        'created_at' => $now->copy()->subDays(rand(5, 120)),
+                        'updated_at' => $now,
+                        'deleted_at' => null,
+                    ];
+                    $totalKeywords++;
+                }
+            } else {
+                // Add a generic keyword for unmapped sub-categories
+                $genericKeyword = strtolower(str_replace([' - ', ' '], ['_', '_'], $subCategoryName));
+                $allKeywords[] = [
+                    'uuid' => Str::uuid(),
+                    'company_id' => $subCategory->company_id,
+                    'sub_category_id' => $subCategory->id,
+                    'keyword' => $genericKeyword,
+                    'is_regex' => false,
+                    'case_sensitive' => false,
+                    'match_type' => 'contains',
+                    'pattern_description' => "Generic pattern for {$subCategoryName}",
+                    'priority' => 5,
+                    'is_active' => true,
+                    'match_count' => 0,
+                    'last_matched_at' => null,
+                    'created_at' => $now->copy()->subDays(rand(5, 120)),
+                    'updated_at' => $now,
+                    'deleted_at' => null,
+                ];
+                $totalKeywords++;
             }
-            
-            $categoryIds = $categories->pluck('id')->toArray();
-            
-            // Ambil sub_categories dari categories company ini
-            $subCategories = DB::table('sub_categories')
-                ->whereIn('category_id', $categoryIds)
-                ->get()
-                ->keyBy('name');
-            
-            if ($subCategories->isEmpty()) {
-                $this->command->warn("   ⚠️  No sub categories found for {$company->name}");
-                continue;
-            }
-
-            $companyKeywords = $this->generateKeywordsForCompany($company, $subCategories, $now);
-            $allKeywords = array_merge($allKeywords, $companyKeywords);
-            
-            $stats[$company->name] = count($companyKeywords);
         }
 
-        // ============================================
-        // INSERT KEYWORDS
-        // ============================================
         if (!empty($allKeywords)) {
-            // Insert in chunks untuk menghindari query terlalu besar
+            // Insert in chunks to avoid memory issues
             $chunks = array_chunk($allKeywords, 100);
             foreach ($chunks as $chunk) {
                 DB::table('keywords')->insert($chunk);
             }
             
-            $totalKeywords = count($allKeywords);
-            $this->command->newLine();
-            $this->command->info("✅ {$totalKeywords} Keywords seeded successfully!");
-            $this->command->newLine();
+            $this->command->info('✅ Keywords seeded successfully!');
+            $this->command->info("   Total keywords: " . count($allKeywords));
             
-            // Display stats per company
-            $this->command->info('📊 Keywords per Company:');
-            foreach ($stats as $companyName => $count) {
-                $this->command->info("   • {$companyName}: {$count} keywords");
+            // Display statistics
+            $stats = DB::table('keywords')
+                ->select('match_type', DB::raw('count(*) as count'))
+                ->groupBy('match_type')
+                ->get();
+            
+            $this->command->newLine();
+            $this->command->info('📊 Match Type Distribution:');
+            foreach ($stats as $stat) {
+                $this->command->info("   {$stat->match_type}: {$stat->count} keywords");
             }
+            
+            // Show regex vs non-regex
+            $regexStats = DB::table('keywords')
+                ->select('is_regex', DB::raw('count(*) as count'))
+                ->groupBy('is_regex')
+                ->get();
+            
+            $this->command->newLine();
+            $this->command->info('🔍 Pattern Types:');
+            foreach ($regexStats as $stat) {
+                $type = $stat->is_regex ? 'Regex patterns' : 'Simple patterns';
+                $this->command->info("   {$type}: {$stat->count}");
+            }
+            
+            // Show priority distribution
+            $priorityStats = DB::table('keywords')
+                ->select('priority', DB::raw('count(*) as count'))
+                ->groupBy('priority')
+                ->orderBy('priority', 'desc')
+                ->get();
+            
+            $this->command->newLine();
+            $this->command->info('🎯 Priority Distribution:');
+            foreach ($priorityStats as $stat) {
+                $bar = str_repeat('▓', min($stat->count / 5, 20));
+                $this->command->info("   Priority {$stat->priority}: {$bar} ({$stat->count})");
+            }
+            
+            // Top keywords by sub-category
+            $topSubCategories = DB::table('sub_categories')
+                ->join('keywords', 'sub_categories.id', '=', 'keywords.sub_category_id')
+                ->select('sub_categories.name', DB::raw('count(keywords.id) as keyword_count'))
+                ->groupBy('sub_categories.name')
+                ->orderBy('keyword_count', 'desc')
+                ->limit(5)
+                ->get();
+            
+            $this->command->newLine();
+            $this->command->info('🏆 Top 5 Sub-Categories by Keyword Count:');
+            foreach ($topSubCategories as $idx => $subCat) {
+                $this->command->info("   " . ($idx + 1) . ". {$subCat->name}: {$subCat->keyword_count} keywords");
+            }
+            
+            $this->command->newLine();
+            $this->command->info('💡 Tip: Keywords are ready for transaction matching!');
+            $this->command->info('   - High priority (10) keywords are checked first');
+            $this->command->info('   - Regex patterns allow flexible matching');
+            $this->command->info('   - Match counts track keyword effectiveness');
         } else {
-            $this->command->warn('⚠️  No keywords created. Check if sub_categories exist.');
+            $this->command->warn('⚠️  No keywords created. Check if sub-categories exist.');
         }
-    }
-
-    /**
-     * Generate keywords untuk satu company
-     */
-    private function generateKeywordsForCompany($company, $subCategories, $now): array
-    {
-        $keywords = [];
-        $companySlug = $company->slug;
-
-        // ============================================
-        // KEYWORDS BERDASARKAN COMPANY
-        // ============================================
-        
-        switch ($companySlug) {
-            case 'kimia-farma-apotek':
-                $keywords = $this->getKimiaFarmaApotekKeywords($company->id, $subCategories, $now);
-                break;
-                
-            case 'kimia-farma-diagnostika':
-                $keywords = $this->getKimiaFarmaDiagnostikaKeywords($company->id, $subCategories, $now);
-                break;
-                
-            case 'albahjah':
-                $keywords = $this->getAlbahjahKeywords($company->id, $subCategories, $now);
-                break;
-                
-            default:
-                // Default keywords untuk company lain
-                $keywords = $this->getDefaultKeywords($company->id, $subCategories, $now);
-                break;
-        }
-
-        return $keywords;
-    }
-
-    /**
-     * Keywords untuk PT Kimia Farma Apotek
-     */
-    private function getKimiaFarmaApotekKeywords($companyId, $subCategories, $now): array
-    {
-        $keywords = [];
-
-        // APOTEK - Kimia Farma
-        if (isset($subCategories['Kimia Farma'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Kimia Farma']->id, 'APOTEK KIMIA FARMA', 10, 'contains', false, false, 'Transaksi di Apotek Kimia Farma', 234, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Kimia Farma']->id, 'KIMIA FARMA QR', 9, 'contains', false, false, 'Pembayaran QR Kimia Farma', 145, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Kimia Farma']->id, 'KF-', 8, 'starts_with', false, false, 'Kode outlet Kimia Farma', 178, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Kimia Farma']->id, '/KF\d{4}/', 9, 'regex', true, false, 'Pattern KF + 4 digit angka', 89, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Kimia Farma']->id, 'KLINIK KIMIA FARMA', 8, 'contains', false, false, 'Klinik Kimia Farma', 67, $now);
-        }
-
-        // APOTEK - Guardian
-        if (isset($subCategories['Guardian'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Guardian']->id, 'GUARDIAN', 10, 'contains', false, false, 'Pembelian di Guardian', 167, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Guardian']->id, 'GUARDIAN HEALTH', 9, 'contains', false, false, 'Guardian Health & Beauty', 89, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Guardian']->id, 'GRD', 7, 'starts_with', false, false, 'Kode Guardian', 45, $now);
-        }
-
-        // APOTEK - Century
-        if (isset($subCategories['Century Healthcare'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Century Healthcare']->id, 'CENTURY HEALTHCARE', 10, 'contains', false, false, 'Belanja di Century', 134, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Century Healthcare']->id, 'CENTURY', 9, 'contains', false, false, 'Century outlet', 198, $now);
-        }
-
-        // MINIMARKET - Indomaret
-        if (isset($subCategories['Indomaret'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Indomaret']->id, 'INDOMARET', 10, 'contains', false, false, 'Belanja di Indomaret', 456, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Indomaret']->id, 'INDO MARET', 9, 'contains', false, false, 'Indomaret dengan spasi', 78, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Indomaret']->id, 'IDM', 8, 'starts_with', false, false, 'Kode Indomaret', 123, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Indomaret']->id, '/INDOMARET\s+\d+/', 8, 'regex', true, false, 'Indomaret + nomor cabang', 167, $now);
-        }
-
-        // MINIMARKET - Alfamart
-        if (isset($subCategories['Alfamart'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Alfamart']->id, 'ALFAMART', 10, 'contains', false, false, 'Belanja di Alfamart', 389, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Alfamart']->id, 'ALFA MART', 9, 'contains', false, false, 'Alfamart dengan spasi', 134, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Alfamart']->id, 'ALF', 7, 'starts_with', false, false, 'Kode Alfamart', 89, $now);
-        }
-
-        // MINIMARKET - Alfamidi
-        if (isset($subCategories['Alfamidi'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Alfamidi']->id, 'ALFAMIDI', 10, 'contains', false, false, 'Belanja di Alfamidi', 145, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Alfamidi']->id, 'ALFA MIDI', 8, 'contains', false, false, 'Alfamidi dengan spasi', 56, $now);
-        }
-
-        // E-WALLET - QRIS
-        if (isset($subCategories['QRIS'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['QRIS']->id, 'QRIS', 10, 'contains', false, false, 'Pembayaran QRIS', 678, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['QRIS']->id, 'QR CODE', 8, 'contains', false, false, 'Pembayaran QR', 345, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['QRIS']->id, '/QR\s*PAYMENT/', 7, 'regex', true, false, 'QR Payment pattern', 123, $now);
-        }
-
-        // E-WALLET - GoPay
-        if (isset($subCategories['GoPay'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['GoPay']->id, 'GOPAY', 10, 'contains', false, false, 'Transfer GoPay', 556, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['GoPay']->id, 'GO-PAY', 9, 'contains', false, false, 'GoPay dengan strip', 234, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['GoPay']->id, 'GOJEK', 8, 'contains', false, false, 'Transaksi Gojek', 189, $now);
-        }
-
-        // E-WALLET - OVO
-        if (isset($subCategories['OVO'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['OVO']->id, 'OVO', 10, 'contains', false, false, 'Pembayaran OVO', 489, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['OVO']->id, '/^OVO\s/', 9, 'regex', true, false, 'OVO di awal kalimat', 167, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['OVO']->id, '/OVO\s*-/', 8, 'regex', true, false, 'OVO dengan strip', 123, $now);
-        }
-
-        // E-WALLET - DANA
-        if (isset($subCategories['Dana'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Dana']->id, 'DANA', 10, 'contains', false, false, 'Transfer DANA', 523, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Dana']->id, '/DANA\s*-\s*\d+/', 8, 'regex', true, false, 'DANA dengan referensi', 156, $now);
-        }
-
-        // E-WALLET - ShopeePay
-        if (isset($subCategories['ShopeePay'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['ShopeePay']->id, 'SHOPEEPAY', 10, 'contains', false, false, 'Pembayaran ShopeePay', 378, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['ShopeePay']->id, 'SHOPEE PAY', 9, 'contains', false, false, 'ShopeePay dengan spasi', 145, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['ShopeePay']->id, 'SPay', 7, 'contains', false, false, 'Singkatan ShopeePay', 67, $now);
-        }
-
-        // E-COMMERCE - Tokopedia
-        if (isset($subCategories['Tokopedia'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Tokopedia']->id, 'TOKOPEDIA', 10, 'contains', false, false, 'Belanja di Tokopedia', 267, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Tokopedia']->id, 'TOKPED', 8, 'contains', false, false, 'Singkatan Tokopedia', 89, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Tokopedia']->id, '/TOPED/', 7, 'regex', true, false, 'Pattern Tokped', 45, $now);
-        }
-
-        // E-COMMERCE - Shopee
-        if (isset($subCategories['Shopee'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Shopee']->id, 'SHOPEE', 10, 'contains', false, false, 'Belanja di Shopee', 345, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Shopee']->id, '/SHOPEE\s*ID/', 8, 'regex', true, false, 'Shopee Indonesia', 123, $now);
-        }
-
-        // TRANSPORTASI - Pertamina
-        if (isset($subCategories['Pertamina'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Pertamina']->id, 'PERTAMINA', 10, 'contains', false, false, 'Isi BBM Pertamina', 456, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Pertamina']->id, 'SPBU PERTAMINA', 9, 'contains', false, false, 'SPBU Pertamina', 234, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Pertamina']->id, '/SPBU\s*\d+/', 8, 'regex', true, false, 'SPBU dengan nomor', 167, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Pertamina']->id, 'PERTALITE', 7, 'contains', false, false, 'Pembelian Pertalite', 89, $now);
-        }
-
-        // PEMBAYARAN - PLN Pascabayar
-        if (isset($subCategories['PLN Pascabayar'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['PLN Pascabayar']->id, 'PLN PASCABAYAR', 10, 'contains', false, false, 'Bayar listrik pascabayar', 67, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['PLN Pascabayar']->id, 'TAGIHAN PLN', 9, 'contains', false, false, 'Tagihan listrik', 45, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['PLN Pascabayar']->id, '/PLN\s*POSTPAID/', 8, 'regex', true, false, 'PLN postpaid', 23, $now);
-        }
-
-        // PEMBAYARAN - Token PLN
-        if (isset($subCategories['Token PLN'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Token PLN']->id, 'TOKEN PLN', 10, 'contains', false, false, 'Beli token listrik', 123, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Token PLN']->id, 'TOKEN LISTRIK', 9, 'contains', false, false, 'Token listrik prabayar', 89, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Token PLN']->id, '/TOKEN\s*\d{20}/', 8, 'regex', true, false, 'Token dengan 20 digit', 56, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Token PLN']->id, 'PLN PREPAID', 7, 'contains', false, false, 'PLN prabayar', 34, $now);
-        }
-
-        // PEMBAYARAN - Pulsa
-        if (isset($subCategories['Pulsa'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Pulsa']->id, 'PULSA', 10, 'contains', false, false, 'Pembelian pulsa', 178, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Pulsa']->id, '/PULSA\s*(TELKOMSEL|XL|INDOSAT|TRI)/', 9, 'regex', true, false, 'Pulsa provider', 123, $now);
-        }
-
-        // RESTORAN - Fast Food
-        if (isset($subCategories['Fast Food'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Fast Food']->id, 'MCDONALD', 9, 'contains', false, false, 'McDonald\'s', 89, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Fast Food']->id, 'KFC', 9, 'contains', false, false, 'Kentucky Fried Chicken', 134, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Fast Food']->id, 'BURGER KING', 8, 'contains', false, false, 'Burger King', 45, $now);
-        }
-
-        // RESTORAN - Cafe
-        if (isset($subCategories['Cafe & Coffee Shop'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Cafe & Coffee Shop']->id, 'STARBUCKS', 9, 'contains', false, false, 'Starbucks Coffee', 156, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Cafe & Coffee Shop']->id, 'KOPI KENANGAN', 9, 'contains', false, false, 'Kopi Kenangan', 123, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Cafe & Coffee Shop']->id, 'JANJI JIWA', 8, 'contains', false, false, 'Janji Jiwa', 89, $now);
-        }
-
-        return $keywords;
-    }
-
-    /**
-     * Keywords untuk PT Kimia Farma Diagnostika
-     */
-    private function getKimiaFarmaDiagnostikaKeywords($companyId, $subCategories, $now): array
-    {
-        $keywords = [];
-
-        // Focus pada operasional lab
-        if (isset($subCategories['Kimia Farma'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Kimia Farma']->id, 'KIMIA FARMA DIAGNOSTIK', 10, 'contains', false, false, 'Lab KF Diagnostik', 89, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Kimia Farma']->id, 'KLINIK KIMIA FARMA', 9, 'contains', false, false, 'Klinik Kimia Farma', 67, $now);
-        }
-
-        if (isset($subCategories['Indomaret'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Indomaret']->id, 'INDOMARET', 9, 'contains', false, false, 'Belanja operasional', 167, $now);
-        }
-
-        if (isset($subCategories['QRIS'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['QRIS']->id, 'QRIS', 10, 'contains', false, false, 'Pembayaran QRIS', 289, $now);
-        }
-
-        if (isset($subCategories['Pertamina'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Pertamina']->id, 'PERTAMINA', 9, 'contains', false, false, 'BBM kendaraan operasional', 198, $now);
-        }
-
-        if (isset($subCategories['PLN Pascabayar'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['PLN Pascabayar']->id, 'PLN', 9, 'contains', false, false, 'Tagihan listrik lab', 34, $now);
-        }
-
-        return $keywords;
-    }
-
-    /**
-     * Keywords untuk ALBAHJAH (Trial User)
-     */
-    private function getAlbahjahKeywords($companyId, $subCategories, $now): array
-    {
-        $keywords = [];
-
-        // Basic keywords untuk trial user
-        if (isset($subCategories['Indomaret'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Indomaret']->id, 'INDOMARET', 10, 'contains', false, false, 'Belanja bulanan', 56, $now);
-        }
-
-        if (isset($subCategories['Alfamart'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Alfamart']->id, 'ALFAMART', 10, 'contains', false, false, 'Belanja harian', 78, $now);
-        }
-
-        if (isset($subCategories['QRIS'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['QRIS']->id, 'QRIS', 9, 'contains', false, false, 'Pembayaran digital', 123, $now);
-        }
-
-        if (isset($subCategories['GoPay'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['GoPay']->id, 'GOPAY', 9, 'contains', false, false, 'Transfer GoPay', 45, $now);
-        }
-
-        if (isset($subCategories['Dana'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Dana']->id, 'DANA', 9, 'contains', false, false, 'Transfer DANA', 67, $now);
-        }
-
-        if (isset($subCategories['Tokopedia'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Tokopedia']->id, 'TOKOPEDIA', 9, 'contains', false, false, 'Belanja online', 34, $now);
-        }
-
-        if (isset($subCategories['Shopee'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Shopee']->id, 'SHOPEE', 9, 'contains', false, false, 'Belanja marketplace', 45, $now);
-        }
-
-        if (isset($subCategories['Pertamina'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Pertamina']->id, 'PERTAMINA', 9, 'contains', false, false, 'BBM kendaraan', 56, $now);
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Pertamina']->id, 'SPBU', 7, 'contains', false, false, 'Isi bensin', 34, $now);
-        }
-
-        if (isset($subCategories['Token PLN'])) {
-            $keywords[] = $this->makeKeyword($companyId, $subCategories['Token PLN']->id, 'TOKEN PLN', 9, 'contains', false, false, 'Token listrik rumah', 23, $now);
-        }
-
-        return $keywords;
-    }
-
-    /**
-     * Default keywords untuk company lain
-     */
-    private function getDefaultKeywords($companyId, $subCategories, $now): array
-    {
-        $keywords = [];
-
-        // Add basic keywords untuk company baru
-        $basicKeywords = [
-            'QRIS' => ['QRIS', 10, 'Pembayaran QRIS'],
-            'Indomaret' => ['INDOMARET', 9, 'Belanja Indomaret'],
-            'Alfamart' => ['ALFAMART', 9, 'Belanja Alfamart'],
-            'GoPay' => ['GOPAY', 8, 'Transfer GoPay'],
-            'Dana' => ['DANA', 8, 'Transfer DANA'],
-        ];
-
-        foreach ($basicKeywords as $subCatName => $data) {
-            if (isset($subCategories[$subCatName])) {
-                $keywords[] = $this->makeKeyword(
-                    $companyId,
-                    $subCategories[$subCatName]->id,
-                    $data[0],
-                    $data[1],
-                    'contains',
-                    false,
-                    false,
-                    $data[2],
-                    0,
-                    $now
-                );
-            }
-        }
-
-        return $keywords;
-    }
-
-    /**
-     * Helper untuk membuat keyword array
-     */
-    private function makeKeyword(
-        int $companyId,
-        int $subCategoryId,
-        string $keyword,
-        int $priority = 5,
-        string $matchType = 'contains',
-        bool $isRegex = false,
-        bool $caseSensitive = false,
-        ?string $description = null,
-        int $matchCount = 0,
-        Carbon $now
-    ): array {
-        $lastMatched = $matchCount > 0 ? $now->copy()->subDays(rand(1, 60)) : null;
-
-        return [
-            'uuid' => Str::uuid(),
-            'company_id' => $companyId,
-            'sub_category_id' => $subCategoryId,
-            'keyword' => $keyword,
-            'is_regex' => $isRegex,
-            'case_sensitive' => $caseSensitive,
-            'match_type' => $matchType,
-            'pattern_description' => $description,
-            'priority' => $priority,
-            'is_active' => true,
-            'match_count' => $matchCount,
-            'last_matched_at' => $lastMatched,
-            'created_at' => $now->copy()->subDays(rand(30, 90)),
-            'updated_at' => $now,
-        ];
     }
 }

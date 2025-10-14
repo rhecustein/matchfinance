@@ -2,485 +2,441 @@
 
 namespace App\Services;
 
-use App\Models\StatementTransaction;
 use App\Models\Keyword;
+use App\Models\StatementTransaction;
+use App\Models\KeywordSuggestion;
 use App\Models\SubCategory;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 
 class KeywordSuggestionService
 {
     /**
-     * Analyze bank statement and suggest keywords
+     * Extract potential keywords dari description
+     * 
+     * @param string $description
+     * @return array
      */
-    public function analyzeBankStatement(int $bankStatementId, array $filters = []): array
+    public function extractPotentialKeywords(string $description): array
     {
-        Log::info('Analyzing transactions for keyword suggestions', [
-            'bank_statement_id' => $bankStatementId,
-            'filters' => $filters
-        ]);
-
-        // Get uncategorized transactions
-        $query = StatementTransaction::where('bank_statement_id', $bankStatementId)
-            ->whereNull('sub_category_id') // Uncategorized
-            ->orderBy('transaction_date', 'desc');
-
-        // Apply filters
-        if (!empty($filters['transaction_type'])) {
-            $query->where('transaction_type', $filters['transaction_type']);
-        }
-
-        if (!empty($filters['min_amount'])) {
-            $query->where('amount', '>=', $filters['min_amount']);
-        }
-
-        $transactions = $query->get();
-
-        if ($transactions->isEmpty()) {
-            return [];
-        }
-
-        // Group transactions by pattern
-        $suggestions = $this->groupTransactionsByPattern($transactions, $filters);
-
-        // Sort suggestions
-        $suggestions = $this->sortSuggestions($suggestions, $filters['sort_by'] ?? 'frequency');
-
-        Log::info('Analysis complete', [
-            'suggestions_count' => count($suggestions),
-            'total_transactions' => $transactions->count(),
-        ]);
-
-        return $suggestions;
-    }
-
-    /**
-     * Group transactions by similar patterns
-     */
-    private function groupTransactionsByPattern($transactions, array $filters): array
-    {
-        $groups = [];
-        $minFrequency = $filters['min_frequency'] ?? 2;
-        $includeSimilar = $filters['include_similar'] ?? true;
-
-        foreach ($transactions as $transaction) {
-            $description = $transaction->description;
-            
-            // Extract potential keywords
-            $keywords = $this->extractKeywords($description);
-            
-            if (empty($keywords)) {
-                continue;
-            }
-
-            // Get best keyword (most specific)
-            $suggestedKeyword = $this->getBestKeyword($keywords);
-
-            // Find similar transactions
-            $similarTransactions = $this->findSimilarTransactions(
-                $transaction->bank_statement_id,
-                $keywords,
-                $transaction->id
-            );
-
-            // Skip if frequency too low
-            if (count($similarTransactions) + 1 < $minFrequency) {
-                continue;
-            }
-
-            // Calculate group stats
-            $allTransactionIds = array_merge([$transaction->id], $similarTransactions);
-            $groupTransactions = StatementTransaction::whereIn('id', $allTransactionIds)->get();
-
-            $totalAmount = $groupTransactions->sum('amount');
-            $avgAmount = $groupTransactions->avg('amount');
-
-            // Create suggestion
-            $groupKey = md5($suggestedKeyword);
-            
-            if (!isset($groups[$groupKey])) {
-                $groups[$groupKey] = [
-                    'suggested_keyword' => $suggestedKeyword,
-                    'alternative_keywords' => array_values(array_unique($keywords)),
-                    'transaction_count' => count($allTransactionIds),
-                    'transaction_ids' => $allTransactionIds,
-                    'description_sample' => $description,
-                    'transaction_type' => $transaction->transaction_type,
-                    'total_amount' => $totalAmount,
-                    'average_amount' => $avgAmount,
-                    'frequency' => count($allTransactionIds),
-                    'priority_score' => $this->calculatePriorityScore($totalAmount, count($allTransactionIds)),
-                    'recommended_match_type' => $this->recommendMatchType($suggestedKeyword),
-                    'sample_transactions' => $groupTransactions->take(3)->map(function($t) {
-                        return [
-                            'id' => $t->id,
-                            'date' => $t->transaction_date->format('d M Y'),
-                            'description' => $t->description,
-                            'amount' => $t->amount,
-                        ];
-                    })->toArray(),
-                ];
-            }
-        }
-
-        return array_values($groups);
-    }
-
-    /**
-     * Extract keywords from transaction description
-     */
-    private function extractKeywords(string $description): array
-    {
-        $description = strtoupper(trim($description));
         $keywords = [];
-
-        // Pattern 1: Merchant names (uppercase words)
-        // Example: "TRSF E-WALLET OVO TOPUP"
-        if (preg_match_all('/\b[A-Z]{3,}(?:\s+[A-Z]{3,}){0,2}\b/', $description, $matches)) {
+        $description = strtoupper(trim($description));
+        
+        // Pattern 1: Extract nama merchant/toko (kata UPPERCASE berurutan)
+        // Contoh: "APOTEK KIMIA FARMA" atau "INDOMARET POINT"
+        if (preg_match_all('/\b[A-Z]{2,}(?:\s+[A-Z]+){0,3}\b/', $description, $matches)) {
             foreach ($matches[0] as $match) {
-                $keywords[] = trim($match);
-            }
-        }
-
-        // Pattern 2: Words with numbers (account/reference numbers)
-        // Example: "GIRO 1234567"
-        if (preg_match_all('/\b[A-Z]+\s+\d+/', $description, $matches)) {
-            foreach ($matches[0] as $match) {
-                // Extract only the text part
-                if (preg_match('/^([A-Z]+)/', $match, $textMatch)) {
-                    $keywords[] = $textMatch[1];
+                $match = trim($match);
+                if (strlen($match) >= 3 && !$this->isNoiseWord($match)) {
+                    $keywords[] = $match;
                 }
             }
         }
-
-        // Pattern 3: Common transaction types
-        $commonTypes = ['TRANSFER', 'TRSF', 'DEBIT', 'CREDIT', 'PAYMENT', 'BAYAR', 'TOPUP', 'TARIK'];
-        foreach ($commonTypes as $type) {
-            if (str_contains($description, $type)) {
-                // Get context around this word
-                $pattern = '/\b' . $type . '\b\s+([A-Z]+(?:\s+[A-Z]+){0,2})/';
-                if (preg_match($pattern, $description, $match)) {
-                    $keywords[] = trim($match[1]);
+        
+        // Pattern 2: Extract payment methods
+        $paymentPatterns = [
+            'QRIS', 'QR', 'EDC', 'ATM', 'TRANSFER', 'TRSF', 
+            'DEBIT', 'CREDIT', 'TOPUP', 'TARIK', 'SETOR'
+        ];
+        
+        foreach ($paymentPatterns as $pattern) {
+            if (stripos($description, $pattern) !== false) {
+                // Get context around payment method
+                $contextPattern = '/(\b\w+\s+)?' . preg_quote($pattern, '/') . '(\s+\w+)?/i';
+                if (preg_match($contextPattern, $description, $contextMatch)) {
+                    $keywords[] = trim($contextMatch[0]);
                 }
             }
         }
-
-        // Pattern 4: E-wallet and digital services
-        $digitalServices = ['OVO', 'GOPAY', 'DANA', 'SHOPEEPAY', 'LINKAJA', 'TOKOPEDIA', 'SHOPEE', 'LAZADA', 'GRAB'];
+        
+        // Pattern 3: E-wallets dan digital services
+        $digitalServices = [
+            'OVO', 'GOPAY', 'DANA', 'SHOPEEPAY', 'LINKAJA',
+            'TOKOPEDIA', 'SHOPEE', 'LAZADA', 'GRAB', 'GOJEK',
+            'BLIBLI', 'BUKALAPAK', 'TRAVELOKA'
+        ];
+        
         foreach ($digitalServices as $service) {
-            if (str_contains($description, $service)) {
+            if (stripos($description, $service) !== false) {
                 $keywords[] = $service;
+                
+                // Also extract variant (e.g., "GOPAY COINS")
+                $variantPattern = '/' . preg_quote($service, '/') . '\s+\w+/i';
+                if (preg_match($variantPattern, $description, $variantMatch)) {
+                    $keywords[] = strtoupper(trim($variantMatch[0]));
+                }
             }
         }
-
-        // Pattern 5: ATM/CDM locations
-        if (preg_match('/ATM|CDM/', $description)) {
-            $keywords[] = 'ATM';
-        }
-
-        // Remove noise words
-        $noiseWords = ['THE', 'AND', 'FOR', 'WITH', 'FROM', 'TO', 'IN', 'ON', 'AT', 'BY', 'IDR', 'RP'];
-        $keywords = array_filter($keywords, function($keyword) use ($noiseWords) {
-            return !in_array($keyword, $noiseWords) && strlen($keyword) >= 3;
-        });
-
-        // Remove duplicates and return
-        return array_values(array_unique($keywords));
-    }
-
-    /**
-     * Get best keyword from extracted keywords
-     */
-    private function getBestKeyword(array $keywords): string
-    {
-        if (empty($keywords)) {
-            return 'UNKNOWN';
-        }
-
-        // Prefer longer, more specific keywords
-        usort($keywords, function($a, $b) {
-            // Prioritize keywords with spaces (more specific)
-            $scoreA = strlen($a) + (substr_count($a, ' ') * 10);
-            $scoreB = strlen($b) + (substr_count($b, ' ') * 10);
-            return $scoreB - $scoreA;
-        });
-
-        return $keywords[0];
-    }
-
-    /**
-     * Find similar transactions based on keywords
-     */
-    private function findSimilarTransactions(int $bankStatementId, array $keywords, int $excludeId): array
-    {
-        $query = StatementTransaction::where('bank_statement_id', $bankStatementId)
-            ->where('id', '!=', $excludeId)
-            ->whereNull('sub_category_id'); // Only uncategorized
-
-        // Build search conditions
-        $query->where(function($q) use ($keywords) {
-            foreach ($keywords as $keyword) {
-                $q->orWhere('description', 'LIKE', "%{$keyword}%");
-            }
-        });
-
-        return $query->pluck('id')->toArray();
-    }
-
-    /**
-     * Calculate priority score for suggestion
-     */
-    private function calculatePriorityScore(float $totalAmount, int $frequency): int
-    {
-        // Score based on:
-        // - Frequency: more frequent = higher priority
-        // - Amount: higher amounts = higher priority
         
-        $frequencyScore = min($frequency * 2, 50); // Max 50 points
-        $amountScore = min(($totalAmount / 1000000) * 10, 50); // Max 50 points (normalize to millions)
-        
-        return (int) ($frequencyScore + $amountScore);
-    }
-
-    /**
-     * Recommend match type based on keyword pattern
-     */
-    private function recommendMatchType(string $keyword): string
-    {
-        // If contains special chars, recommend regex
-        if (preg_match('/[^A-Z0-9\s]/', $keyword)) {
-            return 'regex';
-        }
-
-        // If single word, recommend exact
-        if (!str_contains($keyword, ' ')) {
-            return 'exact';
-        }
-
-        // Default: contains
-        return 'contains';
-    }
-
-    /**
-     * Sort suggestions by specified criteria
-     */
-    private function sortSuggestions(array $suggestions, string $sortBy): array
-    {
-        usort($suggestions, function($a, $b) use ($sortBy) {
-            switch ($sortBy) {
-                case 'amount':
-                    return $b['total_amount'] <=> $a['total_amount'];
-                case 'count':
-                    return $b['transaction_count'] <=> $a['transaction_count'];
-                case 'frequency':
-                default:
-                    return $b['frequency'] <=> $a['frequency'];
+        // Pattern 4: Kode unik / reference numbers yang berulang
+        // Contoh: "TRX-123456" atau "INV/2024/001"
+        if (preg_match_all('/\b[A-Z]{2,}-\d+|\b[A-Z]+\/\d+/', $description, $refMatches)) {
+            foreach ($refMatches[0] as $ref) {
+                // Extract only the prefix part
+                if (preg_match('/^([A-Z]{2,})/', $ref, $prefixMatch)) {
+                    $keywords[] = $prefixMatch[1];
+                }
             }
+        }
+        
+        // Pattern 5: Recurring/subscription indicators
+        if (preg_match('/(RECURRING|MONTHLY|BULANAN|SUBSCRIPTION|LANGGANAN)/i', $description)) {
+            $keywords[] = 'RECURRING';
+        }
+        
+        // Remove duplicates dan filter noise
+        $keywords = array_unique($keywords);
+        $keywords = array_filter($keywords, function($keyword) {
+            return strlen($keyword) >= 3 && !$this->isNoiseWord($keyword);
         });
-
+        
+        return array_values($keywords);
+    }
+    
+    /**
+     * Check if word is noise/common word
+     */
+    private function isNoiseWord(string $word): bool
+    {
+        $noiseWords = [
+            'THE', 'AND', 'FOR', 'WITH', 'FROM', 'TO', 'IN', 'ON', 'AT', 'BY',
+            'IDR', 'RP', 'USD', 'DARI', 'KE', 'UNTUK', 'YANG', 'DAN', 'ATAU'
+        ];
+        
+        return in_array($word, $noiseWords) || is_numeric($word);
+    }
+    
+    /**
+     * Analyze unmatched transactions and suggest keywords
+     * 
+     * @param int $companyId
+     * @param int $limit
+     * @return array
+     */
+    public function analyzeUnmatchedTransactions(int $companyId, int $limit = 100): array
+    {
+        $unmatched = StatementTransaction::where('company_id', $companyId)
+            ->whereNull('matched_keyword_id')
+            ->orderBy('transaction_date', 'desc')
+            ->limit($limit)
+            ->get();
+        
+        $suggestions = [];
+        
+        foreach ($unmatched as $transaction) {
+            $potentialKeywords = $this->extractPotentialKeywords($transaction->description);
+            
+            foreach ($potentialKeywords as $keyword) {
+                $key = strtoupper($keyword);
+                
+                if (!isset($suggestions[$key])) {
+                    $suggestions[$key] = [
+                        'keyword' => $keyword,
+                        'occurrences' => 0,
+                        'total_debit' => 0,
+                        'total_credit' => 0,
+                        'sample_descriptions' => [],
+                        'transaction_ids' => [],
+                        'date_range' => [
+                            'first' => $transaction->transaction_date,
+                            'last' => $transaction->transaction_date
+                        ]
+                    ];
+                }
+                
+                $suggestions[$key]['occurrences']++;
+                $suggestions[$key]['total_debit'] += $transaction->debit_amount;
+                $suggestions[$key]['total_credit'] += $transaction->credit_amount;
+                $suggestions[$key]['transaction_ids'][] = $transaction->id;
+                
+                // Update date range
+                if ($transaction->transaction_date < $suggestions[$key]['date_range']['first']) {
+                    $suggestions[$key]['date_range']['first'] = $transaction->transaction_date;
+                }
+                if ($transaction->transaction_date > $suggestions[$key]['date_range']['last']) {
+                    $suggestions[$key]['date_range']['last'] = $transaction->transaction_date;
+                }
+                
+                // Keep max 3 sample descriptions
+                if (count($suggestions[$key]['sample_descriptions']) < 3) {
+                    $suggestions[$key]['sample_descriptions'][] = [
+                        'description' => $transaction->description,
+                        'amount' => $transaction->amount,
+                        'date' => $transaction->transaction_date->format('Y-m-d')
+                    ];
+                }
+            }
+        }
+        
+        // Calculate confidence score
+        foreach ($suggestions as &$suggestion) {
+            $suggestion['confidence'] = $this->calculateSuggestionConfidence($suggestion);
+            $suggestion['suggested_category'] = $this->suggestCategory($suggestion, $companyId);
+        }
+        
+        // Sort by confidence and occurrences
+        uasort($suggestions, function($a, $b) {
+            if ($a['confidence'] == $b['confidence']) {
+                return $b['occurrences'] <=> $a['occurrences'];
+            }
+            return $b['confidence'] <=> $a['confidence'];
+        });
+        
         return $suggestions;
     }
-
+    
     /**
-     * Get AI-powered category recommendations
+     * Calculate confidence score for keyword suggestion
      */
-    public function getAICategoryRecommendations(array $suggestions): array
+    private function calculateSuggestionConfidence(array $suggestion): int
     {
-        $recommendations = [];
-
-        foreach ($suggestions as $suggestion) {
-            $keyword = $suggestion['suggested_keyword'];
-            $transactionType = $suggestion['transaction_type'];
-            $avgAmount = $suggestion['average_amount'];
-
-            // Simple rule-based AI (can be enhanced with ML)
-            $category = $this->predictCategory($keyword, $transactionType, $avgAmount);
-
-            if ($category) {
-                $recommendations[$keyword] = [
-                    'category' => $category['name'],
-                    'sub_category' => $category['sub_category'] ?? null,
-                    'confidence' => $category['confidence'],
-                    'reason' => $category['reason'],
-                ];
+        $score = 0;
+        
+        // Occurrence weight (max 40 points)
+        if ($suggestion['occurrences'] >= 10) {
+            $score += 40;
+        } elseif ($suggestion['occurrences'] >= 5) {
+            $score += 30;
+        } elseif ($suggestion['occurrences'] >= 3) {
+            $score += 20;
+        } else {
+            $score += 10;
+        }
+        
+        // Keyword length weight (max 20 points)
+        $keywordLength = strlen($suggestion['keyword']);
+        if ($keywordLength >= 10) {
+            $score += 20; // Specific keywords
+        } elseif ($keywordLength >= 5) {
+            $score += 15;
+        } else {
+            $score += 5;
+        }
+        
+        // Pattern consistency (max 20 points)
+        // Check if amounts are similar
+        $hasConsistentAmount = false;
+        if ($suggestion['occurrences'] > 1) {
+            $amounts = [];
+            foreach ($suggestion['sample_descriptions'] as $sample) {
+                $amounts[] = $sample['amount'];
+            }
+            
+            if (count(array_unique($amounts)) == 1) {
+                $score += 20; // Same amount = likely subscription
+                $hasConsistentAmount = true;
+            } elseif ($this->hasConsistentAmountRange($amounts)) {
+                $score += 10; // Similar amount range
             }
         }
-
-        return $recommendations;
+        
+        // Date pattern weight (max 20 points)
+        if ($suggestion['occurrences'] >= 3) {
+            $daysBetween = $suggestion['date_range']['first']->diffInDays($suggestion['date_range']['last']);
+            $avgDaysBetween = $daysBetween / ($suggestion['occurrences'] - 1);
+            
+            if ($avgDaysBetween >= 28 && $avgDaysBetween <= 31) {
+                $score += 20; // Monthly pattern
+            } elseif ($avgDaysBetween >= 7 && $avgDaysBetween <= 7.5) {
+                $score += 15; // Weekly pattern
+            }
+        }
+        
+        return min($score, 100);
     }
-
+    
     /**
-     * Predict category based on keyword patterns
+     * Check if amounts are in consistent range
      */
-    private function predictCategory(string $keyword, string $transactionType, float $avgAmount): ?array
+    private function hasConsistentAmountRange(array $amounts): bool
     {
-        $keyword = strtoupper($keyword);
-
-        // E-commerce & Shopping
-        if (preg_match('/TOKOPEDIA|SHOPEE|LAZADA|BUKALAPAK|BLIBLI/', $keyword)) {
-            return [
-                'name' => 'Shopping',
-                'sub_category' => 'E-commerce',
-                'confidence' => 95,
-                'reason' => 'E-commerce platform detected'
-            ];
+        if (count($amounts) < 2) return false;
+        
+        $min = min($amounts);
+        $max = max($amounts);
+        $avg = array_sum($amounts) / count($amounts);
+        
+        // Check if range is within 20% of average
+        $tolerance = $avg * 0.2;
+        
+        return ($max - $min) <= $tolerance;
+    }
+    
+    /**
+     * Suggest category based on keyword pattern
+     */
+    private function suggestCategory(array $suggestion, int $companyId): ?array
+    {
+        $keyword = strtoupper($suggestion['keyword']);
+        
+        // Map common patterns to categories
+        $categoryPatterns = [
+            'Food & Beverage' => ['COFFEE', 'RESTAURANT', 'FOOD', 'MAKAN', 'CAFE', 'BAKERY'],
+            'Transportation' => ['GRAB', 'GOJEK', 'TAXI', 'UBER', 'TRANSJAKARTA', 'MRT', 'KRL'],
+            'E-Commerce' => ['TOKOPEDIA', 'SHOPEE', 'LAZADA', 'BUKALAPAK', 'BLIBLI'],
+            'Utilities' => ['PLN', 'PDAM', 'TELKOM', 'INDIHOME', 'INTERNET'],
+            'Healthcare' => ['APOTEK', 'PHARMACY', 'HOSPITAL', 'KLINIK', 'DOCTOR'],
+            'Groceries' => ['INDOMARET', 'ALFAMART', 'SUPERINDO', 'HYPERMART', 'CARREFOUR'],
+            'Entertainment' => ['NETFLIX', 'SPOTIFY', 'YOUTUBE', 'DISNEY', 'CINEMA', 'XXI'],
+            'Subscription' => ['RECURRING', 'MONTHLY', 'SUBSCRIPTION', 'PREMIUM']
+        ];
+        
+        foreach ($categoryPatterns as $categoryName => $patterns) {
+            foreach ($patterns as $pattern) {
+                if (stripos($keyword, $pattern) !== false) {
+                    // Try to find existing category
+                    $category = DB::table('categories')
+                        ->where('company_id', $companyId)
+                        ->where('name', 'LIKE', '%' . $categoryName . '%')
+                        ->first();
+                    
+                    if ($category) {
+                        // Find most used subcategory for this pattern
+                        $subCategory = DB::table('sub_categories')
+                            ->where('category_id', $category->id)
+                            ->first();
+                        
+                        return [
+                            'category_id' => $category->id,
+                            'category_name' => $category->name,
+                            'sub_category_id' => $subCategory->id ?? null,
+                            'sub_category_name' => $subCategory->name ?? null,
+                            'reason' => "Pattern match: {$pattern}"
+                        ];
+                    }
+                }
+            }
         }
-
-        // Food & Dining
-        if (preg_match('/GOFOOD|GRABFOOD|SHOPEEFOOD|RESTAURANT|CAFE|MCDONALD|KFC/', $keyword)) {
-            return [
-                'name' => 'Food & Dining',
-                'sub_category' => 'Food Delivery',
-                'confidence' => 90,
-                'reason' => 'Food delivery or restaurant detected'
-            ];
-        }
-
-        // Transportation
-        if (preg_match('/GOJEK|GRAB|TAXI|UBER|TRANSPORT/', $keyword)) {
-            return [
-                'name' => 'Transportation',
-                'sub_category' => 'Ride Hailing',
-                'confidence' => 90,
-                'reason' => 'Transportation service detected'
-            ];
-        }
-
-        // Digital Wallet
-        if (preg_match('/OVO|GOPAY|DANA|SHOPEEPAY|LINKAJA|TOPUP/', $keyword)) {
-            return [
-                'name' => 'Transfer',
-                'sub_category' => 'E-Wallet',
-                'confidence' => 95,
-                'reason' => 'Digital wallet detected'
-            ];
-        }
-
-        // Utilities
-        if (preg_match('/PLN|PDAM|TELKOM|INTERNET|LISTRIK|AIR/', $keyword)) {
-            return [
-                'name' => 'Utilities',
-                'sub_category' => 'Bills',
-                'confidence' => 85,
-                'reason' => 'Utility payment detected'
-            ];
-        }
-
-        // ATM Withdrawal
-        if (preg_match('/ATM|TARIK TUNAI|CASH|CDM/', $keyword)) {
-            return [
-                'name' => 'Cash & ATM',
-                'sub_category' => 'Withdrawal',
-                'confidence' => 90,
-                'reason' => 'ATM transaction detected'
-            ];
-        }
-
-        // Transfer
-        if (preg_match('/TRANSFER|TRSF|KIRIM/', $keyword)) {
-            return [
-                'name' => 'Transfer',
-                'sub_category' => $transactionType === 'debit' ? 'Transfer Out' : 'Transfer In',
-                'confidence' => 70,
-                'reason' => 'Transfer transaction detected'
-            ];
-        }
-
-        // Salary (high amount credit)
-        if ($transactionType === 'credit' && $avgAmount > 3000000) {
-            return [
-                'name' => 'Income',
-                'sub_category' => 'Salary',
-                'confidence' => 60,
-                'reason' => 'Large credit transaction suggests salary'
-            ];
-        }
-
+        
         return null;
     }
-
+    
     /**
-     * Apply keyword to transactions
+     * Create keyword from suggestion
      */
-    public function applyKeywordToTransactions(int $keywordId, array $transactionIds): int
+    public function createKeywordFromSuggestion(array $suggestionData, int $subCategoryId): Keyword
     {
-        $keyword = Keyword::with('subCategory.category.type')->findOrFail($keywordId);
+        return DB::transaction(function() use ($suggestionData, $subCategoryId) {
+            $subCategory = SubCategory::findOrFail($subCategoryId);
+            
+            // Check if keyword already exists
+            $existing = Keyword::where('company_id', $subCategory->company_id)
+                ->where('sub_category_id', $subCategoryId)
+                ->where('keyword', $suggestionData['keyword'])
+                ->first();
+            
+            if ($existing) {
+                // Update existing keyword
+                $existing->increment('match_count', $suggestionData['occurrences'] ?? 1);
+                $existing->update(['last_matched_at' => now()]);
+                return $existing;
+            }
+            
+            // Create new keyword
+            $keyword = Keyword::create([
+                'uuid' => Str::uuid(),
+                'company_id' => $subCategory->company_id,
+                'sub_category_id' => $subCategoryId,
+                'keyword' => $suggestionData['keyword'],
+                'is_regex' => false,
+                'case_sensitive' => false,
+                'match_type' => $this->determineMatchType($suggestionData['keyword']),
+                'pattern_description' => 'Auto-generated from transaction analysis',
+                'priority' => $this->calculatePriority($suggestionData),
+                'is_active' => true,
+                'match_count' => $suggestionData['occurrences'] ?? 1
+            ]);
+            
+            // Auto-match transactions with this keyword
+            if (!empty($suggestionData['transaction_ids'])) {
+                $this->applyKeywordToTransactions($keyword, $suggestionData['transaction_ids']);
+            }
+            
+            // Clear keyword cache
+            Cache::forget('active_keywords_with_relations');
+            
+            Log::info('Keyword created from suggestion', [
+                'keyword' => $keyword->keyword,
+                'sub_category_id' => $subCategoryId,
+                'occurrences' => $suggestionData['occurrences'] ?? 0
+            ]);
+            
+            return $keyword;
+        });
+    }
+    
+    /**
+     * Determine best match type for keyword
+     */
+    private function determineMatchType(string $keyword): string
+    {
+        // If keyword has special chars or spaces, use contains
+        if (preg_match('/[\s\-\/]/', $keyword)) {
+            return 'contains';
+        }
         
-        $updated = StatementTransaction::whereIn('id', $transactionIds)
+        // If keyword is short (< 5 chars), use exact to avoid false positives
+        if (strlen($keyword) < 5) {
+            return 'exact';
+        }
+        
+        return 'contains';
+    }
+    
+    /**
+     * Calculate priority based on suggestion data
+     */
+    private function calculatePriority(array $suggestionData): int
+    {
+        $confidence = $suggestionData['confidence'] ?? 50;
+        
+        if ($confidence >= 90) return 8;
+        if ($confidence >= 70) return 6;
+        if ($confidence >= 50) return 5;
+        return 4;
+    }
+    
+    /**
+     * Apply keyword to matching transactions
+     */
+    private function applyKeywordToTransactions(Keyword $keyword, array $transactionIds): void
+    {
+        StatementTransaction::whereIn('id', $transactionIds)
+            ->whereNull('matched_keyword_id')
             ->update([
                 'matched_keyword_id' => $keyword->id,
                 'sub_category_id' => $keyword->sub_category_id,
                 'category_id' => $keyword->subCategory->category_id,
                 'type_id' => $keyword->subCategory->category->type_id,
-                'confidence_score' => 85, // AI-suggested = 85% confidence
-                'is_manual_category' => false,
-                'matching_reason' => "Auto-matched using AI-suggested keyword: {$keyword->keyword}",
+                'confidence_score' => 85,
+                'matching_reason' => 'Auto-matched from keyword learning'
             ]);
-
-        // Update keyword stats
-        $keyword->increment('match_count', $updated);
-        $keyword->update(['last_matched_at' => now()]);
-
-        Log::info('Keyword applied to transactions', [
-            'keyword_id' => $keywordId,
-            'transactions_updated' => $updated,
-        ]);
-
-        return $updated;
     }
-
+    
     /**
-     * Detect potential duplicate keywords
+     * Learn from manual correction
      */
-    public function detectDuplicates(string $keyword, array $existingKeywords): array
+    public function learnFromCorrection(int $transactionId, int $subCategoryId): void
     {
-        $duplicates = [];
-        $keywordLower = strtolower($keyword);
-
-        foreach ($existingKeywords as $existing) {
-            $existingLower = strtolower($existing);
-
-            // Exact match
-            if ($keywordLower === $existingLower) {
-                $duplicates[] = [
-                    'keyword' => $existing,
-                    'match_type' => 'exact',
-                    'similarity' => 100,
-                ];
-            }
-            // Similar (Levenshtein distance <= 2)
-            else if (levenshtein($keywordLower, $existingLower) <= 2) {
-                $similarity = round((1 - levenshtein($keywordLower, $existingLower) / max(strlen($keywordLower), strlen($existingLower))) * 100);
-                $duplicates[] = [
-                    'keyword' => $existing,
-                    'match_type' => 'similar',
-                    'similarity' => $similarity,
-                ];
-            }
-            // Substring
-            else if (str_contains($existingLower, $keywordLower) || str_contains($keywordLower, $existingLower)) {
-                $duplicates[] = [
-                    'keyword' => $existing,
-                    'match_type' => 'substring',
-                    'similarity' => 70,
-                ];
-            }
+        $transaction = StatementTransaction::findOrFail($transactionId);
+        $keywords = $this->extractPotentialKeywords($transaction->description);
+        
+        foreach ($keywords as $keyword) {
+            // Store as suggestion for review
+            DB::table('keyword_suggestions')->insertOrIgnore([
+                'uuid' => Str::uuid(),
+                'company_id' => $transaction->company_id,
+                'sub_category_id' => $subCategoryId,
+                'keyword' => $keyword,
+                'source_transaction_id' => $transactionId,
+                'confidence' => 70,
+                'occurrence_count' => 1,
+                'status' => 'pending',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
         }
-
-        return $duplicates;
-    }
-
-    /**
-     * Get keyword statistics
-     */
-    public function getKeywordStats(): array
-    {
-        return [
-            'total_keywords' => Keyword::count(),
-            'active_keywords' => Keyword::where('is_active', true)->count(),
-            'regex_keywords' => Keyword::where('is_regex', true)->count(),
-            'unused_keywords' => Keyword::doesntHave('matchedTransactions')->count(),
-            'avg_match_count' => round(Keyword::avg('match_count'), 2),
-        ];
     }
 }
