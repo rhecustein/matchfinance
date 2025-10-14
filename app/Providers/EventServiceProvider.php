@@ -1,10 +1,12 @@
 <?php
-// app/Providers/EventServiceProvider.php
 
 namespace App\Providers;
 
 use App\Events\BankStatementOcrCompleted;
-use App\Listeners\StartTransactionMatching;
+use App\Events\TransactionMatchingCompleted;
+use App\Events\AccountMatchingCompleted;
+use App\Listeners\StartTransactionMatching; // ✅ Already exists
+use App\Listeners\TriggerAccountMatching; // ✅ New
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
@@ -15,12 +17,20 @@ class EventServiceProvider extends ServiceProvider
      * @var array<class-string, array<int, class-string>>
      */
     protected $listen = [
+        // ✅ STEP 1: OCR Completed → Trigger Transaction Matching
         BankStatementOcrCompleted::class => [
-            StartTransactionMatching::class,
-            // ✨ Easy to add more listeners:
-            // SendOcrCompletedNotification::class,
-            // UpdateCompanyStatistics::class,
-            // TriggerAccountMatching::class,
+            StartTransactionMatching::class, // Already exists in your repo
+        ],
+
+        // ✅ STEP 2: Transaction Matching Completed → Trigger Account Matching
+        TransactionMatchingCompleted::class => [
+            TriggerAccountMatching::class, // NEW - you need to create this
+        ],
+
+        // ✅ STEP 3: Account Matching Completed → (Optional: Notifications, Analytics, etc)
+        AccountMatchingCompleted::class => [
+            // Add your listeners here if needed
+            // e.g., SendMatchingCompletedNotification::class
         ],
     ];
 

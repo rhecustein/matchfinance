@@ -1,5 +1,4 @@
 <?php
-// app/Listeners/StartAccountMatching.php
 
 namespace App\Listeners;
 
@@ -14,25 +13,30 @@ class StartAccountMatching implements ShouldQueue
     {
         $bankStatement = $event->bankStatement;
         
-        // Only if company has accounts configured
+        Log::info('Starting account matching after transaction matching', [
+            'statement_id' => $bankStatement->id,
+            'matched_transactions' => $event->matchedCount,
+        ]);
+
+        // Check if company has active accounts
         $hasAccounts = \App\Models\Account::where('company_id', $bankStatement->company_id)
             ->where('is_active', true)
             ->exists();
 
         if (!$hasAccounts) {
-            Log::info('No active accounts found, skipping account matching', [
+            Log::info('No active accounts, skipping account matching', [
                 'statement_id' => $bankStatement->id,
             ]);
             return;
         }
 
-        ProcessAccountMatching::dispatch($bankStatement)
+        // Dispatch account matching job
+        ProcessAccountMatching::dispatch($bankStatement, false)
             ->onQueue('matching')
-            ->delay(now()->addSeconds(5));
+            ->delay(now()->addSeconds(3));
 
         Log::info('Account matching job dispatched', [
             'statement_id' => $bankStatement->id,
-            'matched_transactions' => $event->matchedCount,
         ]);
     }
 }
