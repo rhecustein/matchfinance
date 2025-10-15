@@ -138,6 +138,14 @@ return new class extends Migration
             $table->boolean('is_reconciled')->default(false)->comment('Whether statement is reconciled');
             $table->timestamp('reconciled_at')->nullable()->comment('When the statement was reconciled');
             $table->foreignId('reconciled_by')->nullable()->constrained('users')->nullOnDelete()->comment('User who reconciled');
+
+            $table->enum('status', [
+            'pending', 
+            'processing', 
+            'completed', 
+            'failed', 
+            'skipped'
+            ])->default('pending')->nullable()->comment('General status of bank statement');
             
             // =========================================================
             // TIMESTAMPS

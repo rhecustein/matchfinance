@@ -105,6 +105,7 @@ class BankStatement extends Model
         // =========================================================
         'notes',
         'uploaded_at',
+        'status', // Added status field
     ];
 
     protected $casts = [
