@@ -1,4 +1,5 @@
 <?php
+// app/Events/AccountMatchingCompleted.php
 
 namespace App\Events;
 
@@ -11,9 +12,20 @@ class AccountMatchingCompleted
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    public BankStatement $bankStatement;
+    public int $matchedCount;
+    public int $unmatchedCount;
+
+    /**
+     * Create a new event instance.
+     */
     public function __construct(
-        public BankStatement $bankStatement,
-        public int $matchedCount,
-        public int $unmatchedCount
-    ) {}
+        BankStatement $bankStatement,
+        int $matchedCount,
+        int $unmatchedCount
+    ) {
+        $this->bankStatement = $bankStatement;
+        $this->matchedCount = $matchedCount;
+        $this->unmatchedCount = $unmatchedCount;
+    }
 }

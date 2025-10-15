@@ -6,7 +6,7 @@ use App\Events\BankStatementOcrCompleted;
 use App\Events\TransactionMatchingCompleted;
 use App\Events\AccountMatchingCompleted;
 use App\Listeners\StartTransactionMatching;
-use App\Listeners\StartAccountMatching; // ✅ New
+use App\Listeners\StartAccountMatching;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
@@ -19,15 +19,15 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         // ✅ STEP 1: OCR Complete → Transaction Matching
         BankStatementOcrCompleted::class => [
-            StartTransactionMatching::class, // HANYA INI SAJA
+            StartTransactionMatching::class, // ✅ BENAR - bukan TriggerTransactionMatching
         ],
 
         // ✅ STEP 2: Transaction Matching Complete → Account Matching
         TransactionMatchingCompleted::class => [
-            StartAccountMatching::class, // HANYA INI SAJA
+            StartAccountMatching::class, // ✅ BENAR - bukan TriggerAccountMatching
         ],
 
-        // ✅ STEP 3: Account Matching Complete (optional)
+        // ✅ STEP 3: Account Matching Complete (optional untuk future)
         AccountMatchingCompleted::class => [
             // Future: notifications, analytics, etc
         ],

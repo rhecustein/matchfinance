@@ -21,12 +21,10 @@
     'App\\Events\\TransactionMatchingCompleted' => 
     array (
       0 => 'App\\Listeners\\StartAccountMatching@handle',
-      1 => 'App\\Listeners\\TriggerAccountMatching@handle',
     ),
     'App\\Events\\BankStatementOcrCompleted' => 
     array (
       0 => 'App\\Listeners\\StartTransactionMatching@handle',
-      1 => 'App\\Listeners\\TriggerTransactionMatching@handle',
     ),
   ),
 );

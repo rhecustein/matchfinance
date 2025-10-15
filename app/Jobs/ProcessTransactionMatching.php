@@ -19,53 +19,64 @@ class ProcessTransactionMatching implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $timeout = 600; // 10 minutes
+    public $timeout = 600;
     public $tries = 3;
 
-    // Configuration
-    private const MIN_CONFIDENCE_THRESHOLD = 50; // Minimum score untuk masuk suggestions
-    private const PRIMARY_CONFIDENCE_THRESHOLD = 70; // Minimum untuk primary match
-    private const MAX_SUGGESTIONS = 5; // Top 5 suggestions
-    private const CACHE_TTL = 3600; // 1 hour cache untuk keywords
+    private const MIN_CONFIDENCE_THRESHOLD = 50;
+    private const PRIMARY_CONFIDENCE_THRESHOLD = 70;
+    private const MAX_SUGGESTIONS = 5;
+    private const CACHE_TTL = 3600;
 
-    /**
-     * Create a new job instance.
-     */
     public function __construct(
         public BankStatement $bankStatement
     ) {}
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
         $startTime = microtime(true);
         
         try {
-            Log::info("Starting transaction matching for Bank Statement ID: {$this->bankStatement->id}", [
+            Log::info("🔍 [TRANSACTION MATCHING] Starting for Bank Statement ID: {$this->bankStatement->id}", [
                 'company_id' => $this->bankStatement->company_id,
                 'total_transactions' => $this->bankStatement->total_transactions,
             ]);
 
-            // Get all unmatched transactions from this statement
+            // ✅ UPDATE: Set matching status to processing
+            $this->bankStatement->update([
+                'matching_status' => 'processing',
+                'matching_started_at' => now(),
+            ]);
+
             $transactions = StatementTransaction::where('bank_statement_id', $this->bankStatement->id)
-                ->where('company_id', $this->bankStatement->company_id) // Security: company scoped
+                ->where('company_id', $this->bankStatement->company_id)
                 ->whereNull('matched_keyword_id')
                 ->get();
 
             if ($transactions->isEmpty()) {
                 Log::info("No unmatched transactions found for Bank Statement ID: {$this->bankStatement->id}");
+                
+                $this->bankStatement->update([
+                    'matching_status' => 'completed',
+                    'matching_completed_at' => now(),
+                ]);
+                
                 return;
             }
 
-            // Get all active keywords with relations (with caching)
+            // ✅ Get keywords from KEYWORD SEEDER (sub_categories relation)
             $keywords = $this->getActiveKeywords($this->bankStatement->company_id);
 
             if ($keywords->isEmpty()) {
                 Log::warning("No active keywords found for matching", [
                     'company_id' => $this->bankStatement->company_id
                 ]);
+                
+                $this->bankStatement->update([
+                    'matching_status' => 'skipped',
+                    'matching_notes' => 'No active keywords available',
+                    'matching_completed_at' => now(),
+                ]);
+                
                 return;
             }
 
@@ -78,17 +89,14 @@ class ProcessTransactionMatching implements ShouldQueue
             foreach ($transactions as $transaction) {
                 $matchingStartTime = microtime(true);
                 
-                // Find ALL possible matches (not just best one)
                 $allMatches = $this->findAllMatches($transaction, $keywords);
                 
-                $matchingDuration = round((microtime(true) - $matchingStartTime) * 1000); // milliseconds
+                $matchingDuration = round((microtime(true) - $matchingStartTime) * 1000);
 
                 if (empty($allMatches)) {
-                    // No match found
                     $this->handleNoMatch($transaction, $matchingDuration);
                     $unmatchedCount++;
                 } else {
-                    // Process matches and create suggestions
                     $result = $this->processMatches($transaction, $allMatches, $matchingDuration);
                     
                     if ($result['primary_score'] >= self::PRIMARY_CONFIDENCE_THRESHOLD) {
@@ -99,11 +107,12 @@ class ProcessTransactionMatching implements ShouldQueue
                 }
             }
 
-            // Update bank statement statistics
+            // ✅ UPDATE: Set matching status to completed
             $this->bankStatement->update([
                 'matched_transactions' => $matchedCount,
                 'unmatched_transactions' => $unmatchedCount,
                 'low_confidence_transactions' => $lowConfidenceCount,
+                'matching_status' => 'completed',
                 'matching_completed_at' => now(),
             ]);
 
@@ -111,7 +120,7 @@ class ProcessTransactionMatching implements ShouldQueue
 
             $totalDuration = round((microtime(true) - $startTime) * 1000);
 
-            Log::info("Transaction matching completed for Bank Statement ID: {$this->bankStatement->id}", [
+            Log::info("✅ [TRANSACTION MATCHING] Completed for Bank Statement ID: {$this->bankStatement->id}", [
                 'matched' => $matchedCount,
                 'unmatched' => $unmatchedCount,
                 'low_confidence' => $lowConfidenceCount,
@@ -119,7 +128,7 @@ class ProcessTransactionMatching implements ShouldQueue
                 'avg_per_transaction_ms' => round($totalDuration / $transactions->count()),
             ]);
 
-            // ✅ FIRE EVENT - This triggers account matching
+            // ✅ FIRE EVENT - This triggers ACCOUNT MATCHING
             event(new \App\Events\TransactionMatchingCompleted(
                 $this->bankStatement->fresh(),
                 $matchedCount,
@@ -129,7 +138,14 @@ class ProcessTransactionMatching implements ShouldQueue
         } catch (\Exception $e) {
             DB::rollBack();
 
-            Log::error("Transaction matching failed for Bank Statement ID: {$this->bankStatement->id}", [
+            // ✅ UPDATE: Set matching status to failed
+            $this->bankStatement->update([
+                'matching_status' => 'failed',
+                'matching_notes' => $e->getMessage(),
+                'matching_completed_at' => now(),
+            ]);
+
+            Log::error("❌ [TRANSACTION MATCHING] Failed for Bank Statement ID: {$this->bankStatement->id}", [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
@@ -138,14 +154,12 @@ class ProcessTransactionMatching implements ShouldQueue
         }
     }
 
-    /**
-     * Get active keywords with caching
-     */
     private function getActiveKeywords(int $companyId)
     {
         $cacheKey = "keywords_active_company_{$companyId}";
         
         return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($companyId) {
+            // ✅ PENTING: Load relasi lengkap (type → category → subCategory)
             return Keyword::with(['subCategory.category.type'])
                 ->where('company_id', $companyId)
                 ->where('is_active', true)
@@ -154,10 +168,6 @@ class ProcessTransactionMatching implements ShouldQueue
         });
     }
 
-    /**
-     * Find ALL possible matches for a transaction
-     * Returns array of matches with scores
-     */
     private function findAllMatches(StatementTransaction $transaction, $keywords): array
     {
         $description = $this->normalizeDescription($transaction->description ?? '');
@@ -171,7 +181,6 @@ class ProcessTransactionMatching implements ShouldQueue
             }
         }
 
-        // Sort by weighted score (descending)
         usort($allMatches, function($a, $b) {
             return $b['weighted_score'] <=> $a['weighted_score'];
         });
@@ -179,9 +188,6 @@ class ProcessTransactionMatching implements ShouldQueue
         return $allMatches;
     }
 
-    /**
-     * Match a single keyword against description
-     */
     private function matchKeyword(string $description, Keyword $keyword, StatementTransaction $transaction): ?array
     {
         $keywordText = $keyword->case_sensitive 
@@ -196,11 +202,10 @@ class ProcessTransactionMatching implements ShouldQueue
         $method = '';
         $matchedText = '';
 
-        // REGEX PATTERN MATCHING
         if ($keyword->is_regex) {
             try {
                 if (preg_match('/' . $keyword->keyword . '/u', $searchText, $matches)) {
-                    $score = 85; // Regex match gets high score
+                    $score = 85;
                     $method = 'regex';
                     $matchedText = $matches[0] ?? $keywordText;
                 }
@@ -213,37 +218,31 @@ class ProcessTransactionMatching implements ShouldQueue
                 return null;
             }
         }
-        // EXACT MATCH (highest confidence)
         elseif ($searchText === $keywordText) {
             $score = 100;
             $method = 'exact_match';
             $matchedText = $keywordText;
         }
-        // CONTAINS MATCH
         elseif (strpos($searchText, $keywordText) !== false) {
             $score = 95;
             $method = 'contains';
             $matchedText = $keywordText;
             
-            // Bonus: if match is at start of string
             if (strpos($searchText, $keywordText) === 0) {
                 $score = 98;
                 $method = 'starts_with';
             }
         }
-        // WORD BOUNDARY MATCH
         elseif (preg_match('/\b' . preg_quote($keywordText, '/') . '\b/ui', $searchText)) {
             $score = 90;
             $method = 'word_boundary';
             $matchedText = $keywordText;
         }
-        // PARTIAL WORD MATCH
         elseif ($this->containsPartialMatch($searchText, $keywordText)) {
             $score = 80;
             $method = 'partial_word';
             $matchedText = $keywordText;
         }
-        // SIMILARITY MATCH (fuzzy matching)
         else {
             similar_text($keywordText, $searchText, $percent);
             if ($percent >= 70) {
@@ -253,17 +252,12 @@ class ProcessTransactionMatching implements ShouldQueue
             }
         }
 
-        // No match found
         if ($score === 0) {
             return null;
         }
 
-        // Apply priority weighting
-        // Priority 10 = 100% weight, Priority 1 = 10% weight
         $priorityMultiplier = $keyword->priority / 10;
         $weightedScore = (int) ($score * $priorityMultiplier);
-
-        // Calculate final confidence with additional factors
         $finalScore = $this->calculateFinalConfidence($score, $keyword, $transaction, $method);
 
         return [
@@ -283,59 +277,34 @@ class ProcessTransactionMatching implements ShouldQueue
         ];
     }
 
-    /**
-     * Calculate final confidence score with additional factors
-     */
-    private function calculateFinalConfidence(
-        int $baseScore, 
-        Keyword $keyword, 
-        StatementTransaction $transaction,
-        string $method
-    ): int {
+    private function calculateFinalConfidence(int $baseScore, Keyword $keyword, StatementTransaction $transaction, string $method): int
+    {
         $score = $baseScore;
 
-        // Factor 1: Keyword match history (performance bonus)
-        if ($keyword->match_count > 0 && $keyword->match_count > 10) {
-            $score += 2; // Proven keyword gets bonus
+        if ($keyword->match_count > 10) {
+            $score += 2;
         }
 
-        // Factor 2: Amount range matching (if keyword has amount patterns)
-        // This can be extended based on your business logic
-        
-        // Factor 3: Transaction type alignment
         if ($transaction->transaction_type === 'debit' && $keyword->subCategory->category->type->name === 'Outlet') {
-            $score += 1; // Type alignment bonus
+            $score += 1;
         }
 
-        // Factor 4: Regex penalty (less reliable than exact match)
         if ($method === 'regex') {
             $score -= 3;
         }
 
-        // Factor 5: Similarity penalty (least reliable)
         if ($method === 'similarity') {
             $score -= 5;
         }
 
-        // Ensure score stays in 0-100 range
         return max(0, min(100, $score));
     }
 
-    /**
-     * Process matches and create suggestions structure
-     */
-    private function processMatches(
-        StatementTransaction $transaction, 
-        array $allMatches, 
-        int $matchingDuration
-    ): array {
-        // Take top N suggestions
+    private function processMatches(StatementTransaction $transaction, array $allMatches, int $matchingDuration): array
+    {
         $topMatches = array_slice($allMatches, 0, self::MAX_SUGGESTIONS);
-        
-        // Primary match (best score)
         $primaryMatch = $topMatches[0];
 
-        // Build alternative categories JSON structure
         $suggestions = [];
         foreach ($topMatches as $index => $match) {
             $suggestions[] = [
@@ -373,22 +342,16 @@ class ProcessTransactionMatching implements ShouldQueue
             ]
         ];
 
-        // Extract keywords for search optimization
         $extractedKeywords = $this->extractKeywordsFromDescription($transaction->description);
 
-        // Update transaction with primary match and all suggestions
+        // ✅ UPDATE: Isi type_id, category_id, sub_category_id dari KEYWORD SEEDER
         $transaction->update([
-            // Primary Match
             'matched_keyword_id' => $primaryMatch['keyword']->id,
             'confidence_score' => $primaryMatch['score'],
             'type_id' => $primaryMatch['keyword']->subCategory->category->type_id,
             'category_id' => $primaryMatch['keyword']->subCategory->category_id,
             'sub_category_id' => $primaryMatch['keyword']->sub_category_id,
-            
-            // Alternative Suggestions
             'alternative_categories' => $alternativeCategories,
-            
-            // Match Metadata
             'match_method' => $primaryMatch['method'],
             'match_metadata' => [
                 'keyword_text' => $primaryMatch['keyword']->keyword,
@@ -398,27 +361,18 @@ class ProcessTransactionMatching implements ShouldQueue
                 'priority' => $primaryMatch['keyword']->priority,
                 'matched_at' => now()->toIso8601String(),
                 'description' => $transaction->description,
-                'total_alternatives' => count($suggestions) - 1, // exclude primary
+                'total_alternatives' => count($suggestions) - 1,
             ],
-            
-            // Extracted Information
             'extracted_keywords' => $extractedKeywords,
             'normalized_description' => $this->normalizeDescription($transaction->description),
-            
-            // Performance Tracking
             'matching_duration_ms' => $matchingDuration,
             'matching_attempts' => 1,
-            
-            // Feedback Status
             'feedback_status' => 'pending',
-            
-            // Flags
             'is_manual_category' => false,
             'is_approved' => false,
             'is_rejected' => false,
         ]);
 
-        // Log primary match to matching_logs
         MatchingLog::create([
             'uuid' => \Illuminate\Support\Str::uuid(),
             'company_id' => $transaction->company_id,
@@ -437,7 +391,6 @@ class ProcessTransactionMatching implements ShouldQueue
             'matched_at' => now(),
         ]);
 
-        // Update keyword statistics
         $primaryMatch['keyword']->increment('match_count');
         $primaryMatch['keyword']->update(['last_matched_at' => now()]);
 
@@ -448,9 +401,6 @@ class ProcessTransactionMatching implements ShouldQueue
         ];
     }
 
-    /**
-     * Handle transaction with no match
-     */
     private function handleNoMatch(StatementTransaction $transaction, int $matchingDuration): void
     {
         $transaction->update([
@@ -459,7 +409,6 @@ class ProcessTransactionMatching implements ShouldQueue
             'type_id' => null,
             'category_id' => null,
             'sub_category_id' => null,
-            
             'alternative_categories' => [
                 'suggestions' => [],
                 'generation_timestamp' => now()->toIso8601String(),
@@ -471,70 +420,43 @@ class ProcessTransactionMatching implements ShouldQueue
                     'result' => 'no_match'
                 ]
             ],
-            
             'match_method' => 'no_match',
             'match_metadata' => [
                 'reason' => 'No keywords matched the transaction description',
                 'description' => $transaction->description,
             ],
-            
             'extracted_keywords' => $this->extractKeywordsFromDescription($transaction->description),
             'normalized_description' => $this->normalizeDescription($transaction->description),
-            
             'matching_duration_ms' => $matchingDuration,
             'matching_attempts' => 1,
             'feedback_status' => 'pending',
-            
             'is_manual_category' => false,
             'is_approved' => false,
             'is_rejected' => false,
         ]);
     }
 
-    /**
-     * Normalize description for better matching
-     */
     private function normalizeDescription(string $description): string
     {
-        // Convert to lowercase
         $normalized = strtolower($description);
-        
-        // Remove special characters but keep spaces
         $normalized = preg_replace('/[^a-z0-9\s]/u', ' ', $normalized);
-        
-        // Remove extra whitespaces
         $normalized = preg_replace('/\s+/', ' ', $normalized);
-        
-        // Trim
-        $normalized = trim($normalized);
-        
-        return $normalized;
+        return trim($normalized);
     }
 
-    /**
-     * Extract potential keywords from description
-     */
     private function extractKeywordsFromDescription(string $description): array
     {
         $normalized = $this->normalizeDescription($description);
-        
-        // Split into words
         $words = explode(' ', $normalized);
-        
-        // Filter out common words and short words
         $commonWords = ['dari', 'ke', 'untuk', 'pada', 'di', 'dan', 'atau', 'yang', 'by', 'from', 'to', 'the', 'a', 'an', 'in', 'on', 'at'];
         
         $keywords = array_filter($words, function($word) use ($commonWords) {
             return strlen($word) > 2 && !in_array($word, $commonWords);
         });
         
-        // Return unique keywords, limit to 10
         return array_values(array_unique(array_slice($keywords, 0, 10)));
     }
 
-    /**
-     * Check if description contains partial word match
-     */
     private function containsPartialMatch(string $description, string $keyword): bool
     {
         $descWords = explode(' ', $description);
@@ -554,21 +476,18 @@ class ProcessTransactionMatching implements ShouldQueue
         return false;
     }
 
-    /**
-     * Handle a job failure.
-     */
     public function failed(\Throwable $exception): void
     {
-        Log::error("Transaction matching job failed permanently for Bank Statement ID: {$this->bankStatement->id}", [
+        Log::error("❌ [TRANSACTION MATCHING] Job failed permanently for Bank Statement ID: {$this->bankStatement->id}", [
             'company_id' => $this->bankStatement->company_id,
             'error' => $exception->getMessage(),
             'trace' => $exception->getTraceAsString(),
         ]);
 
-        // Update bank statement with error status
         $this->bankStatement->update([
             'matching_status' => 'failed',
-            'matching_error' => $exception->getMessage(),
+            'matching_notes' => $exception->getMessage(),
+            'matching_completed_at' => now(),
         ]);
     }
 }
