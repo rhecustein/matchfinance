@@ -222,7 +222,7 @@ class ProcessAccountMatching implements ShouldQueue
         }
         elseif ($searchText === $keywordText) {
             $score = 100;
-            $method = 'exact_match';
+            $method = 'exact';
             $matchedText = $keywordText;
         }
         elseif (strpos($searchText, $keywordText) !== false) {
@@ -237,19 +237,19 @@ class ProcessAccountMatching implements ShouldQueue
         }
         elseif (preg_match('/\b' . preg_quote($keywordText, '/') . '\b/ui', $searchText)) {
             $score = 90;
-            $method = 'word_boundary';
+            $method = 'contains';
             $matchedText = $keywordText;
         }
         elseif ($this->containsPartialMatch($searchText, $keywordText)) {
             $score = 80;
-            $method = 'partial_word';
+            $method = 'contains';
             $matchedText = $keywordText;
         }
         else {
             similar_text($keywordText, $searchText, $percent);
             if ($percent >= 70) {
                 $score = (int) $percent;
-                $method = 'similarity';
+                $method = 'contains';
                 $matchedText = $keywordText;
             }
         }
@@ -325,8 +325,8 @@ class ProcessAccountMatching implements ShouldQueue
             'is_manual_account' => false,
         ]);
 
+        // ✅ FIXED: Removed manual UUID generation, let Model handle it
         AccountMatchingLog::create([
-            'uuid' => \Illuminate\Support\Str::uuid(),
             'company_id' => $transaction->company_id,
             'statement_transaction_id' => $transaction->id,
             'account_id' => $primaryMatch['account_id'],
@@ -350,6 +350,7 @@ class ProcessAccountMatching implements ShouldQueue
             'processing_time_ms' => $matchingDuration,
         ]);
 
+        // ✅ Increment match count pada keyword
         $primaryMatch['account_keyword']->increment('match_count');
         $primaryMatch['account_keyword']->update(['last_matched_at' => now()]);
 

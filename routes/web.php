@@ -347,15 +347,23 @@ Route::middleware(['auth', 'verified', 'company.member'])->group(function () {
     */
     
     Route::prefix('reports')->name('reports.')->middleware('company.manager')->group(function () {
+
+        // Dashboard
         Route::get('/', [ReportController::class, 'index'])->name('index');
+
+        // Report Types (6 jenis laporan)
         Route::get('/monthly-by-bank', [ReportController::class, 'monthlyByBank'])->name('monthly-by-bank');
         Route::get('/by-keyword', [ReportController::class, 'byKeyword'])->name('by-keyword');
         Route::get('/by-category', [ReportController::class, 'byCategory'])->name('by-category');
         Route::get('/by-sub-category', [ReportController::class, 'bySubCategory'])->name('by-sub-category');
-        Route::get('/by-account', [ReportController::class, 'byAccount'])->name('by-account');
+        Route::get('/by-account', [ReportController::class, 'byAccount'])->name('by-account'); // ✨ NEW
         Route::get('/comparison', [ReportController::class, 'comparison'])->name('comparison');
-        Route::get('/cash-flow', [ReportController::class, 'cashFlow'])->name('cash-flow');
-        Route::get('/trends', [ReportController::class, 'trends'])->name('trends');
+
+        // Transaction Details (2 detail pages)
+        Route::get('/monthly-detail', [ReportController::class, 'monthlyDetail'])->name('monthly-detail');
+        Route::get('/account-detail', [ReportController::class, 'accountDetail'])->name('account-detail'); // ✨ NEW
+
+        // Export & PDF
         Route::post('/export', [ReportController::class, 'export'])->name('export');
         Route::post('/generate-pdf', [ReportController::class, 'generatePdf'])->name('generate-pdf');
 
@@ -363,6 +371,38 @@ Route::middleware(['auth', 'verified', 'company.member'])->group(function () {
         Route::get('/monthly-detail', [ReportController::class, 'MonthlyDetail'])->name('monthly-detail');
     });
 });
+
+/*
+    |--------------------------------------------------------------------------
+    | ✅ Queue Management Routes (TAMBAHKAN DI SINI)
+    |--------------------------------------------------------------------------
+    | Access: Manager+ (manager, admin, owner)
+    | Middleware: auth, verified, company.manager
+    */
+    
+    Route::prefix('queue-management')->name('queue-management.')
+        ->middleware('company.manager')
+        ->group(function () {
+            
+            // Dashboard & Overview
+            Route::get('/', [QueueManagementController::class, 'index'])->name('index');
+            Route::get('/stats', [QueueManagementController::class, 'getStats'])->name('stats');
+            
+            // Job Lists
+            Route::get('/pending-jobs', [QueueManagementController::class, 'pendingJobs'])->name('pending-jobs');
+            Route::get('/failed-jobs', [QueueManagementController::class, 'failedJobs'])->name('failed-jobs');
+            Route::get('/job/{uuid}', [QueueManagementController::class, 'showJob'])->name('show-job');
+            
+            // Retry Actions
+            Route::post('/retry/{uuid}', [QueueManagementController::class, 'retryJob'])->name('retry');
+            Route::post('/retry-all', [QueueManagementController::class, 'retryAll'])->name('retry-all');
+            Route::post('/retry-queue', [QueueManagementController::class, 'retryQueue'])->name('retry-queue');
+            
+            // Delete Actions
+            Route::delete('/delete/{uuid}', [QueueManagementController::class, 'deleteJob'])->name('delete');
+            Route::delete('/clear-failed', [QueueManagementController::class, 'clearFailed'])->name('clear-failed');
+            Route::post('/clear-queue', [QueueManagementController::class, 'clearQueue'])->name('clear-queue');
+        });
 
 /*
 |--------------------------------------------------------------------------

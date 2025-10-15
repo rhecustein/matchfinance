@@ -82,7 +82,24 @@
                 </button>
             </div>
 
-            {{-- 5. Comparison Report --}}
+            {{-- 5. By Account Report (NEW!) --}}
+            <div class="bg-gradient-to-br from-cyan-900/20 to-slate-900 rounded-2xl p-6 border border-cyan-500/30 shadow-xl hover:scale-105 transition-transform">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-cyan-600 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-book text-white text-xl"></i>
+                    </div>
+                    <span class="px-3 py-1 bg-cyan-600/20 text-cyan-400 rounded-full text-xs font-semibold">
+                        Accounts
+                    </span>
+                </div>
+                <h3 class="text-white font-bold text-lg mb-2">By Account</h3>
+                <p class="text-gray-400 text-sm mb-4">Chart of accounts transaction report</p>
+                <button onclick="showReportModal('account')" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg font-semibold transition">
+                    <i class="fas fa-eye mr-2"></i>Generate Report
+                </button>
+            </div>
+
+            {{-- 6. Comparison Report --}}
             <div class="bg-gradient-to-br from-red-900/20 to-slate-900 rounded-2xl p-6 border border-red-500/30 shadow-xl hover:scale-105 transition-transform">
                 <div class="flex items-center justify-between mb-4">
                     <div class="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center">
@@ -96,23 +113,6 @@
                 <p class="text-gray-400 text-sm mb-4">Compare two banks side by side</p>
                 <button onclick="showReportModal('comparison')" class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition">
                     <i class="fas fa-eye mr-2"></i>Generate Report
-                </button>
-            </div>
-
-            {{-- 6. Custom Report --}}
-            <div class="bg-gradient-to-br from-indigo-900/20 to-slate-900 rounded-2xl p-6 border border-indigo-500/30 shadow-xl hover:scale-105 transition-transform">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center">
-                        <i class="fas fa-cog text-white text-xl"></i>
-                    </div>
-                    <span class="px-3 py-1 bg-indigo-600/20 text-indigo-400 rounded-full text-xs font-semibold">
-                        Custom
-                    </span>
-                </div>
-                <h3 class="text-white font-bold text-lg mb-2">Custom Report</h3>
-                <p class="text-gray-400 text-sm mb-4">Build your own custom report</p>
-                <button onclick="alert('Coming Soon!')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold transition">
-                    <i class="fas fa-wrench mr-2"></i>Build Report
                 </button>
             </div>
         </div>
@@ -159,7 +159,7 @@
 
     {{-- Modal untuk Filter --}}
     <div id="reportModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50">
-        <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 border border-slate-700 shadow-2xl max-w-lg w-full mx-4">
+        <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 border border-slate-700 shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-white font-bold text-xl" id="modalTitle">Generate Report</h3>
                 <button onclick="hideReportModal()" class="text-gray-400 hover:text-white transition">
@@ -169,12 +169,27 @@
 
             <form id="reportForm" method="GET">
                 <div class="space-y-4">
-                    {{-- Year --}}
-                    <div>
+                    {{-- Period Type Toggle --}}
+                    <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+                        <label class="block text-sm font-semibold text-gray-300 mb-3">
+                            <i class="fas fa-calendar-alt mr-1"></i>Period Type
+                        </label>
+                        <div class="flex gap-3">
+                            <button type="button" onclick="setPeriodType('year')" id="yearTypeBtn" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold transition">
+                                <i class="fas fa-calendar mr-2"></i>By Year
+                            </button>
+                            <button type="button" onclick="setPeriodType('custom')" id="customTypeBtn" class="flex-1 px-4 py-2 bg-slate-700 text-gray-300 rounded-lg font-semibold transition hover:bg-slate-600">
+                                <i class="fas fa-calendar-week mr-2"></i>Custom Range
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Year Filter (Default) --}}
+                    <div id="yearFilter">
                         <label class="block text-sm font-semibold text-gray-300 mb-2">
                             <i class="fas fa-calendar mr-1"></i>Year
                         </label>
-                        <select name="year" required class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500">
+                        <select name="year" id="yearSelect" class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500">
                             <optgroup label="Available Years (with data)">
                                 @foreach($availableYears as $year)
                                     @if($transactionYears->contains($year))
@@ -187,17 +202,50 @@
                             <optgroup label="All Years (2015-2027)">
                                 @foreach($availableYears as $year)
                                     @if(!$transactionYears->contains($year))
-                                        <option value="{{ $year }}" {{ $year == date('Y') ? 'selected' : '' }}>
+                                        <option value="{{ $year }}">
                                             {{ $year }} (no data)
                                         </option>
                                     @endif
                                 @endforeach
                             </optgroup>
                         </select>
-                        <p class="text-xs text-gray-500 mt-1">
-                            <i class="fas fa-info-circle mr-1"></i>Years are grouped by data availability
+                    </div>
+
+                    {{-- Custom Date Range (Hidden by default) --}}
+                    <div id="customFilter" class="hidden space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-300 mb-2">
+                                    <i class="fas fa-calendar-day mr-1"></i>Start Date
+                                </label>
+                                <input type="date" name="start_date" id="startDate" class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-300 mb-2">
+                                    <i class="fas fa-calendar-day mr-1"></i>End Date
+                                </label>
+                                <input type="date" name="end_date" id="endDate" class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500">
+                            <i class="fas fa-info-circle mr-1"></i>Leave empty to use year-based filter
                         </p>
                     </div>
+
+                    {{-- Super Admin Company Filter --}}
+                    @if($companies->count() > 0)
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-300 mb-2">
+                                <i class="fas fa-building mr-1"></i>Company (Super Admin)
+                            </label>
+                            <select name="company_id" class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500">
+                                <option value="">All Companies</option>
+                                @foreach($companies as $company)
+                                    <option value="{{ $company->id }}">{{ $company->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
 
                     {{-- Transaction Type --}}
                     <div>
@@ -229,6 +277,47 @@
     </div>
 
     <script>
+        let currentPeriodType = 'year';
+
+        function setPeriodType(type) {
+            currentPeriodType = type;
+            const yearFilter = document.getElementById('yearFilter');
+            const customFilter = document.getElementById('customFilter');
+            const yearSelect = document.getElementById('yearSelect');
+            const startDate = document.getElementById('startDate');
+            const endDate = document.getElementById('endDate');
+            const yearTypeBtn = document.getElementById('yearTypeBtn');
+            const customTypeBtn = document.getElementById('customTypeBtn');
+
+            if (type === 'year') {
+                yearFilter.classList.remove('hidden');
+                customFilter.classList.add('hidden');
+                yearSelect.required = true;
+                startDate.required = false;
+                endDate.required = false;
+                startDate.value = '';
+                endDate.value = '';
+                
+                // Update button styles
+                yearTypeBtn.classList.remove('bg-slate-700', 'text-gray-300');
+                yearTypeBtn.classList.add('bg-blue-600', 'text-white');
+                customTypeBtn.classList.remove('bg-blue-600', 'text-white');
+                customTypeBtn.classList.add('bg-slate-700', 'text-gray-300');
+            } else {
+                yearFilter.classList.add('hidden');
+                customFilter.classList.remove('hidden');
+                yearSelect.required = false;
+                startDate.required = true;
+                endDate.required = true;
+                
+                // Update button styles
+                customTypeBtn.classList.remove('bg-slate-700', 'text-gray-300');
+                customTypeBtn.classList.add('bg-blue-600', 'text-white');
+                yearTypeBtn.classList.remove('bg-blue-600', 'text-white');
+                yearTypeBtn.classList.add('bg-slate-700', 'text-gray-300');
+            }
+        }
+
         function showReportModal(type) {
             const modal = document.getElementById('reportModal');
             const form = document.getElementById('reportForm');
@@ -237,16 +326,18 @@
             
             // Reset
             additionalFilters.innerHTML = '';
+            setPeriodType('year');
             
             // Set action dan title berdasarkan type
             switch(type) {
                 case 'monthly':
                     form.action = '{{ route("reports.monthly-by-bank") }}';
-                    modalTitle.textContent = 'Monthly by Bank Report';
+                    modalTitle.innerHTML = '<i class="fas fa-calendar-alt mr-2"></i>Monthly by Bank Report';
                     break;
+                    
                 case 'keyword':
                     form.action = '{{ route("reports.by-keyword") }}';
-                    modalTitle.textContent = 'By Keyword Report';
+                    modalTitle.innerHTML = '<i class="fas fa-key mr-2"></i>By Keyword Report';
                     additionalFilters.innerHTML = `
                         <div>
                             <label class="block text-sm font-semibold text-gray-300 mb-2">
@@ -261,9 +352,10 @@
                         </div>
                     `;
                     break;
+                    
                 case 'category':
                     form.action = '{{ route("reports.by-category") }}';
-                    modalTitle.textContent = 'By Category Report';
+                    modalTitle.innerHTML = '<i class="fas fa-folder mr-2"></i>By Category Report';
                     additionalFilters.innerHTML = `
                         <div>
                             <label class="block text-sm font-semibold text-gray-300 mb-2">
@@ -278,9 +370,10 @@
                         </div>
                     `;
                     break;
+                    
                 case 'subcategory':
                     form.action = '{{ route("reports.by-sub-category") }}';
-                    modalTitle.textContent = 'By Sub Category Report';
+                    modalTitle.innerHTML = '<i class="fas fa-layer-group mr-2"></i>By Sub Category Report';
                     additionalFilters.innerHTML = `
                         <div>
                             <label class="block text-sm font-semibold text-gray-300 mb-2">
@@ -295,9 +388,39 @@
                         </div>
                     `;
                     break;
+                    
+                case 'account':
+                    form.action = '{{ route("reports.by-account") }}';
+                    modalTitle.innerHTML = '<i class="fas fa-book mr-2"></i>By Account Report';
+                    additionalFilters.innerHTML = `
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-300 mb-2">
+                                <i class="fas fa-tags mr-1"></i>Account Type (Optional)
+                            </label>
+                            <select name="account_type" class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500">
+                                <option value="">All Account Types</option>
+                                @foreach($accountTypes as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-300 mb-2">
+                                <i class="fas fa-university mr-1"></i>Bank (Optional)
+                            </label>
+                            <select name="bank_id" class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500">
+                                <option value="">All Banks</option>
+                                @foreach($availableBanks as $bank)
+                                    <option value="{{ $bank->id }}">{{ $bank->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    `;
+                    break;
+                    
                 case 'comparison':
                     form.action = '{{ route("reports.comparison") }}';
-                    modalTitle.textContent = 'Bank Comparison Report';
+                    modalTitle.innerHTML = '<i class="fas fa-balance-scale mr-2"></i>Bank Comparison Report';
                     additionalFilters.innerHTML = `
                         <div>
                             <label class="block text-sm font-semibold text-gray-300 mb-2">
@@ -338,6 +461,13 @@
         // Close on outside click
         document.getElementById('reportModal').addEventListener('click', function(e) {
             if (e.target === this) {
+                hideReportModal();
+            }
+        });
+
+        // Close on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
                 hideReportModal();
             }
         });

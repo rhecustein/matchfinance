@@ -52,9 +52,10 @@ class ProcessAccountMatchingPrep implements ShouldQueue
             // STEP 2: Update Status to Processing
             // =========================================
             $this->bankStatement->update([
-                'account_matching_prep_status' => 'processing',
-                'account_matching_prep_started_at' => now(),
-                'account_matching_prep_notes' => null,
+                'account_matching_status' => 'processing',
+                'account_matching_started_at' => now(),
+                'account_matching_notes' => null,
+                'account_matching_error' => null,
             ]);
 
             // =========================================
@@ -69,10 +70,9 @@ class ProcessAccountMatchingPrep implements ShouldQueue
                 ]);
 
                 $this->bankStatement->update([
-                    'account_matching_prep_status' => 'completed',
-                    'account_matching_prep_completed_at' => now(),
-                    'account_matching_prep_count' => 0,
-                    'account_matching_prep_notes' => 'No transactions need account matching',
+                    'account_matching_status' => 'completed',
+                    'account_matching_completed_at' => now(),
+                    'account_matching_notes' => 'No transactions need account matching',
                 ]);
 
                 return;
@@ -94,10 +94,9 @@ class ProcessAccountMatchingPrep implements ShouldQueue
             $duration = round(microtime(true) - $startTime, 2);
             
             $this->bankStatement->update([
-                'account_matching_prep_status' => 'completed',
-                'account_matching_prep_completed_at' => now(),
-                'account_matching_prep_count' => $processedCount,
-                'account_matching_prep_notes' => "Processed {$processedCount} transactions in {$duration}s",
+                'account_matching_status' => 'completed',
+                'account_matching_completed_at' => now(),
+                'account_matching_notes' => "Processed {$processedCount} transactions in {$duration}s",
             ]);
 
             Log::info("✅ [ACCOUNT MATCHING PREP] Completed", [
@@ -107,15 +106,9 @@ class ProcessAccountMatchingPrep implements ShouldQueue
             ]);
 
             // =========================================
-            // STEP 6: Trigger Next Job (ProcessAccountMatching)
+            // STEP 6: No need to trigger ProcessAccountMatching
+            // Account matching is done directly in this job via service
             // =========================================
-            if ($processedCount > 0) {
-                $this->dispatchNextJob();
-            } else {
-                Log::info("ℹ️ [ACCOUNT MATCHING PREP] Skipping ProcessAccountMatching (no transactions processed)", [
-                    'bank_statement_id' => $this->bankStatement->id,
-                ]);
-            }
 
         } catch (\Exception $e) {
             // =========================================
@@ -132,15 +125,19 @@ class ProcessAccountMatchingPrep implements ShouldQueue
     private function getTransactionIds(): array
     {
         try {
-            $query = StatementTransaction::where('bank_statement_id', $this->bankStatement->id);
+            $query = StatementTransaction::where('bank_statement_id', $this->bankStatement->id)
+                ->where('company_id', $this->bankStatement->company_id);
 
             if ($this->forceRematch) {
-                // Force rematch: ambil semua transaksi
-                Log::info("[ACCOUNT MATCHING PREP] Force rematch enabled - processing all transactions");
+                // Force rematch: ambil semua transaksi kecuali yang manual
+                $query->where('is_manual_account', false);
+                
+                Log::info("[ACCOUNT MATCHING PREP] Force rematch enabled - processing all non-manual transactions");
             } else {
-                // Normal: hanya yang belum ada account_id
+                // Normal: hanya yang belum ada account_id dan bukan manual
                 $query->whereNull('account_id')
-                      ->whereNull('matched_account_keyword_id');
+                      ->whereNull('matched_account_keyword_id')
+                      ->where('is_manual_account', false);
             }
 
             $transactionIds = $query->pluck('id')->toArray();
@@ -155,6 +152,7 @@ class ProcessAccountMatchingPrep implements ShouldQueue
         } catch (\Exception $e) {
             Log::error("[ACCOUNT MATCHING PREP] Failed to retrieve transaction IDs", [
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
             throw $e;
         }
@@ -182,7 +180,7 @@ class ProcessAccountMatchingPrep implements ShouldQueue
             try {
                 $batchStartTime = microtime(true);
 
-                // Process batch
+                // Process batch menggunakan service
                 $batchResults = $accountMatchingService->processBatchTransactions($batch, $this->forceRematch);
                 
                 $processedCount += $batchResults['matched'] + $batchResults['unmatched'];
@@ -203,6 +201,7 @@ class ProcessAccountMatchingPrep implements ShouldQueue
                     'batch' => "{$currentBatch}/{$totalBatches}",
                     'batch_size' => count($batch),
                     'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
                 ]);
                 
                 // Continue with next batch instead of failing completely
@@ -211,41 +210,6 @@ class ProcessAccountMatchingPrep implements ShouldQueue
         }
 
         return $processedCount;
-    }
-
-    /**
-     * Dispatch next job (ProcessAccountMatching)
-     */
-    private function dispatchNextJob(): void
-    {
-        try {
-            $delaySeconds = 3;
-
-            Log::info("🚀 [ACCOUNT MATCHING PREP] Dispatching ProcessAccountMatching", [
-                'bank_statement_id' => $this->bankStatement->id,
-                'delay_seconds' => $delaySeconds,
-                'queue' => 'matching',
-            ]);
-
-            ProcessAccountMatching::dispatch($this->bankStatement, $this->forceRematch)
-                ->onQueue('matching')
-                ->delay(now()->addSeconds($delaySeconds));
-
-            Log::info("✅ [ACCOUNT MATCHING PREP] ProcessAccountMatching dispatched successfully", [
-                'bank_statement_id' => $this->bankStatement->id,
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error("❌ [ACCOUNT MATCHING PREP] Failed to dispatch ProcessAccountMatching", [
-                'bank_statement_id' => $this->bankStatement->id,
-                'error' => $e->getMessage(),
-            ]);
-            
-            // Update bank statement with dispatch error
-            $this->bankStatement->update([
-                'account_matching_prep_notes' => 'Failed to dispatch next job: ' . $e->getMessage(),
-            ]);
-        }
     }
 
     /**
@@ -263,8 +227,10 @@ class ProcessAccountMatchingPrep implements ShouldQueue
         ]);
         
         $this->bankStatement->update([
-            'account_matching_prep_status' => 'failed',
-            'account_matching_prep_notes' => $e->getMessage(),
+            'account_matching_status' => 'failed',
+            'account_matching_notes' => 'Job processing failed',
+            'account_matching_error' => $e->getMessage(),
+            'account_matching_completed_at' => now(),
         ]);
     }
 
@@ -282,8 +248,10 @@ class ProcessAccountMatchingPrep implements ShouldQueue
         ]);
         
         $this->bankStatement->update([
-            'account_matching_prep_status' => 'failed',
-            'account_matching_prep_notes' => "Job failed after {$this->attempts()} attempts: {$exception->getMessage()}",
+            'account_matching_status' => 'failed',
+            'account_matching_notes' => "Job failed after {$this->attempts()} attempts",
+            'account_matching_error' => $exception->getMessage(),
+            'account_matching_completed_at' => now(),
         ]);
     }
 }
