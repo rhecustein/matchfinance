@@ -6,13 +6,19 @@ use App\Models\Account;
 use App\Models\AccountKeyword;
 use App\Models\AccountMatchingLog;
 use App\Models\StatementTransaction;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class AccountMatchingService
 {
-    protected array $activeKeywords = [];
+    protected Collection $activeKeywords;
+
+    public function __construct()
+    {
+        $this->activeKeywords = collect();
+    }
 
     /**
      * Match single transaction ke Account
@@ -191,14 +197,16 @@ class AccountMatchingService
 
     /**
      * Load active keywords dengan caching
+     * 
+     * ⚠️ FIX: Jangan convert ke array, pakai Collection
      */
     protected function loadActiveKeywords(): void
     {
-        if (!empty($this->activeKeywords)) {
+        if ($this->activeKeywords->isNotEmpty()) {
             return;
         }
 
-        // Cache selama 1 jam
+        // Cache selama 1 jam, return Collection instead of array
         $this->activeKeywords = Cache::remember('active_account_keywords', 3600, function () {
             return AccountKeyword::with('account')
                 ->whereHas('account', function ($query) {
@@ -207,8 +215,7 @@ class AccountMatchingService
                 ->where('is_active', true)
                 ->orderBy('priority', 'desc')
                 ->orderBy('account_id')
-                ->get()
-                ->toArray();
+                ->get(); // ✅ Jangan ->toArray()
         });
     }
 
@@ -218,7 +225,7 @@ class AccountMatchingService
     public function clearKeywordsCache(): void
     {
         Cache::forget('active_account_keywords');
-        $this->activeKeywords = [];
+        $this->activeKeywords = collect();
     }
 
     /**
@@ -234,6 +241,8 @@ class AccountMatchingService
 
     /**
      * Check apakah keyword match dengan text
+     * 
+     * @param AccountKeyword $keyword ✅ Type hint tetap AccountKeyword
      */
     protected function checkKeywordMatch(AccountKeyword $keyword, string $text): array
     {
@@ -284,14 +293,10 @@ class AccountMatchingService
         // Bonus untuk case sensitive
         $caseSensitiveBonus = $keyword->case_sensitive ? 5 : 0;
 
-        // Bonus untuk keyword yang lebih panjang (lebih spesifik)
-        $keywordLength = strlen($keyword->keyword);
-        $lengthBonus = min(($keywordLength / 5), 10);
+        // Total score (max 100)
+        $totalScore = min(100, $baseScore + $priorityBonus + $matchTypeBonus + $caseSensitiveBonus);
 
-        $totalScore = $baseScore + $priorityBonus + $matchTypeBonus + $caseSensitiveBonus + $lengthBonus;
-
-        // Ensure score is between 0-100
-        return max(0, min(100, (int) $totalScore));
+        return (int) $totalScore;
     }
 
     /**
@@ -300,42 +305,23 @@ class AccountMatchingService
     protected function saveMatchingLogs(int $transactionId, array $logs): void
     {
         try {
-            $insertData = array_map(function ($log) use ($transactionId) {
-                return array_merge($log, [
+            foreach ($logs as $log) {
+                AccountMatchingLog::create([
                     'statement_transaction_id' => $transactionId,
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'account_id' => $log['account_id'],
+                    'account_keyword_id' => $log['account_keyword_id'],
+                    'confidence_score' => $log['confidence_score'],
+                    'is_matched' => $log['is_matched'],
+                    'match_reason' => $log['match_reason'],
+                    'match_details' => $log['match_details'],
+                    'matched_at' => now(),
                 ]);
-            }, $logs);
-
-            // Batch insert untuk performance
-            if (!empty($insertData)) {
-                AccountMatchingLog::insert($insertData);
             }
         } catch (\Exception $e) {
-            Log::error('Failed to save account matching logs', [
+            Log::warning('Failed to save matching logs', [
                 'transaction_id' => $transactionId,
                 'error' => $e->getMessage()
             ]);
         }
-    }
-
-    /**
-     * Get matching statistics untuk account
-     */
-    public function getAccountStatistics(int $accountId): array
-    {
-        $account = Account::with('transactions')->findOrFail($accountId);
-
-        return [
-            'total_transactions' => $account->transactions()->count(),
-            'total_amount' => $account->getTotalAmount(),
-            'automatic_matches' => $account->transactions()->where('is_manual_account', false)->count(),
-            'manual_matches' => $account->transactions()->where('is_manual_account', true)->count(),
-            'average_confidence' => $account->transactions()
-                ->whereNotNull('account_confidence_score')
-                ->avg('account_confidence_score'),
-            'last_matched' => $account->last_matched_at?->format('Y-m-d H:i:s'),
-        ];
     }
 }

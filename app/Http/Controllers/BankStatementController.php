@@ -427,7 +427,8 @@ class BankStatementController extends Controller
                 'type:id,name',
                 'category:id,name,color',
                 'subCategory:id,name',
-                'account:id,name,code,account_type',
+                'account:id,name,code,account_type', // ✅ Account relationship
+                'matchedAccountKeyword:id,keyword,match_type', // ✅ Account keyword
                 'verifiedBy:id,name'
             ]);
 
@@ -439,10 +440,49 @@ class BankStatementController extends Controller
 
         $transactions = $query->paginate(20);
 
-        // STATISTIK
+        // STATISTIK (Enhanced with account matching info)
         $statistics = $this->calculateTransactionStatistics($bankStatement);
+        
+        // ✅ ACCOUNT MATCHING STATUS
+        $accountMatchingStatus = $this->getAccountMatchingStatus($bankStatement);
 
-        return view('bank-statements.show', compact('bankStatement', 'statistics', 'transactions'));
+        return view('bank-statements.show', compact(
+            'bankStatement', 
+            'statistics', 
+            'transactions',
+            'accountMatchingStatus' // ✅ Pass to view
+        ));
+    }
+
+    /**
+     * ✅ NEW: Get account matching status info
+     */
+    private function getAccountMatchingStatus(BankStatement $bankStatement): array
+    {
+        return [
+            // Prep status
+            'prep_status' => $bankStatement->account_matching_prep_status ?? 'pending',
+            'prep_started_at' => $bankStatement->account_matching_prep_started_at,
+            'prep_completed_at' => $bankStatement->account_matching_prep_completed_at,
+            'prep_count' => $bankStatement->account_matching_prep_count ?? 0,
+            'prep_notes' => $bankStatement->account_matching_prep_notes,
+            
+            // Main matching status
+            'matching_status' => $bankStatement->account_matching_status ?? 'pending',
+            'matching_started_at' => $bankStatement->account_matching_started_at,
+            'matching_completed_at' => $bankStatement->account_matching_completed_at,
+            'matching_notes' => $bankStatement->account_matching_notes,
+            
+            // Progress
+            'total_processed' => $bankStatement->account_matching_count ?? 0,
+            'matched_count' => $bankStatement->account_matched_count ?? 0,
+            'unmatched_count' => $bankStatement->account_unmatched_count ?? 0,
+            
+            // Percentage
+            'match_percentage' => $bankStatement->total_transactions > 0
+                ? round(($bankStatement->transactions()->whereNotNull('account_id')->count() / $bankStatement->total_transactions) * 100, 1)
+                : 0,
+        ];
     }
 
     
@@ -2054,77 +2094,109 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Terapkan filter transaksi ke query
+     * Terapkan filter pada query transaksi
+     * 
+     * ✅ ENHANCED: Tambahkan account matching filters
      */
     private function applyTransactionFilters($query, Request $request): void
     {
         $filter = $request->get('filter');
-        
-        switch ($filter) {
-            case 'categorized':
-                $query->whereNotNull('sub_category_id');
-                break;
-            case 'uncategorized':
-                $query->whereNull('sub_category_id');
-                break;
-            case 'verified':
-                $query->where('is_verified', true);
-                break;
-            case 'approved':
-                $query->where('is_approved', true);
-                break;
-            case 'rejected':
-                $query->where('is_rejected', true);
-                break;
-            case 'with-account':
-                $query->whereNotNull('account_id');
-                break;
-            case 'high-confidence':
-                $query->where('confidence_score', '>=', 80);
-                break;
-            case 'low-confidence':
-                $query->where('confidence_score', '>', 0)
-                    ->where('confidence_score', '<', 50);
-                break;
-        }
-
-        // FILTER TIPE
         $type = $request->get('type');
-        if ($type === 'credit') {
-            $query->where('transaction_type', 'credit');
-        } elseif ($type === 'debit') {
-            $query->where('transaction_type', 'debit');
-        }
-
-        // FILTER RENTANG AMOUNT
         $amountRange = $request->get('amount_range');
-        switch ($amountRange) {
-            case 'large':
-                $query->where('amount', '>', 1000000);
-                break;
-            case 'medium':
-                $query->whereBetween('amount', [100000, 1000000]);
-                break;
-            case 'small':
-                $query->where('amount', '<', 100000);
-                break;
+
+        // ========================================
+        // CATEGORY FILTERS (Existing)
+        // ========================================
+        if ($filter === 'categorized') {
+            $query->whereNotNull('sub_category_id');
+        } elseif ($filter === 'uncategorized') {
+            $query->whereNull('sub_category_id');
+        } elseif ($filter === 'verified') {
+            $query->where('is_verified', true);
+        } elseif ($filter === 'high-confidence') {
+            $query->where('confidence_score', '>=', 80);
+        } elseif ($filter === 'medium-confidence') {
+            $query->whereBetween('confidence_score', [50, 79]);
+        } elseif ($filter === 'low-confidence') {
+            $query->where('confidence_score', '<', 50)
+                ->where('confidence_score', '>', 0);
+        }
+        
+        // ========================================
+        // ✅ ACCOUNT FILTERS (NEW)
+        // ========================================
+        elseif ($filter === 'with-account') {
+            $query->whereNotNull('account_id');
+        } elseif ($filter === 'without-account') {
+            $query->whereNull('account_id');
+        } elseif ($filter === 'auto-account') {
+            $query->whereNotNull('account_id')
+                ->where('is_manual_account', false);
+        } elseif ($filter === 'manual-account') {
+            $query->whereNotNull('account_id')
+                ->where('is_manual_account', true);
+        } elseif ($filter === 'high-account-confidence') {
+            $query->whereNotNull('account_id')
+                ->where('account_confidence_score', '>=', 80);
+        } elseif ($filter === 'medium-account-confidence') {
+            $query->whereNotNull('account_id')
+                ->whereBetween('account_confidence_score', [50, 79]);
+        } elseif ($filter === 'low-account-confidence') {
+            $query->whereNotNull('account_id')
+                ->where('account_confidence_score', '<', 50);
+        } elseif ($filter === 'needs-review') {
+            // Transactions yang perlu review: uncategorized OR no account OR low confidence
+            $query->where(function($q) {
+                $q->whereNull('sub_category_id')
+                ->orWhereNull('account_id')
+                ->orWhere('confidence_score', '<', 50)
+                ->orWhere('account_confidence_score', '<', 50);
+            });
         }
 
-        // FILTER KHUSUS
-        $special = $request->get('special');
-        switch ($special) {
-            case 'round':
-                $query->where(function($q) {
-                    $q->whereRaw('amount % 1000000 = 0')
-                    ->orWhereRaw('amount % 100000 = 0');
+        // ========================================
+        // TRANSACTION TYPE FILTER
+        // ========================================
+        if ($type === 'credit') {
+            $query->where('credit_amount', '>', 0);
+        } elseif ($type === 'debit') {
+            $query->where('debit_amount', '>', 0);
+        }
+
+        // ========================================
+        // AMOUNT RANGE FILTER
+        // ========================================
+        if ($amountRange === 'large') {
+            $query->where(function($q) {
+                $q->where('credit_amount', '>=', 1000000)
+                ->orWhere('debit_amount', '>=', 1000000);
+            });
+        } elseif ($amountRange === 'medium') {
+            $query->where(function($q) {
+                $q->whereBetween('credit_amount', [100000, 999999])
+                ->orWhereBetween('debit_amount', [100000, 999999]);
+            });
+        } elseif ($amountRange === 'small') {
+            $query->where(function($q) {
+                $q->where(function($q2) {
+                    $q2->where('credit_amount', '>', 0)
+                    ->where('credit_amount', '<', 100000);
+                })->orWhere(function($q2) {
+                    $q2->where('debit_amount', '>', 0)
+                    ->where('debit_amount', '<', 100000);
                 });
-                break;
-            case 'manual':
-                $query->where(function($q) {
-                    $q->where('is_manual_category', true)
-                    ->orWhere('is_manual_account', true);
-                });
-                break;
+            });
+        }
+
+        // ========================================
+        // SEARCH (if implemented)
+        // ========================================
+        $search = $request->get('search');
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('description', 'like', "%{$search}%")
+                ->orWhere('reference_no', 'like', "%{$search}%");
+            });
         }
     }
 
@@ -2154,21 +2226,60 @@ class BankStatementController extends Controller
 
     /**
      * Hitung statistik transaksi untuk halaman show
+     * 
+     * ✅ ENHANCED: Tambahkan info account matching
      */
     private function calculateTransactionStatistics(BankStatement $bankStatement): array
     {
         return [
+            // Basic stats
             'total' => $bankStatement->total_transactions,
             'categorized' => $bankStatement->transactions()->whereNotNull('sub_category_id')->count(),
             'uncategorized' => $bankStatement->transactions()->whereNull('sub_category_id')->count(),
+            
+            // ✅ Account matching stats
             'with_account' => $bankStatement->transactions()->whereNotNull('account_id')->count(),
             'without_account' => $bankStatement->transactions()->whereNull('account_id')->count(),
+            'auto_account_matched' => $bankStatement->transactions()
+                ->whereNotNull('account_id')
+                ->where('is_manual_account', false)
+                ->count(),
+            'manual_account_assigned' => $bankStatement->transactions()
+                ->whereNotNull('account_id')
+                ->where('is_manual_account', true)
+                ->count(),
+            
+            // ✅ Account confidence stats
+            'high_account_confidence' => $bankStatement->transactions()
+                ->whereNotNull('account_id')
+                ->where('account_confidence_score', '>=', 80)
+                ->count(),
+            'medium_account_confidence' => $bankStatement->transactions()
+                ->whereNotNull('account_id')
+                ->where('account_confidence_score', '>=', 50)
+                ->where('account_confidence_score', '<', 80)
+                ->count(),
+            'low_account_confidence' => $bankStatement->transactions()
+                ->whereNotNull('account_id')
+                ->where('account_confidence_score', '<', 50)
+                ->count(),
+            
+            // Verification stats
             'verified' => $bankStatement->verified_transactions,
             'unverified' => $bankStatement->total_transactions - $bankStatement->verified_transactions,
             'approved' => $bankStatement->transactions()->where('is_approved', true)->count(),
             'rejected' => $bankStatement->transactions()->where('is_rejected', true)->count(),
+            
+            // Category confidence stats
             'high_confidence' => $bankStatement->transactions()->where('confidence_score', '>=', 80)->count(),
-            'low_confidence' => $bankStatement->transactions()->where('confidence_score', '>', 0)->where('confidence_score', '<', 50)->count(),
+            'medium_confidence' => $bankStatement->transactions()
+                ->where('confidence_score', '>=', 50)
+                ->where('confidence_score', '<', 80)
+                ->count(),
+            'low_confidence' => $bankStatement->transactions()
+                ->where('confidence_score', '>', 0)
+                ->where('confidence_score', '<', 50)
+                ->count(),
         ];
     }
 
