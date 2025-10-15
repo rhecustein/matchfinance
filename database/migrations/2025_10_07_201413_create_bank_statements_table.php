@@ -31,7 +31,9 @@ return new class extends Migration
             $table->unsignedBigInteger('file_size')->nullable()->comment('File size in bytes');
             $table->string('mime_type', 100)->default('application/pdf')->comment('File MIME type');
             
-            // OCR Processing Status
+            // =========================================================
+            // OCR PROCESSING STATUS
+            // =========================================================
             $table->enum('ocr_status', [
                 'pending', 
                 'processing', 
@@ -42,8 +44,12 @@ return new class extends Migration
             $table->json('ocr_response')->nullable()->comment('Full OCR API response for reference');
             $table->text('ocr_error')->nullable()->comment('Error message if OCR failed');
             $table->string('ocr_job_id', 100)->nullable()->comment('Queue job ID for tracking');
+            $table->timestamp('ocr_started_at')->nullable()->comment('When OCR processing started');
+            $table->timestamp('ocr_completed_at')->nullable()->comment('When OCR processing completed');
             
-            // Statement Metadata (extracted from OCR response)
+            // =========================================================
+            // STATEMENT METADATA (extracted from OCR response)
+            // =========================================================
             $table->string('bank_name', 100)->nullable()->comment('Bank name extracted from OCR');
             $table->date('period_from')->nullable()->comment('Statement period start date');
             $table->date('period_to')->nullable()->comment('Statement period end date');
@@ -53,7 +59,9 @@ return new class extends Migration
             $table->string('branch_code', 50)->nullable()->comment('Bank branch code if available');
             $table->string('branch_name', 255)->nullable()->comment('Bank branch name if available');
             
-            // Financial Summary (calculated from OCR response)
+            // =========================================================
+            // FINANCIAL SUMMARY (calculated from OCR response)
+            // =========================================================
             $table->decimal('opening_balance', 20, 2)->nullable()->comment('Opening balance of the period');
             $table->decimal('closing_balance', 20, 2)->nullable()->comment('Closing balance of the period');
             
@@ -63,23 +71,78 @@ return new class extends Migration
             $table->decimal('total_credit_amount', 20, 2)->default(0)->comment('Total amount of credits (incoming)');
             $table->decimal('total_debit_amount', 20, 2)->default(0)->comment('Total amount of debits (outgoing)');
             
-            // Transaction Statistics (managed by system)
+            // =========================================================
+            // TRANSACTION STATISTICS (managed by system)
+            // =========================================================
             $table->integer('total_transactions')->default(0)->comment('Total count of parsed transactions');
             $table->integer('processed_transactions')->default(0)->comment('Number of processed transactions');
             $table->integer('matched_transactions')->default(0)->comment('Number of auto-matched transactions');
             $table->integer('unmatched_transactions')->default(0)->comment('Number of unmatched transactions');
             $table->integer('verified_transactions')->default(0)->comment('Number of user-verified transactions');
             
-            // Additional Metadata
+            // ✅ NEW: Low Confidence Transactions Count (CRITICAL!)
+            $table->integer('low_confidence_transactions')
+                  ->default(0)
+                  ->comment('Number of transactions with confidence score < 70');
+            
+            // =========================================================
+            // ✅ TRANSACTION MATCHING STATUS
+            // =========================================================
+            $table->string('matching_status', 50)
+                  ->nullable()
+                  ->comment('Status: pending, processing, completed, failed, skipped');
+            
+            $table->text('matching_notes')
+                  ->nullable()
+                  ->comment('Notes or reason for matching status');
+            
+            $table->text('matching_error')
+                  ->nullable()
+                  ->comment('Error message if matching failed');
+            
+            $table->timestamp('matching_started_at')
+                  ->nullable()
+                  ->comment('When transaction matching job started');
+            
+            $table->timestamp('matching_completed_at')
+                  ->nullable()
+                  ->comment('When transaction matching job completed');
+            
+            // =========================================================
+            // ✅ ACCOUNT MATCHING STATUS
+            // =========================================================
+            $table->string('account_matching_status', 50)
+                  ->nullable()
+                  ->comment('Status: pending, processing, completed, failed, skipped');
+            
+            $table->text('account_matching_notes')
+                  ->nullable()
+                  ->comment('Notes or reason for account matching status');
+            
+            $table->text('account_matching_error')
+                  ->nullable()
+                  ->comment('Error message if account matching failed');
+            
+            $table->timestamp('account_matching_started_at')
+                  ->nullable()
+                  ->comment('When account matching job started');
+            
+            $table->timestamp('account_matching_completed_at')
+                  ->nullable()
+                  ->comment('When account matching job completed');
+            
+            // =========================================================
+            // RECONCILIATION
+            // =========================================================
             $table->text('notes')->nullable()->comment('User notes or remarks about this statement');
             $table->boolean('is_reconciled')->default(false)->comment('Whether statement is reconciled');
             $table->timestamp('reconciled_at')->nullable()->comment('When the statement was reconciled');
             $table->foreignId('reconciled_by')->nullable()->constrained('users')->nullOnDelete()->comment('User who reconciled');
             
-            // Timestamps
+            // =========================================================
+            // TIMESTAMPS
+            // =========================================================
             $table->timestamp('uploaded_at')->useCurrent()->comment('When file was uploaded');
-            $table->timestamp('ocr_started_at')->nullable()->comment('When OCR processing started');
-            $table->timestamp('ocr_completed_at')->nullable()->comment('When OCR processing completed');
             $table->timestamps();
             $table->softDeletes();
             
@@ -111,7 +174,15 @@ return new class extends Migration
             // 7. STATISTICS & REPORTING
             $table->index(['matched_transactions', 'total_transactions'], 'idx_matching_stats');
             
-            // 8. SOFT DELETE AWARE (CRITICAL for Multi-tenant)
+            // ✅ 8. MATCHING STATUS INDEXES (NEW!)
+            $table->index(['matching_status'], 'idx_matching_status');
+            $table->index(['company_id', 'matching_status'], 'idx_company_matching');
+            
+            // ✅ 9. ACCOUNT MATCHING STATUS INDEXES (NEW!)
+            $table->index(['account_matching_status'], 'idx_account_matching_status');
+            $table->index(['company_id', 'account_matching_status'], 'idx_company_account_status');
+            
+            // 10. SOFT DELETE AWARE (CRITICAL for Multi-tenant)
             $table->index(['company_id', 'deleted_at'], 'idx_company_deleted');
             $table->index(['user_id', 'deleted_at'], 'idx_user_deleted');
         });

@@ -26,7 +26,17 @@ return new class extends Migration
             $table->string('branch_code', 50)->nullable()->comment('Bank branch code where transaction occurred');
             $table->text('description')->comment('Transaction description/narrative from bank statement');
             $table->string('reference_no', 100)->nullable()->comment('Bank reference/transaction number');
-            //status approved
+            
+            // ✅ NEW: Extracted Information (for better matching)
+            $table->json('extracted_keywords')
+                  ->nullable()
+                  ->comment('Keywords extracted from description for search');
+            
+            $table->text('normalized_description')
+                  ->nullable()
+                  ->comment('Cleaned/normalized version of description');
+            
+            // Status Flags
             $table->boolean('is_approved')->default(false)->comment('Whether transaction is approved by user');
             $table->foreignId('approved_by')
                   ->nullable()
@@ -36,7 +46,7 @@ return new class extends Migration
             $table->timestamp('approved_at')
                   ->nullable()
                   ->comment('Timestamp when transaction was approved');
-            //status rejected
+            
             $table->boolean('is_rejected')->default(false)->comment('Whether transaction is rejected by user');
             $table->foreignId('rejected_by')
                   ->nullable()
@@ -46,7 +56,7 @@ return new class extends Migration
             $table->timestamp('rejected_at')
                   ->nullable()
                   ->comment('Timestamp when transaction was rejected');
-            //status pending
+            
             $table->boolean('is_pending')->default(false)->comment('Whether transaction is pending');
             $table->foreignId('pending_by')
                   ->nullable()
@@ -56,8 +66,6 @@ return new class extends Migration
             $table->timestamp('pending_at')
                   ->nullable()
                   ->comment('Timestamp when transaction was marked as pending');
-            //status cancelled
-
             
             // Amount Fields - Financial Data
             $table->decimal('debit_amount', 15, 2)->default(0)->comment('Outgoing/debit amount (negative cash flow)');
@@ -66,7 +74,9 @@ return new class extends Migration
             $table->enum('transaction_type', ['debit', 'credit'])->comment('Transaction direction: debit (out) or credit (in)');
             $table->decimal('amount', 15, 2)->comment('Absolute transaction amount (always positive)');
             
-            // Account Matching System
+            // =========================================================
+            // ACCOUNT MATCHING SYSTEM
+            // =========================================================
             $table->foreignId('account_id')
                   ->nullable()
                   ->constrained('accounts')
@@ -87,7 +97,9 @@ return new class extends Migration
                   ->default(false)
                   ->comment('True if account was manually assigned by user');
             
-            // Category Matching System - Denormalized for Performance
+            // =========================================================
+            // CATEGORY MATCHING SYSTEM - Denormalized for Performance
+            // =========================================================
             $table->foreignId('matched_keyword_id')
                   ->nullable()
                   ->constrained('keywords')
@@ -125,7 +137,31 @@ return new class extends Migration
                   ->nullable()
                   ->comment('Explanation of why this category was assigned');
             
-            // Verification & Quality Control
+            // ✅ NEW: Enhanced Matching Metadata
+            $table->string('match_method', 50)
+                  ->nullable()
+                  ->comment('Method used for matching: exact_match, contains, regex, similarity, word_boundary, partial_word');
+            
+            $table->json('match_metadata')
+                  ->nullable()
+                  ->comment('Detailed matching information including account suggestions, matched text, scores');
+            
+            $table->json('alternative_categories')
+                  ->nullable()
+                  ->comment('Top 5 category suggestions with confidence scores for user review');
+            
+            // ✅ NEW: Performance Tracking
+            $table->integer('matching_duration_ms')
+                  ->nullable()
+                  ->comment('Time taken to match in milliseconds');
+            
+            $table->integer('matching_attempts')
+                  ->default(0)
+                  ->comment('Number of matching attempts');
+            
+            // =========================================================
+            // VERIFICATION & QUALITY CONTROL
+            // =========================================================
             $table->boolean('is_verified')
                   ->default(false)
                   ->comment('Whether transaction has been reviewed and verified by user');
@@ -140,7 +176,32 @@ return new class extends Migration
                   ->nullable()
                   ->comment('When the transaction was verified');
             
-            // Additional Information
+            // ✅ NEW: Learning Feedback
+            $table->enum('feedback_status', [
+                'pending',
+                'correct',
+                'incorrect',
+                'partial'
+            ])->default('pending')
+               ->comment('User feedback on categorization accuracy for ML learning');
+            
+            $table->text('feedback_notes')
+                  ->nullable()
+                  ->comment('User notes about categorization');
+            
+            $table->foreignId('feedback_by')
+                  ->nullable()
+                  ->constrained('users')
+                  ->nullOnDelete()
+                  ->comment('User who provided feedback');
+            
+            $table->timestamp('feedback_at')
+                  ->nullable()
+                  ->comment('When feedback was provided');
+            
+            // =========================================================
+            // ADDITIONAL INFORMATION
+            // =========================================================
             $table->text('notes')
                   ->nullable()
                   ->comment('User notes, remarks, or additional context');
@@ -177,6 +238,7 @@ return new class extends Migration
             // 2. MATCHING SYSTEM INDEXES
             $table->index(['bank_statement_id', 'matched_keyword_id'], 'idx_statement_matching');
             $table->index(['matched_keyword_id', 'confidence_score'], 'idx_keyword_confidence');
+            $table->index(['match_method'], 'idx_match_method');
             
             // 3. ACCOUNT MATCHING INDEXES
             $table->index(['account_id', 'transaction_date'], 'idx_account_date');
@@ -186,9 +248,11 @@ return new class extends Migration
             $table->index(['type_id', 'category_id', 'sub_category_id'], 'idx_category_hierarchy');
             $table->index(['sub_category_id', 'transaction_date'], 'idx_subcat_date');
             
-            // 5. VERIFICATION INDEXES
+            // 5. VERIFICATION & FEEDBACK INDEXES
             $table->index(['is_verified', 'verified_at'], 'idx_verified');
             $table->index(['is_verified', 'confidence_score'], 'idx_verified_confidence');
+            $table->index(['feedback_status'], 'idx_feedback_status');
+            $table->index(['feedback_at'], 'idx_feedback_at');
             
             // 6. TRANSACTION TYPE & AMOUNT INDEXES
             $table->index(['transaction_type', 'transaction_date'], 'idx_type_date');
@@ -199,7 +263,6 @@ return new class extends Migration
             $table->index(['is_recurring', 'recurring_pattern'], 'idx_recurring');
             
             // 8. SOFT DELETE AWARE COMPOSITE INDEXES (CRITICAL!)
-            // These are for queries that filter by deleted_at frequently
             $table->index(['company_id', 'deleted_at'], 'idx_company_deleted');
             $table->index(['bank_statement_id', 'deleted_at'], 'idx_statement_deleted');
             $table->index(['is_verified', 'deleted_at'], 'idx_verified_deleted');

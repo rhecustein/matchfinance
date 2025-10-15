@@ -17,26 +17,58 @@ class StatementTransaction extends Model
     use HasFactory, SoftDeletes, BelongsToTenant;
 
     protected $fillable = [
+        // =========================================================
+        // CORE FIELDS
+        // =========================================================
         'uuid',
         'company_id',
         'bank_statement_id',
+        
+        // Transaction Details
         'transaction_date',
         'transaction_time',
         'value_date',
         'branch_code',
         'description',
         'reference_no',
+        
+        // ✅ Extracted Information (for better matching)
+        'extracted_keywords',
+        'normalized_description',
+        
+        // =========================================================
+        // STATUS FLAGS
+        // =========================================================
+        'is_approved',
+        'approved_by',
+        'approved_at',
+        'is_rejected',
+        'rejected_by',
+        'rejected_at',
+        'is_pending',
+        'pending_by',
+        'pending_at',
+        
+        // =========================================================
+        // AMOUNT FIELDS
+        // =========================================================
         'debit_amount',
         'credit_amount',
         'balance',
         'transaction_type',
         'amount',
-        'is_approved',
-        'is_rejected',
+        
+        // =========================================================
+        // ACCOUNT MATCHING (Step 2 - After Transaction Matching)
+        // =========================================================
         'account_id',
         'matched_account_keyword_id',
         'account_confidence_score',
         'is_manual_account',
+        
+        // =========================================================
+        // CATEGORY MATCHING (Step 1 - Transaction Categorization)
+        // =========================================================
         'matched_keyword_id',
         'sub_category_id',
         'category_id',
@@ -44,9 +76,32 @@ class StatementTransaction extends Model
         'confidence_score',
         'is_manual_category',
         'matching_reason',
+        
+        // ✅ Enhanced Matching Metadata
+        'match_method',              // exact_match, contains, regex, similarity, etc
+        'match_metadata',            // JSON: detailed info + account suggestions
+        'alternative_categories',    // JSON: Top 5 category suggestions
+        
+        // ✅ Performance Tracking
+        'matching_duration_ms',      // Time taken to match
+        'matching_attempts',         // Number of attempts
+        
+        // =========================================================
+        // VERIFICATION & FEEDBACK
+        // =========================================================
         'is_verified',
         'verified_by',
         'verified_at',
+        
+        // ✅ Learning Feedback (for ML improvement)
+        'feedback_status',           // pending, correct, incorrect, partial
+        'feedback_notes',            // User notes about accuracy
+        'feedback_by',               // Who gave feedback
+        'feedback_at',               // When feedback was given
+        
+        // =========================================================
+        // ADDITIONAL
+        // =========================================================
         'notes',
         'metadata',
         'is_transfer',
@@ -55,19 +110,44 @@ class StatementTransaction extends Model
     ];
 
     protected $casts = [
+        // Dates & Times
         'transaction_date' => 'date',
         'value_date' => 'date',
+        'approved_at' => 'datetime',
+        'rejected_at' => 'datetime',
+        'pending_at' => 'datetime',
+        'verified_at' => 'datetime',
+        'feedback_at' => 'datetime',
+        
+        // Amounts
         'debit_amount' => 'decimal:2',
         'credit_amount' => 'decimal:2',
         'balance' => 'decimal:2',
         'amount' => 'decimal:2',
+        
+        // Account Matching
         'account_confidence_score' => 'integer',
         'is_manual_account' => 'boolean',
+        
+        // Category Matching
         'confidence_score' => 'integer',
         'is_manual_category' => 'boolean',
-        'is_verified' => 'boolean',
-        'verified_at' => 'datetime',
+        
+        // ✅ JSON Fields
+        'match_metadata' => 'array',
+        'alternative_categories' => 'array',
+        'extracted_keywords' => 'array',
         'metadata' => 'array',
+        
+        // ✅ Performance
+        'matching_duration_ms' => 'integer',
+        'matching_attempts' => 'integer',
+        
+        // Flags
+        'is_approved' => 'boolean',
+        'is_rejected' => 'boolean',
+        'is_pending' => 'boolean',
+        'is_verified' => 'boolean',
         'is_transfer' => 'boolean',
         'is_recurring' => 'boolean',
     ];
@@ -87,7 +167,8 @@ class StatementTransaction extends Model
     {
         return 'id';  // ✅ Gunakan ID numerik
     }
-        /*
+
+    /*
     |--------------------------------------------------------------------------
     | Relationships - Core
     |--------------------------------------------------------------------------
@@ -108,10 +189,10 @@ class StatementTransaction extends Model
         return $this->hasOneThrough(
             Bank::class,
             BankStatement::class,
-            'id', // Foreign key on bank_statements table
-            'id', // Foreign key on banks table
-            'bank_statement_id', // Local key on statement_transactions table
-            'bank_id' // Local key on bank_statements table
+            'id',
+            'id',
+            'bank_statement_id',
+            'bank_id'
         )->withoutGlobalScopes();
     }
 
@@ -120,16 +201,25 @@ class StatementTransaction extends Model
         return $this->belongsTo(User::class, 'verified_by');
     }
 
-    //approvedBy
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
 
-    //rejectedBy
     public function rejectedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    public function pendingBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'pending_by');
+    }
+
+    // ✅ NEW: Feedback By Relationship
+    public function feedbackBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'feedback_by');
     }
 
     /*
@@ -214,7 +304,7 @@ class StatementTransaction extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Query Scopes
+    | Query Scopes - Verification & Status
     |--------------------------------------------------------------------------
     */
 
@@ -227,6 +317,27 @@ class StatementTransaction extends Model
     {
         return $query->where('is_verified', false);
     }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('is_approved', true);
+    }
+
+    public function scopeRejected($query)
+    {
+        return $query->where('is_rejected', true);
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('is_pending', true);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Query Scopes - Matching Type
+    |--------------------------------------------------------------------------
+    */
 
     public function scopeManualCategory($query)
     {
@@ -248,6 +359,12 @@ class StatementTransaction extends Model
         return $query->where('is_manual_account', false);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Query Scopes - Confidence Levels
+    |--------------------------------------------------------------------------
+    */
+
     public function scopeHighConfidence($query, $threshold = 80)
     {
         return $query->where('confidence_score', '>=', $threshold);
@@ -257,6 +374,17 @@ class StatementTransaction extends Model
     {
         return $query->where('confidence_score', '<', $threshold);
     }
+
+    public function scopeMediumConfidence($query)
+    {
+        return $query->whereBetween('confidence_score', [50, 79]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Query Scopes - Transaction Types
+    |--------------------------------------------------------------------------
+    */
 
     public function scopeDebits($query)
     {
@@ -277,6 +405,12 @@ class StatementTransaction extends Model
     {
         return $query->where('is_recurring', true);
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Query Scopes - Date & Filters
+    |--------------------------------------------------------------------------
+    */
 
     public function scopeDateRange($query, $from, $to)
     {
@@ -361,6 +495,22 @@ class StatementTransaction extends Model
         return $query->whereYear('transaction_date', now()->year);
     }
 
+    // ✅ NEW: Feedback Status Scopes
+    public function scopeFeedbackCorrect($query)
+    {
+        return $query->where('feedback_status', 'correct');
+    }
+
+    public function scopeFeedbackIncorrect($query)
+    {
+        return $query->where('feedback_status', 'incorrect');
+    }
+
+    public function scopeFeedbackPending($query)
+    {
+        return $query->where('feedback_status', 'pending');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Status Check Methods
@@ -370,6 +520,21 @@ class StatementTransaction extends Model
     public function isVerified(): bool
     {
         return $this->is_verified;
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->is_approved;
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->is_rejected;
+    }
+
+    public function isPending(): bool
+    {
+        return $this->is_pending;
     }
 
     public function isCategorized(): bool
@@ -425,6 +590,18 @@ class StatementTransaction extends Model
     public function hasLowConfidence(): bool
     {
         return $this->confidence_score < 50;
+    }
+
+    // ✅ NEW: Has Alternative Categories
+    public function hasAlternatives(): bool
+    {
+        return !empty($this->alternative_categories['suggestions'] ?? []);
+    }
+
+    // ✅ NEW: Has Feedback
+    public function hasFeedback(): bool
+    {
+        return $this->feedback_status !== 'pending';
     }
 
     /*
@@ -522,6 +699,27 @@ class StatementTransaction extends Model
         return $this->update([
             'is_recurring' => true,
             'recurring_pattern' => $pattern,
+        ]);
+    }
+
+    // ✅ NEW: Feedback Methods
+    public function markFeedbackCorrect(?string $notes = null, ?int $userId = null): bool
+    {
+        return $this->update([
+            'feedback_status' => 'correct',
+            'feedback_notes' => $notes,
+            'feedback_by' => $userId ?? auth()->id(),
+            'feedback_at' => now(),
+        ]);
+    }
+
+    public function markFeedbackIncorrect(?string $notes = null, ?int $userId = null): bool
+    {
+        return $this->update([
+            'feedback_status' => 'incorrect',
+            'feedback_notes' => $notes,
+            'feedback_by' => $userId ?? auth()->id(),
+            'feedback_at' => now(),
         ]);
     }
 
@@ -714,6 +912,33 @@ class StatementTransaction extends Model
         );
     }
 
+    // ✅ NEW: Alternatives Count
+    public function alternativesCount(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => count($this->alternative_categories['suggestions'] ?? [])
+        );
+    }
+
+    // ✅ NEW: Match Method Label
+    public function matchMethodLabel(): Attribute
+    {
+        $labels = [
+            'exact_match' => 'Exact Match',
+            'contains' => 'Contains',
+            'starts_with' => 'Starts With',
+            'word_boundary' => 'Word Boundary',
+            'regex' => 'Regex Pattern',
+            'similarity' => 'Similarity',
+            'partial_word' => 'Partial Word',
+            'no_match' => 'No Match',
+        ];
+
+        return Attribute::make(
+            get: fn() => $labels[$this->match_method ?? 'no_match'] ?? 'Unknown'
+        );
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Helper Methods
@@ -744,12 +969,15 @@ class StatementTransaction extends Model
             'categorization_status' => $this->categorization_status,
             'confidence_score' => $this->confidence_score,
             'confidence_label' => $this->confidence_label,
+            'match_method' => $this->match_method_label, // ✅ ADDED
+            'alternatives_count' => $this->alternatives_count, // ✅ ADDED
             'is_verified' => $this->is_verified,
             'verified_at' => $this->verified_at?->format('Y-m-d H:i:s'),
             'needs_review' => $this->needsReview(),
             'is_transfer' => $this->is_transfer,
             'is_recurring' => $this->is_recurring,
             'recurring_pattern' => $this->recurring_pattern,
+            'feedback_status' => $this->feedback_status, // ✅ ADDED
             'notes' => $this->notes,
         ];
     }

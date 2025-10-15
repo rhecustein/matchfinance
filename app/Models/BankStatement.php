@@ -18,19 +18,34 @@ class BankStatement extends Model
     use HasFactory, SoftDeletes, BelongsToTenant;
 
     protected $fillable = [
+        // =========================================================
+        // CORE INFO
+        // =========================================================
         'uuid',
         'company_id',
         'bank_id',
         'user_id',
+        
+        // File Information
         'file_path',
         'file_hash',
         'original_filename',
         'file_size',
         'mime_type',
+        
+        // =========================================================
+        // OCR STATUS
+        // =========================================================
         'ocr_status',
         'ocr_response',
         'ocr_error',
         'ocr_job_id',
+        'ocr_started_at',
+        'ocr_completed_at',
+        
+        // =========================================================
+        // BANK INFO (from OCR)
+        // =========================================================
         'bank_name',
         'period_from',
         'period_to',
@@ -39,55 +54,100 @@ class BankStatement extends Model
         'currency',
         'branch_code',
         'branch_name',
+        
+        // =========================================================
+        // FINANCIAL SUMMARY
+        // =========================================================
         'opening_balance',
         'closing_balance',
         'total_credit_count',
         'total_debit_count',
         'total_credit_amount',
         'total_debit_amount',
+        
+        // =========================================================
+        // TRANSACTION COUNTS & STATISTICS
+        // =========================================================
         'total_transactions',
         'processed_transactions',
         'matched_transactions',
         'unmatched_transactions',
         'verified_transactions',
-        'notes',
+        'low_confidence_transactions', // ✅ ADDED
+        
+        // =========================================================
+        // ✅ TRANSACTION MATCHING STATUS (NEW!)
+        // =========================================================
+        'matching_status',           // pending, processing, completed, failed, skipped
+        'matching_notes',            // Notes atau alasan
+        'matching_error',            // Error message jika failed
+        'matching_started_at',       // Kapan mulai
+        'matching_completed_at',     // Kapan selesai
+        
+        // =========================================================
+        // ✅ ACCOUNT MATCHING STATUS (NEW!)
+        // =========================================================
+        'account_matching_status',          // pending, processing, completed, failed, skipped
+        'account_matching_notes',           // Notes atau alasan
+        'account_matching_error',           // Error message jika failed
+        'account_matching_started_at',      // Kapan mulai
+        'account_matching_completed_at',    // Kapan selesai
+        
+        // =========================================================
+        // RECONCILIATION
+        // =========================================================
         'is_reconciled',
         'reconciled_at',
         'reconciled_by',
-        'uploaded_at',
-        'ocr_started_at',
-        'ocr_completed_at',
-        //tambahan
-        'matching_status',
-        'matching_notes',
-        'matching_started_at',
-        'matching_completed_at',
-        'account_matching_status',
-        'account_matching_started_at',
         
+        // =========================================================
+        // ADDITIONAL
+        // =========================================================
+        'notes',
+        'uploaded_at',
     ];
 
     protected $casts = [
+        // File
         'file_size' => 'integer',
+        
+        // OCR
         'ocr_response' => 'array',
+        'ocr_started_at' => 'datetime',
+        'ocr_completed_at' => 'datetime',
+        
+        // Bank Info
         'period_from' => 'date',
         'period_to' => 'date',
+        
+        // Financial
         'opening_balance' => 'decimal:2',
         'closing_balance' => 'decimal:2',
         'total_credit_count' => 'integer',
         'total_debit_count' => 'integer',
         'total_credit_amount' => 'decimal:2',
         'total_debit_amount' => 'decimal:2',
+        
+        // Transaction Counts
         'total_transactions' => 'integer',
         'processed_transactions' => 'integer',
         'matched_transactions' => 'integer',
         'unmatched_transactions' => 'integer',
         'verified_transactions' => 'integer',
+        'low_confidence_transactions' => 'integer', // ✅ ADDED
+        
+        // ✅ Matching Timestamps (NEW!)
+        'matching_started_at' => 'datetime',
+        'matching_completed_at' => 'datetime',
+        'account_matching_started_at' => 'datetime',
+        'account_matching_completed_at' => 'datetime',
+        
+        // Reconciliation
         'is_reconciled' => 'boolean',
         'reconciled_at' => 'datetime',
+        
+        // Additional
         'uploaded_at' => 'datetime',
-        'ocr_started_at' => 'datetime',
-        'ocr_completed_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -115,74 +175,6 @@ class BankStatement extends Model
     | Relationships
     |--------------------------------------------------------------------------
     */
-    /**
-     * Scope: Not in any collection
-     */
-    public function scopeNotInCollection($query)
-    {
-        return $query->whereDoesntHave('documentItem');
-    }
-
-    /**
-     * Scope: In a collection
-     */
-    public function scopeInCollection($query)
-    {
-        return $query->whereHas('documentItem');
-    }
-
-    /**
-     * Check if this statement is already in a collection
-     */
-    public function isInCollection(): bool
-    {
-        return $this->documentItem()->exists();
-    }
-        /*
-    |--------------------------------------------------------------------------
-    | Relationships - Document Collections (AI Chat)
-    |--------------------------------------------------------------------------
-    */
-
-    /**
-     * Get the document item (if this statement is in a collection)
-     */
-    public function documentItem(): HasOne
-    {
-        return $this->hasOne(DocumentItem::class);
-    }
-
-    /**
-     * Get the document items (if this statement is in multiple collections)
-     */
-    public function documentItems(): HasMany
-    {
-        return $this->hasMany(DocumentItem::class);
-    }
-
-    /**
-     * Get the document collection through document item
-     */
-    public function documentCollection(): HasOneThrough
-    {
-        return $this->hasOneThrough(
-            DocumentCollection::class,
-            DocumentItem::class,
-            'bank_statement_id',
-            'id',
-            'id',
-            'document_collection_id'
-        );
-    }
-
-    /**
-     * Get chat sessions related to this statement
-     */
-    public function chatSessions(): HasMany
-    {
-        return $this->hasMany(ChatSession::class);
-    }
-
 
     public function company(): BelongsTo
     {
@@ -232,9 +224,49 @@ class BankStatement extends Model
                     ->where('is_verified', true);
     }
 
+    // ✅ NEW: Low Confidence Transactions Relationship
+    public function lowConfidenceTransactions(): HasMany
+    {
+        return $this->hasMany(StatementTransaction::class)
+                    ->where('confidence_score', '<', 70);
+    }
+
     /*
     |--------------------------------------------------------------------------
-    | Query Scopes
+    | Relationships - Document Collections (AI Chat)
+    |--------------------------------------------------------------------------
+    */
+
+    public function documentItem(): HasOne
+    {
+        return $this->hasOne(DocumentItem::class);
+    }
+
+    public function documentItems(): HasMany
+    {
+        return $this->hasMany(DocumentItem::class);
+    }
+
+    public function documentCollection(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            DocumentCollection::class,
+            DocumentItem::class,
+            'bank_statement_id',
+            'id',
+            'id',
+            'document_collection_id'
+        );
+    }
+
+    public function chatSessions(): HasMany
+    {
+        return $this->hasMany(ChatSession::class);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Query Scopes - OCR Status
     |--------------------------------------------------------------------------
     */
 
@@ -257,6 +289,39 @@ class BankStatement extends Model
     {
         return $query->where('ocr_status', 'failed');
     }
+
+    // ✅ NEW: Matching Status Scopes
+    public function scopeMatchingCompleted($query)
+    {
+        return $query->where('matching_status', 'completed');
+    }
+
+    public function scopeMatchingPending($query)
+    {
+        return $query->where('matching_status', 'pending');
+    }
+
+    public function scopeMatchingFailed($query)
+    {
+        return $query->where('matching_status', 'failed');
+    }
+
+    // ✅ NEW: Account Matching Status Scopes
+    public function scopeAccountMatchingCompleted($query)
+    {
+        return $query->where('account_matching_status', 'completed');
+    }
+
+    public function scopeAccountMatchingPending($query)
+    {
+        return $query->where('account_matching_status', 'pending');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Query Scopes - Other
+    |--------------------------------------------------------------------------
+    */
 
     public function scopeReconciled($query)
     {
@@ -311,6 +376,16 @@ class BankStatement extends Model
                        ->whereColumn('matched_transactions', '<', 'total_transactions');
               });
         });
+    }
+
+    public function scopeNotInCollection($query)
+    {
+        return $query->whereDoesntHave('documentItem');
+    }
+
+    public function scopeInCollection($query)
+    {
+        return $query->whereHas('documentItem');
     }
 
     /*
@@ -432,6 +507,8 @@ class BankStatement extends Model
                                           ->count(),
             'unmatched_transactions' => $this->transactions()->whereNull('sub_category_id')->count(),
             'verified_transactions' => $this->transactions()->where('is_verified', true)->count(),
+            // ✅ ADDED: Low confidence count
+            'low_confidence_transactions' => $this->transactions()->where('confidence_score', '<', 70)->count(),
         ];
 
         return $this->update($stats);
@@ -465,6 +542,13 @@ class BankStatement extends Model
     {
         if ($this->total_transactions === 0) return 0;
         return round(($this->verified_transactions / $this->total_transactions) * 100, 2);
+    }
+
+    // ✅ NEW: Low Confidence Percentage
+    public function getLowConfidencePercentage(): float
+    {
+        if ($this->total_transactions === 0) return 0;
+        return round(($this->low_confidence_transactions / $this->total_transactions) * 100, 2);
     }
 
     public function getNetChange()
@@ -522,6 +606,11 @@ class BankStatement extends Model
         return $this->isCompleted() && 
                !$this->isFullyMatched() && 
                $this->hasTransactions();
+    }
+
+    public function isInCollection(): bool
+    {
+        return $this->documentItem()->exists();
     }
 
     /*
@@ -675,6 +764,14 @@ class BankStatement extends Model
         );
     }
 
+    // ✅ NEW: Low Confidence Percentage Accessor
+    public function lowConfidencePercentage(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->getLowConfidencePercentage()
+        );
+    }
+
     public function bankName(): Attribute
     {
         return Attribute::make(
@@ -711,7 +808,10 @@ class BankStatement extends Model
             'completion_percentage' => $this->completion_percentage,
             'matching_percentage' => $this->matching_percentage,
             'verification_percentage' => $this->verification_percentage,
+            'low_confidence_percentage' => $this->low_confidence_percentage, // ✅ ADDED
             'ocr_status' => $this->ocr_status,
+            'matching_status' => $this->matching_status, // ✅ ADDED
+            'account_matching_status' => $this->account_matching_status, // ✅ ADDED
             'is_reconciled' => $this->is_reconciled,
             'file_size' => $this->formatted_file_size,
             'uploaded_at' => $this->uploaded_at->format('Y-m-d H:i:s'),
@@ -726,9 +826,11 @@ class BankStatement extends Model
             'matched_transactions' => $this->matched_transactions,
             'unmatched_transactions' => $this->unmatched_transactions,
             'verified_transactions' => $this->verified_transactions,
+            'low_confidence_transactions' => $this->low_confidence_transactions, // ✅ ADDED
             'completion_percentage' => $this->completion_percentage,
             'matching_percentage' => $this->matching_percentage,
             'verification_percentage' => $this->verification_percentage,
+            'low_confidence_percentage' => $this->low_confidence_percentage, // ✅ ADDED
             'total_credit_count' => $this->total_credit_count,
             'total_debit_count' => $this->total_debit_count,
             'total_credit_amount' => $this->total_credit_amount,
