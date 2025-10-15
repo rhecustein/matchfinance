@@ -7,7 +7,7 @@
                 </h2>
                 <p class="text-sm text-gray-400 mt-1">{{ $bankStatement->bank->name }} - {{ $bankStatement->original_filename }}</p>
             </div>
-            <a href="{{ route('bank-statements.index) }}" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition">
+            <a href="{{ route('bank-statements.index') }}" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition">
                 <i class="fas fa-arrow-left mr-2"></i>Back
             </a>
         </div>
