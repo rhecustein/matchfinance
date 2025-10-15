@@ -261,6 +261,7 @@ class BankStatementController extends Controller
      * Simpan bank statement baru
      * 
      * AKSES: Semua company member
+     * PERUBAHAN: Update pemanggilan generateUniqueFilename dengan parameter Bank
      */
     public function store(Request $request)
     {
@@ -312,7 +313,8 @@ class BankStatementController extends Controller
                         ->where('bank_id', $bank->id)
                         ->first();
 
-                    $filename = $this->generateUniqueFilename($originalName);
+                    // ✅ PERUBAHAN: Gunakan Bank object sebagai parameter
+                    $filename = $this->generateUniqueFilename($bank);
 
                     $path = $file->storeAs(
                         "companies/{$companyId}/bank-statements/{$bank->slug}/" . date('Y/m'),
@@ -333,6 +335,7 @@ class BankStatementController extends Controller
                             'company_id' => $companyId,
                             'user_id' => $user->id,
                             'filename' => $originalName,
+                            'new_filename' => $filename, // ✅ Log filename baru
                             'bank' => $bank->name,
                         ]);
                     } else {
@@ -344,6 +347,7 @@ class BankStatementController extends Controller
                             'company_id' => $companyId,
                             'user_id' => $user->id,
                             'filename' => $originalName,
+                            'stored_filename' => $filename, // ✅ Log filename baru
                             'bank' => $bank->name,
                         ]);
                     }
@@ -441,6 +445,7 @@ class BankStatementController extends Controller
         return view('bank-statements.show', compact('bankStatement', 'statistics', 'transactions'));
     }
 
+    
     // ========================================
     // 🎯 METODE VALIDATION SYSTEM
     // ========================================
@@ -1782,6 +1787,7 @@ class BankStatementController extends Controller
 
     /**
      * Core upload method untuk API
+     * PERUBAHAN: Update pemanggilan generateUniqueFilename dengan parameter Bank
      */
     private function uploadBankStatement(Request $request, string $bankSlug)
     {
@@ -1821,7 +1827,8 @@ class BankStatementController extends Controller
                         ->where('bank_id', $bank->id)
                         ->first();
 
-                    $filename = $this->generateUniqueFilename($originalName);
+                    // ✅ PERUBAHAN: Gunakan Bank object sebagai parameter
+                    $filename = $this->generateUniqueFilename($bank);
 
                     $path = $file->storeAs(
                         "companies/{$companyId}/bank-statements/{$bankSlug}/" . date('Y/m'),
@@ -1838,7 +1845,8 @@ class BankStatementController extends Controller
                         
                         $replacedStatements[] = [
                             'id' => $existingStatement->id,
-                            'filename' => $originalName,
+                            'original_filename' => $originalName,
+                            'stored_filename' => $filename, // ✅ Tambahkan info filename
                             'size' => $this->formatBytes($file->getSize()),
                             'status' => 'replaced',
                         ];
@@ -1847,7 +1855,8 @@ class BankStatementController extends Controller
                         
                         $uploadedStatements[] = [
                             'id' => $bankStatement->id,
-                            'filename' => $originalName,
+                            'original_filename' => $originalName,
+                            'stored_filename' => $filename, // ✅ Tambahkan info filename
                             'size' => $this->formatBytes($file->getSize()),
                             'status' => 'queued',
                         ];
@@ -1898,19 +1907,6 @@ class BankStatementController extends Controller
             }
 
             return response()->json($response, 200);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validasi gagal.',
-                'errors' => $e->errors(),
-            ], 422);
-
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => "Bank '{$bankSlug}' tidak ditemukan atau tidak aktif.",
-            ], 404);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -2216,30 +2212,26 @@ class BankStatementController extends Controller
         return $stats;
     }
 
-    /**
-     * Generate filename unik untuk file yang diupload
-     */
-    private function generateUniqueFilename(string $originalName): string
+    private function generateUniqueFilename(Bank $bank): string
     {
-        $extension = pathinfo($originalName, PATHINFO_EXTENSION);
-        $baseFilename = Str::slug(pathinfo($originalName, PATHINFO_FILENAME));
+        $bankSlug = $bank->slug; // e.g., 'mandiri', 'bca', 'bni'
+        $date = now()->format('Ymd'); // e.g., '20251015'
+        $time = now()->format('His'); // e.g., '143025'
+        $microseconds = now()->format('u'); // e.g., '456789'
         
-        $timestamp = now()->format('Ymd_His');
-        $microseconds = now()->format('u');
-        $randomString = Str::random(8);
-        
+        // Format: mandiri_20251015_143025_456789.pdf
         return sprintf(
-            '%s_%s_%s_%s.%s',
-            $baseFilename,
-            $timestamp,
-            $microseconds,
-            $randomString,
-            $extension
+            '%s_%s_%s_%s.pdf',
+            $bankSlug,
+            $date,
+            $time,
+            $microseconds
         );
     }
 
     /**
      * Replace bank statement yang sudah ada
+     * Method ini tidak berubah, hanya menerima parameter $filename dari method store/upload
      */
     private function replaceExistingStatement(
         BankStatement $existingStatement,
@@ -2324,6 +2316,7 @@ class BankStatementController extends Controller
 
     /**
      * Buat bank statement baru
+     * Method ini tidak berubah, hanya menerima parameter $filename dari method store/upload
      */
     private function createNewStatement(
         Bank $bank,
