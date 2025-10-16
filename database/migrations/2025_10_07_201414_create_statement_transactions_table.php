@@ -20,6 +20,8 @@ return new class extends Migration
                   ->comment('Reference to parent bank statement');
             
             // Transaction Details - From OCR
+            //bank type string
+            $table->string('bank_type', 50)->comment('Type of bank (e.g., Chase, Bank of America)')->nullable();
             $table->date('transaction_date')->comment('Date when transaction occurred');
             $table->time('transaction_time')->nullable()->comment('Time of transaction if available from OCR');
             $table->date('value_date')->nullable()->comment('Effective/value date of transaction');

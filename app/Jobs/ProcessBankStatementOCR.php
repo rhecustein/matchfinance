@@ -99,6 +99,7 @@ class ProcessBankStatementOCR implements ShouldQueue
             Log::info("Parsed Data Result", [
                 'statement_id' => $this->bankStatement->id,
                 'bank' => $this->bankSlug,
+                'bank_name' => $parsedData['bank_name'] ?? null, // ✅ Log bank_name dari parser
                 'transaction_count' => count($transactions),
                 'has_account_number' => !empty($parsedData['account_number']),
                 'has_period' => !empty($parsedData['period_from']),
@@ -150,6 +151,7 @@ class ProcessBankStatementOCR implements ShouldQueue
                         'uuid' => \Illuminate\Support\Str::uuid(),
                         'company_id' => $this->bankStatement->company_id,
                         'bank_statement_id' => $this->bankStatement->id,
+                        'bank_type' => $parsedData['bank_name'] ?? null, // ✅ ADDED: Bank type from OCR
                         'transaction_date' => $transactionData['transaction_date'],
                         'transaction_time' => $transactionData['transaction_time'] ?? null,
                         'value_date' => $transactionData['value_date'] ?? $transactionData['transaction_date'],

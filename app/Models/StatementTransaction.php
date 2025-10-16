@@ -31,6 +31,7 @@ class StatementTransaction extends Model
         'branch_code',
         'description',
         'reference_no',
+        'bank_type',
         
         // ✅ Extracted Information (for better matching)
         'extracted_keywords',
