@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MatchFinance - Investor Pitch Deck</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .slide { min-height: 100vh; display: none; }
+        .slide.active { display: flex; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    
+    <!-- Navigation -->
+    <div class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 bg-gray-800 rounded-full px-6 py-3 shadow-2xl">
+        <div class="flex items-center gap-4">
+            <button onclick="prevSlide()" class="hover:text-purple-400 transition">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <span id="slideCounter" class="text-sm font-semibold">1 / 12</span>
+            <button onclick="nextSlide()" class="hover:text-purple-400 transition">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Slide 1: Cover -->
+    <div class="slide active gradient-bg justify-center items-center">
+        <div class="text-center px-8 animate-fade-in">
+            <div class="mb-6">
+                <i class="fas fa-chart-line text-9xl text-white opacity-90"></i>
+            </div>
+            <h1 class="text-7xl font-black mb-4 text-white drop-shadow-2xl">MatchFinance</h1>
+            <p class="text-3xl font-light mb-8 text-white/90">Automated Financial Reconciliation Platform</p>
+            <div class="inline-block bg-white/10 backdrop-blur-sm rounded-lg px-8 py-4 mb-8">
+                <p class="text-2xl font-semibold">Investor Pitch Deck 2025</p>
+            </div>
+            <div class="text-xl text-white/80">
+                <p>CV Autobot Wijaya Solution</p>
+                <p>Cikarang, West Java, Indonesia</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 2: The Problem -->
+    <div class="slide justify-center items-center px-20">
+        <div class="max-w-6xl w-full">
+            <h2 class="text-5xl font-bold mb-12 bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">
+                <i class="fas fa-exclamation-triangle text-red-500 mr-4"></i>
+                The Problem
+            </h2>
+            <div class="grid grid-cols-2 gap-8">
+                <div class="bg-gray-800 rounded-2xl p-8 border-l-4 border-red-500">
+                    <div class="text-5xl mb-4">😰</div>
+                    <h3 class="text-2xl font-bold mb-4">Manual Reconciliation Hell</h3>
+                    <ul class="space-y-3 text-gray-300">
+                        <li class="flex items-start gap-2">
+                            <span class="text-red-400 mt-1">•</span>
+                            <span>Kantor pusat dengan 50-1000+ cabang harus reconcile ribuan transaksi SETIAP BULAN</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-red-400 mt-1">•</span>
+                            <span>Tim audit menghabiskan 2-3 MINGGU untuk monthly closing</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-red-400 mt-1">•</span>
+                            <span>Process 100% manual: Download PDF → Extract data → Categorize → Report</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="bg-gray-800 rounded-2xl p-8 border-l-4 border-orange-500">
+                    <div class="text-5xl mb-4">💸</div>
+                    <h3 class="text-2xl font-bold mb-4">Massive Hidden Costs</h3>
+                    <ul class="space-y-3 text-gray-300">
+                        <li class="flex items-start gap-2">
+                            <span class="text-orange-400 mt-1">•</span>
+                            <span>5-10 staff full-time untuk reconciliation = Rp 400-800 juta/tahun</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-orange-400 mt-1">•</span>
+                            <span>High error rate (human mistakes) = financial losses + audit risk</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-orange-400 mt-1">•</span>
+                            <span>Delayed reporting = poor decision making + compliance issues</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-8 bg-gradient-to-r from-red-600 to-orange-600 rounded-2xl p-8 text-center">
+                <p class="text-3xl font-black mb-2">TARGET MARKET</p>
+                <p class="text-xl">1,500+ perusahaan di Indonesia dengan 10-1000+ cabang (Retail, Pharmacy, F&B, Healthcare)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: The Solution -->
+    <div class="slide justify-center items-center px-20">
+        <div class="max-w-6xl w-full">
+            <h2 class="text-5xl font-bold mb-12 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
+                <i class="fas fa-lightbulb text-green-400 mr-4"></i>
+                Our Solution
+            </h2>
+            <div class="grid grid-cols-3 gap-6 mb-8">
+                <div class="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-6 text-center">
+                    <i class="fas fa-robot text-6xl mb-4"></i>
+                    <h3 class="text-2xl font-bold mb-3">AI-Powered OCR</h3>
+                    <p class="text-blue-100">Upload PDF bank statement → Auto extract ALL transactions in seconds</p>
+                </div>
+                <div class="bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl p-6 text-center">
+                    <i class="fas fa-magic text-6xl mb-4"></i>
+                    <h3 class="text-2xl font-bold mb-3">Smart Matching</h3>
+                    <p class="text-purple-100">AI auto-categorize 95%+ accuracy using keyword intelligence</p>
+                </div>
+                <div class="bg-gradient-to-br from-green-600 to-green-800 rounded-2xl p-6 text-center">
+                    <i class="fas fa-chart-bar text-6xl mb-4"></i>
+                    <h3 class="text-2xl font-bold mb-3">Real-time Dashboard</h3>
+                    <p class="text-green-100">Centralized view untuk 1000+ cabang, instant consolidated reports</p>
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-2xl p-8 border-l-4 border-green-500">
+                <h3 class="text-3xl font-bold mb-6 text-center">Value Proposition</h3>
+                <div class="grid grid-cols-3 gap-6 text-center">
+                    <div>
+                        <p class="text-6xl font-black text-green-400 mb-2">85%</p>
+                        <p class="text-xl">Time Reduction</p>
+                        <p class="text-sm text-gray-400">2 weeks → 2 days</p>
+                    </div>
+                    <div>
+                        <p class="text-6xl font-black text-blue-400 mb-2">70%</p>
+                        <p class="text-xl">Cost Savings</p>
+                        <p class="text-sm text-gray-400">5 staff → 1-2 staff</p>
+                    </div>
+                    <div>
+                        <p class="text-6xl font-black text-purple-400 mb-2">95%</p>
+                        <p class="text-xl">Accuracy Rate</p>
+                        <p class="text-sm text-gray-400">Eliminate human error</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: Market Opportunity -->
+    <div class="slide justify-center items-center px-20">
+        <div class="max-w-6xl w-full">
+            <h2 class="text-5xl font-bold mb-12 bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+                <i class="fas fa-globe-asia text-yellow-400 mr-4"></i>
+                Market Opportunity
+            </h2>
+            <div class="grid grid-cols-2 gap-8 mb-8">
+                <div class="bg-gray-800 rounded-2xl p-8">
+                    <h3 class="text-3xl font-bold mb-6">Indonesia Market Size</h3>
+                    <div class="space-y-4">
+                        <div class="bg-blue-900/30 rounded-lg p-4">
+                            <p class="text-sm text-gray-400 mb-1">Retail Chains (10+ outlets)</p>
+                            <p class="text-3xl font-bold">500+ companies</p>
+                        </div>
+                        <div class="bg-purple-900/30 rounded-lg p-4">
+                            <p class="text-sm text-gray-400 mb-1">Pharmacy Networks</p>
+                            <p class="text-3xl font-bold">300+ companies</p>
+                        </div>
+                        <div class="bg-green-900/30 rounded-lg p-4">
+                            <p class="text-sm text-gray-400 mb-1">F&B Chains</p>
+                            <p class="text-3xl font-bold">400+ companies</p>
+                        </div>
+                        <div class="bg-orange-900/30 rounded-lg p-4">
+                            <p class="text-sm text-gray-400 mb-1">Healthcare/Hospital Chains</p>
+                            <p class="text-3xl font-bold">300+ companies</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-800 rounded-2xl p-8">
+                    <h3 class="text-3xl font-bold mb-6">Total Addressable Market</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <p class="text-gray-400 mb-2">TAM (Total Addressable Market)</p>
+                            <p class="text-5xl font-black text-green-400">Rp 60 Miliar</p>
+                            <p class="text-sm text-gray-400">1,500 companies × Rp 40 juta avg</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 mb-2">SAM (Serviceable Available Market)</p>
+                            <p class="text-5xl font-black text-blue-400">Rp 18 Miliar</p>
+                            <p class="text-sm text-gray-400">Target 30% TAM (450 companies)</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 mb-2">SOM (Serviceable Obtainable Market)</p>
+                            <p class="text-5xl font-black text-purple-400">Rp 3.6 Miliar</p>
+                            <p class="text-sm text-gray-400">Year 3 target: 5% SAM (90 companies)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: Customer Acquisition Strategy -->
+    <div class="slide justify-center items-center px-20">
+        <div class="max-w-6xl w-full">
+            <h2 class="text-5xl font-bold mb-12 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                <i class="fas fa-bullseye text-blue-400 mr-4"></i>
+                Customer Acquisition Strategy
+            </h2>
+            
+            <div class="mb-8 bg-gradient-to-r from-green-600 to-blue-600 rounded-2xl p-6">
+                <h3 class="text-3xl font-bold mb-4 text-center">Kimia Farma: Anchor Client Strategy</h3>
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div class="bg-white/10 rounded-lg p-4">
+                        <p class="text-4xl font-black mb-2">10-40</p>
+                        <p class="text-sm">Branch Managers (BM)</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4">
+                        <p class="text-4xl font-black mb-2">1,000+</p>
+                        <p class="text-sm">Total Outlets</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4">
+                        <p class="text-4xl font-black mb-2">BUMN</p>
+                        <p class="text-sm">Credibility Boost</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6 mb-6">
+                <div class="bg-gray-800 rounded-xl p-6 border-l-4 border-blue-500">
+                    <h4 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <span class="bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-sm">1</span>
+                        Phase 1: Kimia Farma Pilot (Q1)
+                    </h4>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li>• Target: Internal Audit team, 10 BM (Branch Managers)</li>
+                        <li>• Deal: Rp 15 juta pilot (3 months)</li>
+                        <li>• Goal: Prove 85% time reduction + ROI</li>
+                        <li>• Success metric: Expand to 40 BM (all regions)</li>
+                    </ul>
+                </div>
+
+                <div class="bg-gray-800 rounded-xl p-6 border-l-4 border-purple-500">
+                    <h4 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <span class="bg-purple-600 rounded-full w-8 h-8 flex items-center justify-center text-sm">2</span>
+                        Phase 2: BUMN Network (Q2-Q3)
+                    </h4>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li>• Leverage Kimia Farma case study</li>
+                        <li>• Target: Bio Farma, Indofarma, Rajawali Nusindo</li>
+                        <li>• Deal size: Rp 30-100 juta each</li>
+                        <li>• Goal: 3-5 BUMN clients by Q3</li>
+                    </ul>
+                </div>
+
+                <div class="bg-gray-800 rounded-xl p-6 border-l-4 border-green-500">
+                    <h4 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <span class="bg-green-600 rounded-full w-8 h-8 flex items-center justify-center text-sm">3</span>
+                        Phase 3: Mid-Market (Q2-Q4)
+                    </h4>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li>• Target: Guardian, Century, K-24, Viva</li>
+                        <li>• Deal size: Rp 20-50 juta each</li>
+                        <li>• Goal: 10-15 mid-market clients Year 1</li>
+                        <li>• Channel: Direct sales + referrals</li>
+                    </ul>
+                </div>
+
+                <div class="bg-gray-800 rounded-xl p-6 border-l-4 border-orange-500">
+                    <h4 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <span class="bg-orange-600 rounded-full w-8 h-8 flex items-center justify-center text-sm">4</span>
+                        Phase 4: Scale (Year 2-3)
+                    </h4>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li>• Expand to F&B, Retail, Healthcare</li>
+                        <li>• Launch partner/reseller program</li>
+                        <li>• Goal: 50 clients Year 2, 90 clients Year 3</li>
+                        <li>• International expansion (ASEAN) consideration</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 6: Revenue Model & Projections -->
+    <div class="slide justify-center items-center px-20">
+        <div class="max-w-6xl w-full">
+            <h2 class="text-5xl font-bold mb-8 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent text-center">
+                <i class="fas fa-money-bill-wave text-green-400 mr-4"></i>
+                Revenue Model & 3-Year Projections
+            </h2>
+
+            <!-- Revenue Model -->
+            <div class="bg-gray-800 rounded-2xl p-6 mb-8">
+                <h3 class="text-2xl font-bold mb-4 text-center">Hybrid Revenue Model</h3>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="bg-blue-900/30 rounded-lg p-4 text-center">
+                        <p class="text-3xl font-bold mb-2">Setup Fee</p>
+                        <p class="text-4xl font-black text-blue-400">Rp 10-50jt</p>
+                        <p class="text-sm text-gray-400">One-time implementation</p>
+                    </div>
+                    <div class="bg-purple-900/30 rounded-lg p-4 text-center">
+                        <p class="text-3xl font-bold mb-2">Annual Subscription</p>
+                        <p class="text-4xl font-black text-purple-400">Rp 20-300jt</p>
+                        <p class="text-sm text-gray-400">Based on # of branches</p>
+                    </div>
+                    <div class="bg-green-900/30 rounded-lg p-4 text-center">
+                        <p class="text-3xl font-bold mb-2">Add-ons</p>
+                        <p class="text-4xl font-black text-green-400">Rp 5-20jt</p>
+                        <p class="text-sm text-gray-400">Custom dev, priority support</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3-Year Projections -->
+            <div class="bg-gray-800 rounded-2xl p-6">
+                <h3 class="text-2xl font-bold mb-4 text-center">3-Year Financial Projections</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-900 border-b-2 border-gray-700">
+                            <tr>
+                                <th class="p-3 text-left">Metric</th>
+                                <th class="p-3 text-center">Year 1 (2025)</th>
+                                <th class="p-3 text-center">Year 2 (2026)</th>
+                                <th class="p-3 text-center">Year 3 (2027)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700">
+                            <tr class="hover:bg-gray-750">
+                                <td class="p-3 font-semibold">New Clients</td>
+                                <td class="p-3 text-center">15-20</td>
+                                <td class="p-3 text-center">35-45</td>
+                                <td class="p-3 text-center">35-40</td>
+                            </tr>
+                            <tr class="hover:bg-gray-750">
+                                <td class="p-3 font-semibold">Total Active Clients</td>
+                                <td class="p-3 text-center">18</td>
+                                <td class="p-3 text-center">50</td>
+                                <td class="p-3 text-center">90</td>
+                            </tr>
+                            <tr class="hover:bg-gray-750 bg-blue-900/20">
+                                <td class="p-3 font-bold">Setup Revenue</td>
+                                <td class="p-3 text-center font-bold text-blue-400">Rp 300 juta</td>
+                                <td class="p-3 text-center font-bold text-blue-400">Rp 800 juta</td>
+                                <td class="p-3 text-center font-bold text-blue-400">Rp 700 juta</td>
+                            </tr>
+                            <tr class="hover:bg-gray-750 bg-purple-900/20">
+                                <td class="p-3 font-bold">Subscription Revenue</td>
+                                <td class="p-3 text-center font-bold text-purple-400">Rp 600 juta</td>
+                                <td class="p-3 text-center font-bold text-purple-400">Rp 2 Miliar</td>
+                                <td class="p-3 text-center font-bold text-purple-400">Rp 3.6 Miliar</td>
+                            </tr>
+                            <tr class="hover:bg-gray-750 bg-green-900/30">
+                                <td class="p-3 font-black text-xl">Total Revenue</td>
+                                <td class="p-3 text-center font-black text-xl text-green-400">Rp 900 juta</td>
+                                <td class="p-3 text-center font-black text-xl text-green-400">Rp 2.8 Miliar</td>
+                                <td class="p-3 text-center font-black text-xl text-green-400">Rp 4.3 Miliar</td>
+                            </tr>
+                            <tr class="hover:bg-gray-750 bg-orange-900/20">
+                                <td class="p-3 font-bold">Gross Margin</td>
+                                <td class="p-3 text-center">70%</td>
+                                <td class="p-3 text-center">75%</td>
+                                <td class="p-3 text-center">78%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 7: Detailed Cost Structure -->
+    <div class="slide justify-center items-center px-20">
+        <div class="max-w-6xl w-full">
+            <h2 class="text-5xl font-bold mb-8 bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent text-center">
+                <i class="fas fa-calculator text-red-400 mr-4"></i>
+                Operational Costs Breakdown (3-Year)
+            </h2>
+
+            <div class="overflow-x-auto bg-gray-800 rounded-2xl p-6">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-900 border-b-2 border-gray-700">
+                        <tr>
+                            <th class="p-3 text-left">Cost Category</th>
+                            <th class="p-3 text-center">Year 1 (2025)</th>
+                            <th class="p-3 text-center">Year 2 (2026)</th>
+                            <th class="p-3 text-center">Year 3 (2027)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700">
+                        <!-- Infrastructure -->
+                        <tr class="bg-blue-900/20">
+                            <td class="p-3 font-bold" colspan="4">
+                                <i class="fas fa-server mr-2"></i>Infrastructure & Technology (15-20%)
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 pl-8">Cloud Hosting (AWS/DigitalOcean)</td>
+                            <td class="p-3 text-center">Rp 36 juta</td>
+                            <td class="p-3 text-center">Rp 72 juta</td>
+                            <td class="p-3 text-center">Rp 120 juta</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 pl-8">OCR API (per transaction)</td>
+                            <td class="p-3 text-center">Rp 24 juta</td>
+                            <td class="p-3 text-center">Rp 60 juta</td>
+                            <td class="p-3 text-center">Rp 96 juta</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 pl-8">Database & Storage</td>
+                            <td class="p-3 text-center">Rp 12 juta</td>
+                            <td class="p-3 text-center">Rp 24 juta</td>
+                            <td class="p-3 text-center">Rp 36 juta</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 pl-8">Security & Backup</td>
+                            <td class="p-3 text-center">Rp 8 juta</td>
+                            <td class="p-3 text-center">Rp 12 juta</td>
+                            <td class="p-3 text-center">Rp 18 juta</td>
+                        </tr>
+
+                        <!-- Team -->
+                        <tr class="bg-purple-900/20">
+                            <td class="p-3 font-bold" colspan="4">
+                                <i class="fas fa-users mr-2"></i>Team & Payroll (35-40%)
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 pl-8">Founder/CEO (You)</td>
+                            <td class="p-3 text-center">Rp 60 juta</td>
+                            <td class="p-3 text-center">Rp 120 juta</td>
+                            <td class="p-3 text-center">Rp 180 juta</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 pl-8">Tech Lead / CTO</td>
+                            <td class="p-3 text-center">Rp 0</td>
+                            <td class="p-3 text-center">Rp 180 juta</td>
+                            <td class="p-3 text-center">Rp 240 juta</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 pl-8">Developers (2-5 people)</td>
+                            <td class="p-3 text-center">Rp 120 juta</td>
+                            <td class="p-3 text-center">Rp 360 juta</td>
+                            <td class="p-3 text-center">Rp 600 juta</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 pl-8">Sales Team (2-4 people)</td>
+                            <td class="p-3 text-center">Rp 60 juta</td>
+                            <td class="p-3 text-center">Rp 180 juta</td>
+                            <td class="p-3 text-center">Rp 240 juta</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 pl-8">Customer Success (1-3 people)</td>
+                            <td class="p-3 text-center">Rp 36 juta</td>
+                            <td class="p-3 text-center">Rp 108 juta</td>
+                            <td class="p-3 text-center">Rp 180 juta</td>
+                        </tr>
+
+                        <!-- Marketing -->
+                        <tr class="bg-green-900/20">
+                            <td class="p-3 font-bold" colspan="4">
+                                <i class="fas fa-bullhorn mr-2"></i>Sales & Marketing (20-25%)
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 pl-8">Digital Marketing (Ads, SEO)</td>
+                            <td class="p-3 text-center">Rp 48 juta</td>
+                            <td class="p-3 text-center">Rp 120 juta</td>
+                            <td class="p-3 text-center">Rp 180 juta</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 pl-8">Events & Conferences</td>
+                            <td class="p-3 text-center">Rp 24 juta</td>
+                            <td class="p-3 text-center">Rp 60 juta</td>
+                            <td class="p-3 text-center">Rp 96 juta</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 pl-8">Content Creation</td>
+                            <td class="p-3 text-center">Rp 12 juta</td>
+                            <td class="p-3 text-center">Rp 36 juta</td>
+                            <td class="p-3 text-center">Rp 48 juta</td>
+                        </tr>
+
+                        <!-- Operations -->
+                        <tr class="bg-orange-900/20">
+                            <td class="p-3 font-bold" colspan="4">
+                                <i class="fas fa-cogs mr-2"></i>Operations & Admin (10-15%)
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 pl-8">Office & Co-working</td>
+                            <td class="p-3 text-center">Rp 12 juta</td>
+                            <td class="p-3 text-center">Rp 36 juta</td>
+                            <td class="p-3 text-center">Rp 60 juta</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 pl-8">Legal & Accounting</td>
+                            <td class="p-3 text-center">Rp 18 juta</td>
+                            <td class="p-3 text-center">Rp 24 juta</td>
+                            <td class="p-3 text-center">Rp 36 juta</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 pl-8">Software Tools (CRM, etc)</td>
+                            <td class="p-3 text-center">Rp 12 juta</td>
+                            <td class="p-3 text-center">Rp 24 juta</td>
+                            <td class="p-3 text-center">Rp 36 juta</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 pl-8">Insurance & Misc</td>
+                            <td class="p-3 text-center">Rp 6 juta</td>
+                            <td class="p-3 text-center">Rp 12 juta</td>
+                            <td class="p-3 text-center">Rp 18 juta</td>
+                        </tr>
+
+                        <!-- Contingency -->
+                        <tr class="bg-red-900/20">
+                            <td class="p-3 font-bold">
+                                <i class="fas fa-shield-alt mr-2"></i>Contingency Reserve (5-10%)
+                            </td>
+                            <td class="p-3 text-center">Rp 24 juta</td>
+                            <td class="p-3 text-center">Rp 60 juta</td>
+                            <td class="p-3 text-center">Rp 84 juta</td>
+                        </tr>
+
+                        <!-- TOTAL -->
+                        <tr class="bg-gradient-to-r from-red-600 to-orange-600">
+                            <td class="p-4 font-black text-xl">TOTAL OPERATIONAL COSTS</td>
+                            <td class="p-4 text-center font-black text-2xl">Rp 512 juta</td>
+                            <td class="p-4 text-center font-black text-2xl">Rp 1.48 Miliar</td>
+                            <td class="p-4 text-center font-black text-2xl">Rp 2.27 Miliar</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 8: Profitability Analysis -->
+    <div class="slide justify-center items-center px-20">
+        <div class="max-w-6xl w-full">
+            <h2 class="text-5xl font-bold mb-8 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent text-center">
+                <i class="fas fa-chart-pie text-green-400 mr-4"></i>
+                Profitability & Cash Flow Analysis
+            </h2>
+
+            <div class="grid grid-cols-3 gap-6 mb-8">
+                <div class="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-6 text-center border-4 border-blue-400">
+                    <p class="text-2xl font-bold mb-2">YEAR 1 (2025)</p>
+                    <div class="bg-white/10 rounded-lg p-4 mb-3">
+                        <p class="text-sm text-gray-300 mb-1">Revenue</p>
+                        <p class="text-3xl font-black">Rp 900 juta</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4 mb-3">
+                        <p class="text-sm text-gray-300 mb-1">Costs</p>
+                        <p class="text-2xl font-bold text-red-300">Rp 512 juta</p>
+                    </div>
+                    <div class="bg-green-600 rounded-lg p-4">
+                        <p class="text-sm mb-1">Net Profit</p>
+                        <p class="text-4xl font-black">Rp 388 juta</p>
+                        <p class="text-sm text-green-200">43% margin</p>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl p-6 text-center border-4 border-yellow-400">
+                    <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-gray-900 px-4 py-1 rounded-full text-xs font-bold">
+                        BEST YEAR
+                    </div>
+                    <p class="text-2xl font-bold mb-2">YEAR 2 (2026)</p>
+                    <div class="bg-white/10 rounded-lg p-4 mb-3">
+                        <p class="text-sm text-gray-300 mb-1">Revenue</p>
+                        <p class="text-3xl font-black">Rp 2.8 Miliar</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4 mb-3">
+                        <p class="text-sm text-gray-300 mb-1">Costs</p>
+                        <p class="text-2xl font-bold text-red-300">Rp 1.48 Miliar</p>
+                    </div>
+                    <div class="bg-green-600 rounded-lg p-4">
+                        <p class="text-sm mb-1">Net Profit</p>
+                        <p class="text-4xl font-black">Rp 1.32 Miliar</p>
+                        <p class="text-sm text-green-200">47% margin</p>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-green-600 to-green-800 rounded-2xl p-6 text-center border-4 border-green-400">
+                    <p class="text-2xl font-bold mb-2">YEAR 3 (2027)</p>
+                    <div class="bg-white/10 rounded-lg p-4 mb-3">
+                        <p class="text-sm text-gray-300 mb-1">Revenue</p>
+                        <p class="text-3xl font-black">Rp 4.3 Miliar</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4 mb-3">
+                        <p class="text-sm text-gray-300 mb-1">Costs</p>
+                        <p class="text-2xl font-bold text-red-300">Rp 2.27 Miliar</p>
+                    </div>
+                    <div class="bg-green-600 rounded-lg p-4">
+                        <p class="text-sm mb-1">Net Profit</p>
+                        <p class="text-4xl font-black">Rp 2.03 Miliar</p>
+                        <p class="text-sm text-green-200">47% margin</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 rounded-2xl p-6 mb-6">
+                <h3 class="text-2xl font-bold mb-4 text-center">Cumulative Cash Flow (3 Years)</h3>
+                <div class="h-64">
+                    <canvas id="cashFlowChart"></canvas>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div class="bg-gradient-to-br from-blue-900 to-blue-800 rounded-xl p-6">
+                    <h3 class="text-xl font-bold mb-4">Key Financial Metrics</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span>Gross Margin (avg)</span>
+                            <span class="font-bold">72%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Operating Margin (avg)</span>
+                            <span class="font-bold">46%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>CAC (Customer Acquisition Cost)</span>
+                            <span class="font-bold">Rp 8 juta</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>LTV (Lifetime Value)</span>
+                            <span class="font-bold">Rp 120 juta</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>LTV:CAC Ratio</span>
+                            <span class="font-bold text-green-400">15:1</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-green-900 to-green-800 rounded-xl p-6">
+                    <h3 class="text-xl font-bold mb-4">Growth Metrics</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span>Revenue CAGR (3-year)</span>
+                            <span class="font-bold text-green-400">119%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Customer Growth Rate</span>
+                            <span class="font-bold text-green-400">150%+ Y2, 80%+ Y3</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Churn Rate (projected)</span>
+                            <span class="font-bold">< 5%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Break-even Point</span>
+                            <span class="font-bold text-green-400">Month 6</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Payback Period</span>
+                            <span class="font-bold text-green-400">18 months</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 9: Kimia Farma Scenarios -->
+    <div class="slide justify-center items-center px-20">
+        <div class="max-w-6xl w-full">
+            <h2 class="text-5xl font-bold mb-8 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent text-center">
+                <i class="fas fa-hospital text-green-400 mr-4"></i>
+                Kimia Farma Deal Scenarios
+            </h2>
+
+            <div class="grid grid-cols-2 gap-6 mb-8">
+                <!-- Conservative Scenario -->
+                <div class="bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl p-6 border-4 border-blue-500">
+                    <div class="text-center mb-4">
+                        <h3 class="text-3xl font-bold mb-2">Conservative Scenario</h3>
+                        <p class="text-blue-200">10 Branch Managers (BM)</p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-white/10 rounded-lg p-4">
+                            <p class="text-sm text-gray-300 mb-2">Year 1 - Pilot</p>
+                            <p class="text-2xl font-bold">Rp 15 juta</p>
+                            <p class="text-xs text-gray-400">3 months pilot, 10 BM regions</p>
+                        </div>
+
+                        <div class="bg-white/10 rounded-lg p-4">
+                            <p class="text-sm text-gray-300 mb-2">Year 2 - Expansion</p>
+                            <p class="text-2xl font-bold">Rp 50 juta</p>
+                            <p class="text-xs text-gray-400">Annual subscription, 10 BM regions</p>
+                        </div>
+
+                        <div class="bg-white/10 rounded-lg p-4">
+                            <p class="text-sm text-gray-300 mb-2">Year 3 - Stable</p>
+                            <p class="text-2xl font-bold">Rp 60 juta</p>
+                            <p class="text-xs text-gray-400">Renewal + add-ons</p>
+                        </div>
+
+                        <div class="bg-blue-600 rounded-lg p-4 text-center">
+                            <p class="text-sm mb-1">3-Year Total Value</p>
+                            <p class="text-4xl font-black">Rp 125 juta</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 bg-blue-700 rounded-lg p-3">
+                        <p class="text-xs text-blue-100">
+                            <strong>Impact:</strong> Solid case study, moderate revenue, good reference for other BUMNs
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Optimistic Scenario -->
+                <div class="bg-gradient-to-br from-green-600 to-green-800 rounded-2xl p-6 border-4 border-yellow-400">
+                    <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-gray-900 px-4 py-1 rounded-full text-sm font-bold">
+                        TARGET SCENARIO
+                    </div>
+                    <div class="text-center mb-4">
+                        <h3 class="text-3xl font-bold mb-2">Optimistic Scenario</h3>
+                        <p class="text-green-200">40 Branch Managers (Full Coverage)</p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-white/10 rounded-lg p-4">
+                            <p class="text-sm text-gray-300 mb-2">Year 1 - Pilot + Expansion</p>
+                            <p class="text-2xl font-bold">Rp 55 juta</p>
+                            <p class="text-xs text-gray-400">Rp 15jt pilot + Rp 40jt expansion to 40 BM</p>
+                        </div>
+
+                        <div class="bg-white/10 rounded-lg p-4">
+                            <p class="text-sm text-gray-300 mb-2">Year 2 - Full Deployment</p>
+                            <p class="text-2xl font-bold">Rp 150 juta</p>
+                            <p class="text-xs text-gray-400">Annual subscription 40 BM + custom features</p>
+                        </div>
+
+                        <div class="bg-white/10 rounded-lg p-4">
+                            <p class="text-sm text-gray-300 mb-2">Year 3 - National Scale</p>
+                            <p class="text-2xl font-bold">Rp 200 juta</p>
+                            <p class="text-xs text-gray-400">All 1000+ outlets integrated</p>
+                        </div>
+
+                        <div class="bg-green-600 rounded-lg p-4 text-center">
+                            <p class="text-sm mb-1">3-Year Total Value</p>
+                            <p class="text-4xl font-black">Rp 405 juta</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 bg-green-700 rounded-lg p-3">
+                        <p class="text-xs text-green-100">
+                            <strong>Impact:</strong> Major case study, significant revenue anchor, opens doors to all BUMNs + corporates
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-6">
+                <h3 class="text-2xl font-bold mb-4 text-center">Strategic Value Beyond Revenue</h3>
+                <div class="grid grid-cols-4 gap-4">
+                    <div class="bg-white/10 rounded-lg p-4 text-center">
+                        <i class="fas fa-trophy text-4xl mb-2 text-yellow-400"></i>
+                        <p class="font-bold">Credibility</p>
+                        <p class="text-xs text-gray-300">BUMN client = instant trust for sales</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4 text-center">
+                        <i class="fas fa-network-wired text-4xl mb-2 text-blue-400"></i>
+                        <p class="font-bold">Network Effect</p>
+                        <p class="text-xs text-gray-300">Access to Bio Farma, Indofarma, etc</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4 text-center">
+                        <i class="fas fa-newspaper text-4xl mb-2 text-green-400"></i>
+                        <p class="font-bold">PR Value</p>
+                        <p class="text-xs text-gray-300">Media coverage, awards, recognition</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4 text-center">
+                        <i class="fas fa-database text-4xl mb-2 text-purple-400"></i>
+                        <p class="font-bold">Data Quality</p>
+                        <p class="text-xs text-gray-300">Perfect training data for AI/ML improvement</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 10: Funding Ask -->
+    <div class="slide justify-center items-center px-20">
+        <div class="max-w-6xl w-full">
+            <h2 class="text-5xl font-bold mb-8 bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent text-center">
+                <i class="fas fa-hand-holding-usd text-yellow-400 mr-4"></i>
+                Investment Opportunity
+            </h2>
+
+            <div class="grid grid-cols-2 gap-8 mb-8">
+                <!-- Funding Ask -->
+                <div class="bg-gradient-to-br from-green-600 to-green-800 rounded-2xl p-8 border-4 border-green-400">
+                    <h3 class="text-3xl font-bold mb-6 text-center">Funding Ask</h3>
+                    <div class="text-center mb-6">
+                        <p class="text-6xl font-black mb-2">Rp 500 juta</p>
+                        <p class="text-xl text-green-200">Seed Round</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4 mb-4">
+                        <p class="text-sm mb-2">Valuation:</p>
+                        <p class="text-2xl font-bold">Rp 3 Miliar (pre-money)</p>
+                        <p class="text-xs text-gray-300">Rp 3.5 Miliar post-money</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4">
+                        <p class="text-sm mb-2">Equity Offered:</p>
+                        <p class="text-3xl font-bold">14-15%</p>
+                        <p class="text-xs text-gray-300">Investor-friendly terms</p>
+                    </div>
+                </div>
+
+                <!-- Use of Funds -->
+                <div class="bg-gray-800 rounded-2xl p-8">
+                    <h3 class="text-3xl font-bold mb-6">Use of Funds</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-3 bg-blue-900/30 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-users text-2xl text-blue-400"></i>
+                                <span>Team Expansion (40%)</span>
+                            </div>
+                            <span class="font-bold">Rp 200 juta</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-purple-900/30 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-bullhorn text-2xl text-purple-400"></i>
+                                <span>Sales & Marketing (30%)</span>
+                            </div>
+                            <span class="font-bold">Rp 150 juta</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-green-900/30 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-code text-2xl text-green-400"></i>
+                                <span>Product Development (20%)</span>
+                            </div>
+                            <span class="font-bold">Rp 100 juta</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-orange-900/30 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-cogs text-2xl text-orange-400"></i>
+                                <span>Operations & Reserve (10%)</span>
+                            </div>
+                            <span class="font-bold">Rp 50 juta</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-6">
+                <div class="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl p-6 text-center">
+                    <i class="fas fa-rocket text-5xl mb-3"></i>
+                    <h4 class="text-xl font-bold mb-2">12-Month Runway</h4>
+                    <p class="text-sm text-blue-100">Sufficient to achieve profitability & Series A readiness</p>
+                </div>
+                <div class="bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl p-6 text-center">
+                    <i class="fas fa-chart-line text-5xl mb-3"></i>
+                    <h4 class="text-xl font-bold mb-2">3x Revenue Growth</h4>
+                    <p class="text-sm text-purple-100">Target Year 1 → Year 2 revenue multiplication</p>
+                </div>
+                <div class="bg-gradient-to-br from-green-600 to-green-800 rounded-xl p-6 text-center">
+                    <i class="fas fa-hand-holding-heart text-5xl mb-3"></i>
+                    <h4 class="text-xl font-bold mb-2">18-Month Payback</h4>
+                    <p class="text-sm text-green-100">Expected investor return timeline</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 11: Exit Strategy & ROI -->
+    <div class="slide justify-center items-center px-20">
+        <div class="max-w-6xl w-full">
+            <h2 class="text-5xl font-bold mb-8 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent text-center">
+                <i class="fas fa-door-open text-purple-400 mr-4"></i>
+                Exit Strategy & Investor ROI
+            </h2>
+
+            <div class="grid grid-cols-2 gap-8 mb-8">
+                <!-- Exit Options -->
+                <div class="bg-gray-800 rounded-2xl p-8">
+                    <h3 class="text-3xl font-bold mb-6">Exit Options (5-7 Years)</h3>
+                    <div class="space-y-4">
+                        <div class="bg-blue-900/30 rounded-lg p-4 border-l-4 border-blue-500">
+                            <h4 class="text-xl font-bold mb-2">1. Strategic Acquisition</h4>
+                            <p class="text-sm text-gray-300 mb-2">By: Accounting software firms (Accurate, Jurnal), Banks, ERP companies (SAP, Oracle)</p>
+                            <p class="text-lg font-bold text-blue-400">Valuation: Rp 30-50 Miliar</p>
+                        </div>
+                        <div class="bg-purple-900/30 rounded-lg p-4 border-l-4 border-purple-500">
+                            <h4 class="text-xl font-bold mb-2">2. Series B/C Funding</h4>
+                            <p class="text-sm text-gray-300 mb-2">By: Regional VCs, SEA expansion investors</p>
+                            <p class="text-lg font-bold text-purple-400">Valuation: Rp 40-70 Miliar</p>
+                        </div>
+                        <div class="bg-green-900/30 rounded-lg p-4 border-l-4 border-green-500">
+                            <h4 class="text-xl font-bold mb-2">3. IPO (Long-term)</h4>
+                            <p class="text-sm text-gray-300 mb-2">Year 7-10, ASEAN market leadership</p>
+                            <p class="text-lg font-bold text-green-400">Valuation: Rp 100+ Miliar</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Investor ROI -->
+                <div class="bg-gradient-to-br from-green-600 to-green-800 rounded-2xl p-8 border-4 border-yellow-400">
+                    <h3 class="text-3xl font-bold mb-6 text-center">Investor ROI Projection</h3>
+                    
+                    <div class="bg-white/10 rounded-lg p-4 mb-4">
+                        <p class="text-sm mb-2">Initial Investment (14% equity)</p>
+                        <p class="text-3xl font-bold">Rp 500 juta</p>
+                    </div>
+
+                    <div class="bg-white/10 rounded-lg p-4 mb-4">
+                        <p class="text-sm mb-2">Conservative Exit (Year 5)</p>
+                        <p class="text-2xl font-bold mb-1">Valuation: Rp 30 Miliar</p>
+                        <p class="text-xl">14% stake = <span class="text-green-300 font-bold">Rp 4.2 Miliar</span></p>
+                        <p class="text-sm text-green-200">ROI: 8.4x (740% gain)</p>
+                    </div>
+
+                    <div class="bg-green-700 rounded-lg p-4">
+                        <p class="text-sm mb-2">Optimistic Exit (Year 5)</p>
+                        <p class="text-2xl font-bold mb-1">Valuation: Rp 50 Miliar</p>
+                        <p class="text-xl">14% stake = <span class="text-yellow-300 font-bold">Rp 7 Miliar</span></p>
+                        <p class="text-sm text-yellow-200">ROI: 14x (1,300% gain)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6">
+                <h3 class="text-2xl font-bold mb-4 text-center">Why Now? Market Timing</h3>
+                <div class="grid grid-cols-4 gap-4">
+                    <div class="bg-white/10 rounded-lg p-4 text-center">
+                        <i class="fas fa-virus text-3xl mb-2 text-red-400"></i>
+                        <p class="font-bold text-sm">Post-Pandemic Digital Shift</p>
+                        <p class="text-xs text-gray-200">Companies accelerating automation adoption</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4 text-center">
+                        <i class="fas fa-landmark text-3xl mb-2 text-yellow-400"></i>
+                        <p class="font-bold text-sm">Government Push</p>
+                        <p class="text-xs text-gray-200">Indonesia digitalization mandate for BUMNs</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4 text-center">
+                        <i class="fas fa-dollar-sign text-3xl mb-2 text-green-400"></i>
+                        <p class="font-bold text-sm">VC Interest High</p>
+                        <p class="text-xs text-gray-200">B2B SaaS funding at peak in SEA</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4 text-center">
+                        <i class="fas fa-users-cog text-3xl mb-2 text-blue-400"></i>
+                        <p class="font-bold text-sm">First-Mover Advantage</p>
+                        <p class="text-xs text-gray-200">No direct competitor in Indonesia market</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 12: Strategic Roadmap -->
+    <div class="slide justify-center items-center px-20">
+        <div class="max-w-6xl w-full">
+            <h2 class="text-5xl font-bold mb-8 bg-gradient-to-r from-blue-400 to-green-400 bg-clip-text text-transparent text-center">
+                <i class="fas fa-map-marked-alt text-blue-400 mr-4"></i>
+                Strategic Roadmap: 24-Month Plan
+            </h2>
+
+            <!-- Timeline -->
+            <div class="relative mb-12">
+                <div class="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-gradient-to-b from-blue-500 to-green-500"></div>
+                
+                <!-- Q1 -->
+                <div class="relative mb-8">
+                    <div class="flex items-center">
+                        <div class="w-1/2 pr-8 text-right">
+                            <div class="bg-blue-900 rounded-xl p-6 inline-block">
+                                <h3 class="text-2xl font-bold mb-3">Q1 2025 (Jan-Mar)</h3>
+                                <h4 class="font-bold text-blue-300 mb-2">Foundation & Pilot</h4>
+                                <ul class="text-sm space-y-1 text-left">
+                                    <li>✓ Secure seed funding Rp 500 juta</li>
+                                    <li>✓ Close Kimia Farma pilot (10 BM) - Rp 15 juta</li>
+                                    <li>✓ Hire 2 developers + 1 sales</li>
+                                    <li>✓ Setup infrastructure & operations</li>
+                                    <li>✓ Target: 2 additional pilot clients</li>
+                                </ul>
+                                <div class="mt-3 pt-3 border-t border-blue-700">
+                                    <p class="font-bold">Revenue: Rp 45 juta</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-8 h-8 bg-blue-600 rounded-full border-4 border-gray-900 absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center">
+                            <span class="text-xs font-bold">Q1</span>
+                        </div>
+                        <div class="w-1/2"></div>
+                    </div>
+                </div>
+
+                <!-- Q2 -->
+                <div class="relative mb-8">
+                    <div class="flex items-center">
+                        <div class="w-1/2"></div>
+                        <div class="w-8 h-8 bg-purple-600 rounded-full border-4 border-gray-900 absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center">
+                            <span class="text-xs font-bold">Q2</span>
+                        </div>
+                        <div class="w-1/2 pl-8">
+                            <div class="bg-purple-900 rounded-xl p-6 inline-block">
+                                <h3 class="text-2xl font-bold mb-3">Q2 2025 (Apr-Jun)</h3>
+                                <h4 class="font-bold text-purple-300 mb-2">Prove & Expand</h4>
+                                <ul class="text-sm space-y-1 text-left">
+                                    <li>✓ KF pilot success → expand to 40 BM (Rp 40 juta)</li>
+                                    <li>✓ Close 3 BUMN deals (Bio Farma, Indofarma)</li>
+                                    <li>✓ Close 5 mid-market (Guardian, Century, etc)</li>
+                                    <li>✓ Hire 2 more developers + 1 customer success</li>
+                                    <li>✓ Product: Advanced analytics dashboard</li>
+                                </ul>
+                                <div class="mt-3 pt-3 border-t border-purple-700">
+                                    <p class="font-bold">Cumulative: Rp 285 juta</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Q3 -->
+                <div class="relative mb-8">
+                    <div class="flex items-center">
+                        <div class="w-1/2 pr-8 text-right">
+                            <div class="bg-green-900 rounded-xl p-6 inline-block">
+                                <h3 class="text-2xl font-bold mb-3">Q3 2025 (Jul-Sep)</h3>
+                                <h4 class="font-bold text-green-300 mb-2">Scale Sales</h4>
+                                <ul class="text-sm space-y-1 text-left">
+                                    <li>✓ Add 7-10 new clients (focus mid-market)</li>
+                                    <li>✓ Launch partner/reseller program</li>
+                                    <li>✓ Product: API integration, custom reports</li>
+                                    <li>✓ Hire 1 tech lead + 2 sales reps</li>
+                                    <li>✓ Marketing: Case studies, webinars, events</li>
+                                </ul>
+                                <div class="mt-3 pt-3 border-t border-green-700">
+                                    <p class="font-bold">Cumulative: Rp 585 juta</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-8 h-8 bg-green-600 rounded-full border-4 border-gray-900 absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center">
+                            <span class="text-xs font-bold">Q3</span>
+                        </div>
+                        <div class="w-1/2"></div>
+                    </div>
+                </div>
+
+                <!-- Q4 -->
+                <div class="relative mb-8">
+                    <div class="flex items-center">
+                        <div class="w-1/2"></div>
+                        <div class="w-8 h-8 bg-orange-600 rounded-full border-4 border-gray-900 absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center">
+                            <span class="text-xs font-bold">Q4</span>
+                        </div>
+                        <div class="w-1/2 pl-8">
+                            <div class="bg-orange-900 rounded-xl p-6 inline-block">
+                                <h3 class="text-2xl font-bold mb-3">Q4 2025 (Oct-Dec)</h3>
+                                <h4 class="font-bold text-orange-300 mb-2">Optimize & Prepare Series A</h4>
+                                <ul class="text-sm space-y-1 text-left">
+                                    <li>✓ Reach 18-20 active clients</li>
+                                    <li>✓ Achieve profitability (positive cash flow)</li>
+                                    <li>✓ Optimize unit economics (CAC, LTV)</li>
+                                    <li>✓ Prepare Series A materials (pitch deck, metrics)</li>
+                                    <li>✓ Product: AI/ML enhancements, mobile app</li>
+                                </ul>
+                                <div class="mt-3 pt-3 border-t border-orange-700">
+                                    <p class="font-bold">Year End: Rp 900 juta</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Year 2 -->
+                <div class="relative">
+                    <div class="flex items-center">
+                        <div class="w-1/2 pr-8 text-right">
+                            <div class="bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl p-6 inline-block border-4 border-yellow-400">
+                                <h3 class="text-2xl font-bold mb-3">YEAR 2 (2026)</h3>
+                                <h4 class="font-bold text-yellow-300 mb-2">Dominate & Expand</h4>
+                                <ul class="text-sm space-y-1 text-left">
+                                    <li>✓ Grow to 50 active clients</li>
+                                    <li>✓ Enter new verticals (F&B, Retail, Healthcare)</li>
+                                    <li>✓ Launch ASEAN pilot (Singapore, Malaysia)</li>
+                                    <li>✓ Raise Series A (Rp 3-5 Miliar)</li>
+                                    <li>✓ Team: 20-25 people</li>
+                                </ul>
+                                <div class="mt-3 pt-3 border-t border-white/20">
+                                    <p class="font-bold text-2xl">Revenue: Rp 2.8 Miliar</p>
+                                    <p class="text-sm text-gray-200">Net Profit: Rp 1.32 Miliar</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full border-4 border-yellow-400 absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center">
+                            <span class="text-xs font-bold">Y2</span>
+                        </div>
+                        <div class="w-1/2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Milestones -->
+            <div class="bg-gray-800 rounded-2xl p-6">
+                <h3 class="text-2xl font-bold mb-4 text-center">Critical Success Milestones</h3>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="bg-blue-900/30 rounded-lg p-4 text-center">
+                        <p class="text-4xl font-black mb-2 text-blue-400">Month 3</p>
+                        <p class="font-bold">Kimia Farma Pilot Win</p>
+                        <p class="text-xs text-gray-400">Anchor client secured</p>
+                    </div>
+                    <div class="bg-green-900/30 rounded-lg p-4 text-center">
+                        <p class="text-4xl font-black mb-2 text-green-400">Month 6</p>
+                        <p class="font-bold">Break-even Point</p>
+                        <p class="text-xs text-gray-400">Positive cash flow</p>
+                    </div>
+                    <div class="bg-purple-900/30 rounded-lg p-4 text-center">
+                        <p class="text-4xl font-black mb-2 text-purple-400">Month 12</p>
+                        <p class="font-bold">Series A Ready</p>
+                        <p class="text-xs text-gray-400">20 clients, Rp 900jt revenue</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 13: Competitive Advantage & Moat -->
+    <div class="slide justify-center items-center px-20">
+        <div class="max-w-6xl w-full">
+            <h2 class="text-5xl font-bold mb-8 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent text-center">
+                <i class="fas fa-shield-alt text-purple-400 mr-4"></i>
+                Competitive Advantage & Moat
+            </h2>
+
+            <div class="grid grid-cols-2 gap-8 mb-8">
+                <div class="bg-gray-800 rounded-2xl p-6">
+                    <h3 class="text-2xl font-bold mb-6">Why We Win</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-4 bg-blue-900/30 rounded-lg p-4">
+                            <i class="fas fa-brain text-3xl text-blue-400 mt-1"></i>
+                            <div>
+                                <p class="font-bold text-lg mb-1">Domain Expertise</p>
+                                <p class="text-sm text-gray-300">Deep understanding of Indonesian multi-branch audit needs (not generic solution)</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4 bg-purple-900/30 rounded-lg p-4">
+                            <i class="fas fa-database text-3xl text-purple-400 mt-1"></i>
+                            <div>
+                                <p class="font-bold text-lg mb-1">Network Effect</p>
+                                <p class="text-sm text-gray-300">More clients = better keyword database = more accurate matching = more attractive product</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4 bg-green-900/30 rounded-lg p-4">
+                            <i class="fas fa-lock text-3xl text-green-400 mt-1"></i>
+                            <div>
+                                <p class="font-bold text-lg mb-1">High Switching Cost</p>
+                                <p class="text-sm text-gray-300">Once implemented with custom keywords & historical data = hard to migrate</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4 bg-orange-900/30 rounded-lg p-4">
+                            <i class="fas fa-rocket text-3xl text-orange-400 mt-1"></i>
+                            <div>
+                                <p class="font-bold text-lg mb-1">Speed to Market</p>
+                                <p class="text-sm text-gray-300">Working product TODAY, not 6-12 months away like competitors</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 rounded-2xl p-6">
+                    <h3 class="text-2xl font-bold mb-6">Competitive Landscape</h3>
+                    <div class="space-y-3">
+                        <div class="bg-red-900/30 rounded-lg p-4">
+                            <p class="font-bold mb-2 flex items-center gap-2">
+                                <i class="fas fa-times-circle text-red-400"></i>
+                                Manual Excel/Spreadsheets
+                            </p>
+                            <p class="text-xs text-gray-300">80% of market still doing manual reconciliation - our primary competitor</p>
+                        </div>
+                        <div class="bg-yellow-900/30 rounded-lg p-4">
+                            <p class="font-bold mb-2 flex items-center gap-2">
+                                <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                                Generic Accounting Software
+                            </p>
+                            <p class="text-xs text-gray-300">Accurate, Jurnal, MYOB - not specialized for multi-branch reconciliation</p>
+                        </div>
+                        <div class="bg-blue-900/30 rounded-lg p-4">
+                            <p class="font-bold mb-2 flex items-center gap-2">
+                                <i class="fas fa-globe text-blue-400"></i>
+                                International Players
+                            </p>
+                            <p class="text-xs text-gray-300">QuickBooks, Xero - expensive, not localized for Indonesian market</p>
+                        </div>
+                        <div class="bg-green-900/30 rounded-lg p-4">
+                            <p class="font-bold mb-2 flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-400"></i>
+                                Our Position: NICHE LEADER
+                            </p>
+                            <p class="text-xs text-gray-300">Only solution focused specifically on Indonesian multi-branch reconciliation automation</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-r from-green-600 to-blue-600 rounded-2xl p-6">
+                <h3 class="text-2xl font-bold mb-4 text-center">Defensibility: How We Build the Moat</h3>
+                <div class="grid grid-cols-4 gap-4">
+                    <div class="bg-white/10 rounded-lg p-4 text-center">
+                        <i class="fas fa-trophy text-4xl mb-2 text-yellow-400"></i>
+                        <p class="font-bold">Brand</p>
+                        <p class="text-xs">First-mover + BUMN clients = trusted brand</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4 text-center">
+                        <i class="fas fa-database text-4xl mb-2 text-blue-400"></i>
+                        <p class="font-bold">Data Moat</p>
+                        <p class="text-xs">Proprietary keyword database impossible to replicate</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4 text-center">
+                        <i class="fas fa-handshake text-4xl mb-2 text-green-400"></i>
+                        <p class="font-bold">Partnerships</p>
+                        <p class="text-xs">Exclusive deals with industry associations</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4 text-center">
+                        <i class="fas fa-certificate text-4xl mb-2 text-purple-400"></i>
+                        <p class="font-bold">Compliance</p>
+                        <p class="text-xs">SOC2, ISO27001 certification = enterprise-ready</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 14: Team & Vision -->
+    <div class="slide justify-center items-center px-20">
+        <div class="max-w-6xl w-full">
+            <h2 class="text-5xl font-bold mb-8 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent text-center">
+                <i class="fas fa-users text-blue-400 mr-4"></i>
+                Team & Vision
+            </h2>
+
+            <div class="grid grid-cols-2 gap-8 mb-8">
+                <div class="bg-gray-800 rounded-2xl p-8">
+                    <h3 class="text-3xl font-bold mb-6">Current Team</h3>
+                    <div class="space-y-4">
+                        <div class="bg-blue-900/30 rounded-lg p-4">
+                            <p class="font-bold text-xl mb-1">Founder & CEO</p>
+                            <p class="text-sm text-gray-300 mb-2">Full-stack developer, 5+ years enterprise software experience</p>
+                            <p class="text-xs text-blue-300">✓ Built entire MatchFinance platform solo</p>
+                            <p class="text-xs text-blue-300">✓ Deep understanding of audit/finance workflows</p>
+                        </div>
+                        <div class="bg-purple-900/30 rounded-lg p-4">
+                            <p class="font-bold text-lg mb-1">Advisors (Planned)</p>
+                            <p class="text-xs text-gray-300">• Ex-CFO from retail chain (strategic advisor)</p>
+                            <p class="text-xs text-gray-300">• Head of Audit from BUMN (industry advisor)</p>
+                            <p class="text-xs text-gray-300">• Tech entrepreneur (business advisor)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 rounded-2xl p-8">
+                    <h3 class="text-3xl font-bold mb-6">Hiring Plan (Post-Funding)</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between bg-blue-900/20 rounded p-3">
+                            <span><i class="fas fa-code mr-2 text-blue-400"></i>Tech Lead/CTO</span>
+                            <span class="text-sm font-bold">Q1</span>
+                        </div>
+                        <div class="flex items-center justify-between bg-purple-900/20 rounded p-3">
+                            <span><i class="fas fa-laptop-code mr-2 text-purple-400"></i>2x Backend Developers</span>
+                            <span class="text-sm font-bold">Q1-Q2</span>
+                        </div>
+                        <div class="flex items-center justify-between bg-green-900/20 rounded p-3">
+                            <span><i class="fas fa-chart-line mr-2 text-green-400"></i>Sales Manager</span>
+                            <span class="text-sm font-bold">Q1</span>
+                        </div>
+                        <div class="flex items-center justify-between bg-orange-900/20 rounded p-3">
+                            <span><i class="fas fa-headset mr-2 text-orange-400"></i>Customer Success Manager</span>
+                            <span class="text-sm font-bold">Q2</span>
+                        </div>
+                        <div class="flex items-center justify-between bg-red-900/20 rounded p-3">
+                            <span><i class="fas fa-bullhorn mr-2 text-red-400"></i>Marketing Lead</span>
+                            <span class="text-sm font-bold">Q3</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-8">
+                <h3 class="text-3xl font-bold mb-6 text-center">Long-term Vision</h3>
+                <div class="grid grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <div class="text-5xl mb-3">🇮🇩</div>
+                        <p class="text-xl font-bold mb-2">Year 1-2</p>
+                        <p class="text-sm">Dominate Indonesian market: #1 reconciliation platform for multi-branch companies</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-5xl mb-3">🌏</div>
+                        <p class="text-xl font-bold mb-2">Year 3-5</p>
+                        <p class="text-sm">ASEAN Expansion: Singapore, Malaysia, Thailand, Philippines, Vietnam</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-5xl mb-3">🚀</div>
+                        <p class="text-xl font-bold mb-2">Year 5-10</p>
+                        <p class="text-sm">Global SaaS Leader: The de-facto standard for enterprise financial reconciliation</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 15: Call to Action -->
+    <div class="slide gradient-bg justify-center items-center">
+        <div class="text-center max-w-5xl px-8">
+            <i class="fas fa-rocket text-9xl text-white mb-8 animate-pulse"></i>
+            <h2 class="text-7xl font-black mb-6 text-white drop-shadow-2xl">Let's Build the Future Together</h2>
+            
+            <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-8 mb-8">
+                <p class="text-3xl font-bold mb-6">Investment Opportunity</p>
+                <div class="grid grid-cols-3 gap-6 mb-6">
+                    <div>
+                        <p class="text-lg text-white/80 mb-2">Seeking</p>
+                        <p class="text-5xl font-black">Rp 500 juta</p>
+                    </div>
+                    <div>
+                        <p class="text-lg text-white/80 mb-2">Equity Offered</p>
+                        <p class="text-5xl font-black">14-15%</p>
+                    </div>
+                    <div>
+                        <p class="text-lg text-white/80 mb-2">Projected ROI</p>
+                        <p class="text-5xl font-black">8-14x</p>
+                    </div>
+                </div>
+                <p class="text-xl text-white/90">in 5 years</p>
+            </div>
+
+            <div class="space-y-4 mb-8">
+                <p class="text-2xl font-bold text-white">Next Steps:</p>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="bg-white/10 rounded-lg p-4">
+                        <p class="font-bold text-xl mb-2">1. Due Diligence</p>
+                        <p class="text-sm">Financial deep dive, product demo, market validation</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4">
+                        <p class="font-bold text-xl mb-2">2. Term Sheet</p>
+                        <p class="text-sm">Negotiate terms, valuation, investor rights</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4">
+                        <p class="font-bold text-xl mb-2">3. Close & Execute</p>
+                        <p class="text-sm">Legal docs, fund transfer, start building!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <p class="text-3xl font-bold text-white">Contact:</p>
+                <p class="text-2xl text-white/90">[Your Name]</p>
+                <p class="text-xl text-white/80">Founder & CEO, CV Autobot Wijaya Solution</p>
+                <div class="flex justify-center gap-8 text-xl mt-4">
+                    <p><i class="fas fa-envelope mr-2"></i>info@matchfinance.id</p>
+                    <p><i class="fas fa-phone mr-2"></i>+62 XXX-XXXX-XXXX</p>
+                    <p><i class="fab fa-linkedin mr-2"></i>linkedin.com/in/yourprofile</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 15;
+
+        function showSlide(n) {
+            const slides = document.querySelectorAll('.slide');
+            if (n > totalSlides) currentSlide = 1;
+            if (n < 1) currentSlide = totalSlides;
+            
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[currentSlide - 1].classList.add('active');
+            
+            document.getElementById('slideCounter').textContent = `${currentSlide} / ${totalSlides}`;
+        }
+
+        function nextSlide() {
+            currentSlide++;
+            showSlide(currentSlide);
+        }
+
+        function prevSlide() {
+            currentSlide--;
+            showSlide(currentSlide);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        // Initialize chart on slide 8
+        window.addEventListener('load', function() {
+            const ctx = document.getElementById('cashFlowChart');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Q1 Y1', 'Q2 Y1', 'Q3 Y1', 'Q4 Y1', 'Q2 Y2', 'Q4 Y2', 'Q2 Y3', 'Q4 Y3'],
+                        datasets: [{
+                            label: 'Cumulative Cash Flow',
+                            data: [45, 285, 585, 900, 1800, 2800, 3500, 4300],
+                            borderColor: 'rgb(34, 197, 94)',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'Rp ' + context.parsed.y + ' juta';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return 'Rp ' + value + 'jt';
+                                    },
+                                    color: '#9ca3af'
+                                },
+                                grid: { color: '#374151' }
+                            },
+                            x: {
+                                ticks: { color: '#9ca3af' },
+                                grid: { color: '#374151' }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        showSlide(currentSlide);
+    </script>
+</body>
+</html>

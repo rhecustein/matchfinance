@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Model Analysis - MatchFinance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .connection-line { position: absolute; background: linear-gradient(90deg, #3b82f6, #8b5cf6); height: 2px; }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="min-h-screen p-8">
+        <div class="max-w-7xl mx-auto">
+            
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-black mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                    Strategi Bisnis MatchFinance
+                </h1>
+                <p class="text-xl text-gray-300">Analisis Model & Peta Koneksi Kimia Farma</p>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="flex gap-4 mb-8 bg-gray-800 p-2 rounded-xl">
+                <button onclick="showTab('comparison')" id="tab-comparison" class="tab-btn flex-1 py-3 px-6 rounded-lg font-semibold transition bg-blue-600 text-white">
+                    ⚖️ Perbandingan Model
+                </button>
+                <button onclick="showTab('saas')" id="tab-saas" class="tab-btn flex-1 py-3 px-6 rounded-lg font-semibold transition bg-gray-700 text-gray-300">
+                    🌐 SaaS Public Model
+                </button>
+                <button onclick="showTab('partnership')" id="tab-partnership" class="tab-btn flex-1 py-3 px-6 rounded-lg font-semibold transition bg-gray-700 text-gray-300">
+                    🤝 Partnership Model
+                </button>
+                <button onclick="showTab('network')" id="tab-network" class="tab-btn flex-1 py-3 px-6 rounded-lg font-semibold transition bg-gray-700 text-gray-300">
+                    🎯 Peta Koneksi KF
+                </button>
+            </div>
+
+            <!-- Comparison Tab -->
+            <div id="content-comparison" class="tab-content">
+                <div class="grid md:grid-cols-2 gap-8 mb-8">
+                    
+                    <!-- SaaS Public -->
+                    <div class="bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl p-8 border-4 border-blue-500">
+                        <div class="text-center mb-6">
+                            <div class="text-6xl mb-4">🌐</div>
+                            <h2 class="text-3xl font-black mb-2">SaaS Public Multi-Tenant</h2>
+                            <p class="text-blue-200">Akses terbuka dengan subscription</p>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="bg-white/10 rounded-lg p-4">
+                                <h3 class="font-bold mb-2 text-green-400">✅ KEUNTUNGAN:</h3>
+                                <ul class="space-y-2 text-sm">
+                                    <li>✓ <strong>Scalable:</strong> Unlimited companies bisa signup</li>
+                                    <li>✓ <strong>Passive Income:</strong> MRR dari banyak client</li>
+                                    <li>✓ <strong>Market Validation:</strong> Test product-market fit</li>
+                                    <li>✓ <strong>Brand Building:</strong> Portfolio & case studies</li>
+                                    <li>✓ <strong>Network Effect:</strong> Referral antar client</li>
+                                    <li>✓ <strong>Data Training:</strong> Banyak data untuk ML improvement</li>
+                                </ul>
+                            </div>
+
+                            <div class="bg-white/10 rounded-lg p-4">
+                                <h3 class="font-bold mb-2 text-red-400">❌ KERUGIAN:</h3>
+                                <ul class="space-y-2 text-sm">
+                                    <li>✗ <strong>Training Data Challenge:</strong> Setiap company beda keyword</li>
+                                    <li>✗ <strong>Support Overhead:</strong> Banyak client = banyak support</li>
+                                    <li>✗ <strong>Slow Revenue:</strong> Butuh waktu acquire banyak client</li>
+                                    <li>✗ <strong>Competition:</strong> Harus compete dengan existing SaaS</li>
+                                    <li>✗ <strong>Churn Risk:</strong> Client bisa cancel anytime</li>
+                                </ul>
+                            </div>
+
+                            <div class="bg-green-900/50 rounded-lg p-4 border-2 border-green-500">
+                                <h3 class="font-bold mb-2">💰 REVENUE PROJECTION (Year 1):</h3>
+                                <ul class="space-y-1 text-sm">
+                                    <li>• 10 companies × Rp 500k/month = <strong>Rp 60 juta</strong></li>
+                                    <li>• 20 companies × Rp 500k/month = <strong>Rp 120 juta</strong></li>
+                                    <li>• 50 companies × Rp 500k/month = <strong>Rp 300 juta</strong></li>
+                                </ul>
+                                <p class="text-xs text-green-300 mt-2">*Butuh aggressive marketing & sales</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Partnership -->
+                    <div class="bg-gradient-to-br from-purple-900 to-purple-800 rounded-2xl p-8 border-4 border-purple-500">
+                        <div class="text-center mb-6">
+                            <div class="text-6xl mb-4">🤝</div>
+                            <h2 class="text-3xl font-black mb-2">Partnership Exclusive</h2>
+                            <p class="text-purple-200">Kerjasama dengan Internal Audit KF</p>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="bg-white/10 rounded-lg p-4">
+                                <h3 class="font-bold mb-2 text-green-400">✅ KEUNTUNGAN:</h3>
+                                <ul class="space-y-2 text-sm">
+                                    <li>✓ <strong>Big Fish:</strong> 1000+ cabang potential market</li>
+                                    <li>✓ <strong>Easier Training:</strong> Standardized keyword (semua outlet sama)</li>
+                                    <li>✓ <strong>Internal Champion:</strong> Audit team jadi advocate</li>
+                                    <li>✓ <strong>Stable Revenue:</strong> Long-term contract (3-5 tahun)</li>
+                                    <li>✓ <strong>Referral Power:</strong> BUMN network access</li>
+                                    <li>✓ <strong>Data Quality:</strong> Clean, structured, consistent</li>
+                                </ul>
+                            </div>
+
+                            <div class="bg-white/10 rounded-lg p-4">
+                                <h3 class="font-bold mb-2 text-red-400">❌ KERUGIAN:</h3>
+                                <ul class="space-y-2 text-sm">
+                                    <li>✗ <strong>Eggs in One Basket:</strong> Tergantung 1 client</li>
+                                    <li>✗ <strong>Slow Sales Cycle:</strong> Corporate decision = lama</li>
+                                    <li>✗ <strong>Politik Internal:</strong> Bureaucracy & approval layers</li>
+                                    <li>✗ <strong>Custom Development:</strong> Banyak request khusus</li>
+                                    <li>✗ <strong>Lock-in Effect:</strong> Sulit pivot ke industri lain</li>
+                                </ul>
+                            </div>
+
+                            <div class="bg-green-900/50 rounded-lg p-4 border-2 border-green-500">
+                                <h3 class="font-bold mb-2">💰 REVENUE PROJECTION (Year 1):</h3>
+                                <ul class="space-y-1 text-sm">
+                                    <li>• Pilot Bekasi: <strong>Rp 15 juta</strong></li>
+                                    <li>• Regional (20 cabang): <strong>Rp 40 juta</strong></li>
+                                    <li>• Total Year 1: <strong>Rp 55 juta</strong></li>
+                                    <li>• Year 2 (100 cabang): <strong>Rp 300 juta</strong></li>
+                                </ul>
+                                <p class="text-xs text-green-300 mt-2">*More predictable, slower growth</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendation -->
+                <div class="bg-gradient-to-r from-yellow-600 to-orange-600 rounded-2xl p-8">
+                    <h2 class="text-3xl font-black mb-6 text-center">🎯 REKOMENDASI STRATEGI</h2>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="bg-white/10 rounded-xl p-6">
+                            <h3 class="text-2xl font-bold mb-4">📍 FASE 1: Partnership First (Bulan 1-12)</h3>
+                            <ul class="space-y-2">
+                                <li><strong>✓ Focus:</strong> Kimia Farma exclusive partnership</li>
+                                <li><strong>✓ Goal:</strong> Prove value, build case study</li>
+                                <li><strong>✓ Benefit:</strong> Stable revenue, perfect training data</li>
+                                <li><strong>✓ Risk:</strong> Low (managed client relationship)</li>
+                            </ul>
+                        </div>
+                        <div class="bg-white/10 rounded-xl p-6">
+                            <h3 class="text-2xl font-bold mb-4">🚀 FASE 2: Hybrid Model (Bulan 13+)</h3>
+                            <ul class="space-y-2">
+                                <li><strong>✓ Leverage:</strong> KF case study untuk marketing</li>
+                                <li><strong>✓ Expand:</strong> Open SaaS untuk SME & mid-market</li>
+                                <li><strong>✓ Benefit:</strong> Diversified revenue streams</li>
+                                <li><strong>✓ Strategy:</strong> Enterprise (KF) + SME (SaaS)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SaaS Model Tab -->
+            <div id="content-saas" class="tab-content hidden">
+                <div class="space-y-8">
+                    
+                    <!-- Profit Analysis -->
+                    <div class="bg-gray-800 rounded-2xl p-8 border border-gray-700">
+                        <h2 class="text-3xl font-bold mb-6">💵 Analisis Profitabilitas SaaS Model</h2>
+                        
+                        <div class="grid md:grid-cols-3 gap-6 mb-8">
+                            <div class="bg-gradient-to-br from-green-600 to-green-700 rounded-xl p-6 text-center">
+                                <h3 class="text-xl font-bold mb-4">Pricing Strategy</h3>
+                                <div class="text-4xl font-black mb-2">Rp 500k</div>
+                                <p class="text-green-100">per company/bulan</p>
+                                <p class="text-sm text-green-200 mt-2">Unlimited users per company</p>
+                            </div>
+                            <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 text-center">
+                                <h3 class="text-xl font-bold mb-4">Cost Structure</h3>
+                                <div class="text-4xl font-black mb-2">Rp 150k</div>
+                                <p class="text-blue-100">per company/bulan</p>
+                                <p class="text-sm text-blue-200 mt-2">Server, OCR API, support</p>
+                            </div>
+                            <div class="bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl p-6 text-center">
+                                <h3 class="text-xl font-bold mb-4">Gross Margin</h3>
+                                <div class="text-4xl font-black mb-2">70%</div>
+                                <p class="text-purple-100">profit margin</p>
+                                <p class="text-sm text-purple-200 mt-2">Rp 350k profit/company</p>
+                            </div>
+                        </div>
+
+                        <!-- Revenue Scenarios -->
+                        <div class="bg-gray-900 rounded-xl p-6">
+                            <h3 class="text-2xl font-bold mb-6 text-center">Revenue Scenarios</h3>
+                            <table class="w-full text-left">
+                                <thead class="bg-gray-800 border-b-2 border-gray-700">
+                                    <tr>
+                                        <th class="p-4">Companies</th>
+                                        <th class="p-4">MRR</th>
+                                        <th class="p-4">ARR</th>
+                                        <th class="p-4">Cost/Month</th>
+                                        <th class="p-4">Net Profit/Year</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-700">
+                                    <tr class="hover:bg-gray-800">
+                                        <td class="p-4 font-bold">10 companies</td>
+                                        <td class="p-4">Rp 5 juta</td>
+                                        <td class="p-4">Rp 60 juta</td>
+                                        <td class="p-4 text-red-400">Rp 1.5 juta</td>
+                                        <td class="p-4 text-green-400 font-bold">Rp 42 juta</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-800">
+                                        <td class="p-4 font-bold">25 companies</td>
+                                        <td class="p-4">Rp 12.5 juta</td>
+                                        <td class="p-4">Rp 150 juta</td>
+                                        <td class="p-4 text-red-400">Rp 3.75 juta</td>
+                                        <td class="p-4 text-green-400 font-bold">Rp 105 juta</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-800">
+                                        <td class="p-4 font-bold">50 companies</td>
+                                        <td class="p-4">Rp 25 juta</td>
+                                        <td class="p-4">Rp 300 juta</td>
+                                        <td class="p-4 text-red-400">Rp 7.5 juta</td>
+                                        <td class="p-4 text-green-400 font-bold">Rp 210 juta</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-800 bg-yellow-900/20">
+                                        <td class="p-4 font-bold">100 companies</td>
+                                        <td class="p-4">Rp 50 juta</td>
+                                        <td class="p-4">Rp 600 juta</td>
+                                        <td class="p-4 text-red-400">Rp 15 juta</td>
+                                        <td class="p-4 text-green-400 font-bold">Rp 420 juta</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Training Data Challenge -->
+                    <div class="bg-red-900/30 rounded-2xl p-8 border-2 border-red-500">
+                        <h2 class="text-3xl font-bold mb-6 flex items-center gap-3">
+                            <span>⚠️</span> Challenge: Training Data Keywords
+                        </h2>
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h3 class="text-xl font-bold mb-4 text-red-400">🔴 MASALAH:</h3>
+                                <ul class="space-y-3 text-gray-300">
+                                    <li><strong>1. Setiap Company Beda Industry</strong><br>
+                                    <span class="text-sm text-gray-400">Apotek ≠ Restoran ≠ Toko Retail ≠ Jasa</span></li>
+                                    
+                                    <li><strong>2. Pola Transaksi Unique</strong><br>
+                                    <span class="text-sm text-gray-400">Setiap bisnis punya supplier & customer berbeda</span></li>
+                                    
+                                    <li><strong>3. Manual Training Overhead</strong><br>
+                                    <span class="text-sm text-gray-400">Setiap onboarding client butuh setup keyword 1-2 minggu</span></li>
+                                    
+                                    <li><strong>4. Maintenance Burden</strong><br>
+                                    <span class="text-sm text-gray-400">Client terus request tambah keyword baru</span></li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-xl font-bold mb-4 text-green-400">✅ SOLUSI:</h3>
+                                <ul class="space-y-3 text-gray-300">
+                                    <li><strong>1. Industry Templates</strong><br>
+                                    <span class="text-sm text-gray-400">Buat pre-built keyword templates per industri (Pharmacy, F&B, Retail, dll)</span></li>
+                                    
+                                    <li><strong>2. AI-Powered Learning</strong><br>
+                                    <span class="text-sm text-gray-400">Machine learning untuk suggest keywords berdasarkan historical transactions</span></li>
+                                    
+                                    <li><strong>3. Self-Service Training</strong><br>
+                                    <span class="text-sm text-gray-400">Client bisa add keyword sendiri via UI, approve by confidence score</span></li>
+                                    
+                                    <li><strong>4. Community Keywords</strong><br>
+                                    <span class="text-sm text-gray-400">Shared keyword database (anonymized) antar similar companies</span></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 bg-yellow-900/30 rounded-lg p-4 border border-yellow-500">
+                            <p class="text-yellow-300 font-semibold">💡 Pro Tip: Start dengan 1 industri (Pharmacy) dulu, baru expand ke industri lain setelah master training data pattern!</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Partnership Model Tab -->
+            <div id="content-partnership" class="tab-content hidden">
+                <div class="space-y-8">
+                    
+                    <!-- Partnership Benefits -->
+                    <div class="bg-gray-800 rounded-2xl p-8 border border-gray-700">
+                        <h2 class="text-3xl font-bold mb-6">🤝 Kenapa Partnership dengan Internal Audit?</h2>
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="bg-gradient-to-br from-blue-900 to-blue-800 rounded-xl p-6">
+                                <h3 class="text-2xl font-bold mb-4">🎯 Strategic Advantages</h3>
+                                <ul class="space-y-3">
+                                    <li class="flex items-start gap-3">
+                                        <span class="text-2xl">✓</span>
+                                        <div>
+                                            <strong class="text-blue-300">Internal Champion</strong>
+                                            <p class="text-sm text-gray-300">Audit team butuh tool ini untuk pekerjaan mereka, jadi motivated advocate</p>
+                                        </div>
+                                    </li>
+                                    <li class="flex items-start gap-3">
+                                        <span class="text-2xl">✓</span>
+                                        <div>
+                                            <strong class="text-blue-300">Direct Budget Access</strong>
+                                            <p class="text-sm text-gray-300">Audit punya budget untuk tools & technology improvement</p>
+                                        </div>
+                                    </li>
+                                    <li class="flex items-start gap-3">
+                                        <span class="text-2xl">✓</span>
+                                        <div>
+                                            <strong class="text-blue-300">C-Level Visibility</strong>
+                                            <p class="text-sm text-gray-300">Audit report langsung ke Direksi, visibility tinggi</p>
+                                        </div>
+                                    </li>
+                                    <li class="flex items-start gap-3">
+                                        <span class="text-2xl">✓</span>
+                                        <div>
+                                            <strong class="text-blue-300">Scale Potential</strong>
+                                            <p class="text-sm text-gray-300">Audit coverage = all branches = instant scale</p>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="bg-gradient-to-br from-purple-900 to-purple-800 rounded-xl p-6">
+                                <h3 class="text-2xl font-bold mb-4">💼 Training Data Benefits</h3>
+                                <ul class="space-y-3">
+                                    <li class="flex items-start gap-3">
+                                        <span class="text-2xl">✓</span>
+                                        <div>
+                                            <strong class="text-purple-300">Standardized Keywords</strong>
+                                            <p class="text-sm text-gray-300">Semua outlet Kimia Farma punya pola transaksi serupa (supplier sama, kategori sama)</p>
+                                        </div>
+                                    </li>
+                                    <li class="flex items-start gap-3">
+                                        <span class="text-2xl">✓</span>
+                                        <div>
+                                            <strong class="text-purple-300">One-Time Training</strong>
+                                            <p class="text-sm text-gray-300">Setup keyword sekali, apply ke 1000+ cabang</p>
+                                        </div>
+                                    </li>
+                                    <li class="flex items-start gap-3">
+                                        <span class="text-2xl">✓</span>
+                                        <div>
+                                            <strong class="text-purple-300">Expert Collaboration</strong>
+                                            <p class="text-sm text-gray-300">Audit team = domain experts, mereka tahu exact categories yang dibutuhkan</p>
+                                        </div>
+                                    </li>
+                                    <li class="flex items-start gap-3">
+                                        <span class="text-2xl">✓</span>
+                                        <div>
+                                            <strong class="text-purple-300">Quality Data</strong>
+                                            <p class="text-sm text-gray-300">BUMN = structured, clean data, perfect untuk training ML</p>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Implementation Strategy -->
+                    <div class="bg-gray-800 rounded-2xl p-8 border border-gray-700">
+                        <h2 class="text-3xl font-bold mb-6">📋 Implementation Strategy with Audit Team</h2>
+                        
+                        <div class="space-y-6">
+                            <div class="bg-blue-900/30 rounded-lg p-6 border-l-4 border-blue-500">
+                                <h3 class="text-xl font-bold mb-3">Phase 1: Discovery & Alignment (Week 1-2)</h3>
+                                <ul class="space-y-2 text-gray-300">
+                                    <li>• Meeting dengan Head of Internal Audit</li>
+                                    <li>• Understand current audit process & pain points</li>
+                                    <li>• Demo sistem ke audit team</li>
+                                    <li>• Identify key stakeholders & decision makers</li>
+                                </ul>
+                            </div>
+
+                            <div class="bg-purple-900/30 rounded-lg p-6 border-l-4 border-purple-500">
+                                <h3 class="text-xl font-bold mb-3">Phase 2: Pilot with Audit (Week 3-8)</h3>
+                                <ul class="space-y-2 text-gray-300">
+                                    <li>• Setup pilot untuk 1 cabang (Bekasi)</li>
+                                    <li>• Workshop dengan audit team untuk training keywords</li>
+                                    <li>• Audit team test sistem dengan real data mereka</li>
+                                    <li>• Iterate based on feedback</li>
+                                    <li>• Measure time saving & accuracy improvement</li>
+                                </ul>
+                            </div>
+
+                            <div class="bg-green-900/30 rounded-lg p-6 border-l-4 border-green-500">
+                                <h3 class="text-xl font-bold mb-3">Phase 3: Business Case (Week 9-10)</h3>
+                                <ul class="space-y-2 text-gray-300">
+                                    <li>• Audit team create internal recommendation report</li>
+                                    <li>• ROI calculation untuk present ke Direksi</li>
+                                    <li>• Success metrics & KPIs dari pilot</li>
+                                    <li>• Audit team advocate untuk budget approval</li>
+                                </ul>
+                            </div>
+
+                            <div class="bg-orange-900/30 rounded-lg p-6 border-l-4 border-orange-500">
+                                <h3 class="text-xl font-bold mb-3">Phase 4: Approval & Scale (Week 11+)</h3>
+                                <ul class="space-y-2 text-gray-300">
+                                    <li>• Presentation ke Direksi (with audit team)</li>
+                                    <li>• Contract negotiation & signing</li>
+                                    <li>• Rollout plan untuk 20-100 cabang</li>
+                                    <li>• Training & onboarding team</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Network Map Tab -->
+            <div id="content-network" class="tab-content hidden">
+                <div class="space-y-8">
+                    
+                    <!-- Organizational Chart -->
+                    <div class="bg-gray-800 rounded-2xl p-8 border border-gray-700">
+                        <h2 class="text-3xl font-bold mb-8 text-center">🗺️ Peta Koneksi Kimia Farma - Target Stakeholders</h2>
+                        
+                        <!-- Level 1: Top Management -->
+                        <div class="mb-8">
+                            <div class="text-center mb-6">
+                                <span class="bg-red-600 px-4 py-2 rounded-lg font-bold">LEVEL 1: DECISION MAKERS</span>
+                            </div>
+                            <div class="grid md:grid-cols-3 gap-6">
+                                <div class="card-hover bg-gradient-to-br from-red-600 to-red-700 rounded-xl p-6 text-center border-4 border-red-400">
+                                    <div class="text-4xl mb-3">👔</div>
+                                    <h3 class="text-xl font-bold mb-2">Direktur Utama</h3>
+                                    <p class="text-sm text-red-100 mb-4">Final decision maker</p>
+                                    <div class="bg-white/10 rounded p-3 text-sm">
+                                        <p class="font-semibold mb-2">🎯 Approach:</p>
+                                        <p>Via Executive Summary dari Internal Audit</p>
+                                    </div>
+                                </div>
+
+                                <div class="card-hover bg-gradient-to-br from-red-600 to-red-700 rounded-xl p-6 text-center border-4 border-red-400">
+                                    <div class="text-4xl mb-3">💼</div>
+                                    <h3 class="text-xl font-bold mb-2">Direktur Keuangan</h3>
+                                    <p class="text-sm text-red-100 mb-4">Budget holder & ROI evaluator</p>
+                                    <div class="bg-white/10 rounded p-3 text-sm">
+                                        <p class="font-semibold mb-2">🎯 Approach:</p>
+                                        <p>ROI presentation, cost-benefit analysis</p>
+                                    </div>
+                                </div>
+
+                                <div class="card-hover bg-gradient-to-br from-red-600 to-red-700 rounded-xl p-6 text-center border-4 border-red-400">
+                                    <div class="text-4xl mb-3">🏢</div>
+                                    <h3 class="text-xl font-bold mb-2">Direktur Operasional</h3>
+                                    <p class="text-sm text-red-100 mb-4">Implementation overseer</p>
+                                    <div class="bg-white/10 rounded p-3 text-sm">
+                                        <p class="font-semibold mb-2">🎯 Approach:</p>
+                                        <p>Operational efficiency gains, process improvement</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Level 2: Internal Champion -->
+                        <div class="mb-8">
+                            <div class="text-center mb-6">
+                                <span class="bg-blue-600 px-4 py-2 rounded-lg font-bold">LEVEL 2: INTERNAL CHAMPIONS (MAIN TARGET)</span>
+                            </div>
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div class="card-hover bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 border-4 border-blue-300">
+                                    <div class="flex items-center gap-4 mb-4">
+                                        <div class="text-5xl">🔍</div>
+                                        <div>
+                                            <h3 class="text-2xl font-bold">Kepala Internal Audit</h3>
+                                            <p class="text-sm text-blue-100">PRIMARY TARGET</p>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-3 text-sm">
+                                        <div class="bg-white/10 rounded p-3">
+                                            <p class="font-semibold mb-2">🎯 Why Target This Person:</p>
+                                            <ul class="space-y-1 text-blue-100">
+                                                <li>✓ Direct pain point (manual reconciliation)</li>
+                                                <li>✓ Budget authority untuk audit tools</li>
+                                                <li>✓ Direct line ke Direksi</li>
+                                                <li>✓ Motivated buyer (need efficiency)</li>
+                                            </ul>
+                                        </div>
+                                        <div class="bg-white/10 rounded p-3">
+                                            <p class="font-semibold mb-2">📞 How to Connect:</p>
+                                            <ul class="space-y-1 text-blue-100">
+                                                <li>1. LinkedIn message (professional intro)</li>
+                                                <li>2. Email dengan case study relevan</li>
+                                                <li>3. Request 30-min discovery call</li>
+                                                <li>4. Offer free audit process assessment</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card-hover bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 border-4 border-blue-300">
+                                    <div class="flex items-center gap-4 mb-4">
+                                        <div class="text-5xl">🤝</div>
+                                        <div>
+                                            <h3 class="text-2xl font-bold">Ketua Koperasi</h3>
+                                            <p class="text-sm text-blue-100">SECONDARY TARGET</p>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-3 text-sm">
+                                        <div class="bg-white/10 rounded p-3">
+                                            <p class="font-semibold mb-2">🎯 Why Target This Person:</p>
+                                            <ul class="space-y-1 text-blue-100">
+                                                <li>✓ Investment opportunity (revenue share)</li>
+                                                <li>✓ Member benefit angle</li>
+                                                <li>✓ Network ke semua anggota/cabang</li>
+                                                <li>✓ Long-term partnership potential</li>
+                                            </ul>
+                                        </div>
+                                        <div class="bg-white/10 rounded p-3">
+                                            <p class="font-semibold mb-2">📞 How to Connect:</p>
+                                            <ul class="space-y-1 text-blue-100">
+                                                <li>1. Via Internal Audit introduction</li>
+                                                <li>2. Present partnership proposal</li>
+                                                <li>3. Joint venture pitch (50:50)</li>
+                                                <li>4. Member benefit program</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Level 3: Influencers -->
+                        <div class="mb-8">
+                            <div class="text-center mb-6">
+                                <span class="bg-green-600 px-4 py-2 rounded-lg font-bold">LEVEL 3: INFLUENCERS & USERS</span>
+                            </div>
+                            <div class="grid md:grid-cols-4 gap-4">
+                                <div class="card-hover bg-gradient-to-br from-green-700 to-green-800 rounded-xl p-4 text-center">
+                                    <div class="text-3xl mb-2">👨‍💼</div>
+                                    <h4 class="font-bold mb-2">Manager Audit</h4>
+                                    <p class="text-xs text-green-100">Day-to-day user</p>
+                                </div>
+                                <div class="card-hover bg-gradient-to-br from-green-700 to-green-800 rounded-xl p-4 text-center">
+                                    <div class="text-3xl mb-2">💰</div>
+                                    <h4 class="font-bold mb-2">Kepala Finance</h4>
+                                    <p class="text-xs text-green-100">Reconciliation owner</p>
+                                </div>
+                                <div class="card-hover bg-gradient-to-br from-green-700 to-green-800 rounded-xl p-4 text-center">
+                                    <div class="text-3xl mb-2">💻</div>
+                                    <h4 class="font-bold mb-2">Head of IT</h4>
+                                    <p class="text-xs text-green-100">Technical validator</p>
+                                </div>
+                                <div class="card-hover bg-gradient-to-br from-green-700 to-green-800 rounded-xl p-4 text-center">
+                                    <div class="text-3xl mb-2">🏪</div>
+                                    <h4 class="font-bold mb-2">Manager Outlet</h4>
+                                    <p class="text-xs text-green-100">End user feedback</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Action Plan -->
+                    <div class="bg-gradient-to-r from-purple-600 to-purple-700 rounded-2xl p-8">
+                        <h2 class="text-3xl font-bold mb-6">🎬 Action Plan - Step by Step</h2>
+                        <div class="space-y-4">
+                            <div class="bg-white/10 rounded-lg p-4 flex items-start gap-4">
+                                <div class="bg-purple-800 rounded-full w-10 h-10 flex items-center justify-center font-bold flex-shrink-0">1</div>
+                                <div class="flex-1">
+                                    <h3 class="font-bold mb-2">Research & Identify Contact (Week 1)</h3>
+                                    <p class="text-sm text-purple-100">Find Kepala Internal Audit Kimia Farma Bekasi di LinkedIn. Check their profile, mutual connections, recent posts.</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white/10 rounded-lg p-4 flex items-start gap-4">
+                                <div class="bg-purple-800 rounded-full w-10 h-10 flex items-center justify-center font-bold flex-shrink-0">2</div>
+                                <div class="flex-1">
+                                    <h3 class="font-bold mb-2">Warm Introduction (Week 1)</h3>
+                                    <p class="text-sm text-purple-100">LinkedIn InMail atau email: "Bapak/Ibu, saya develop sistem automation untuk audit reconciliation. Boleh 15 menit coffee chat untuk share insights?"</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white/10 rounded-lg p-4 flex items-start gap-4">
+                                <div class="bg-purple-800 rounded-full w-10 h-10 flex items-center justify-center font-bold flex-shrink-0">3</div>
+                                <div class="flex-1">
+                                    <h3 class="font-bold mb-2">Discovery Meeting (Week 2)</h3>
+                                    <p class="text-sm text-purple-100">Ask about pain points, current process, timeline, budget. DON'T pitch yet - just listen and learn.</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white/10 rounded-lg p-4 flex items-start gap-4">
+                                <div class="bg-purple-800 rounded-full w-10 h-10 flex items-center justify-center font-bold flex-shrink-0">4</div>
+                                <div class="flex-1">
+                                    <h3 class="font-bold mb-2">Custom Demo (Week 3)</h3>
+                                    <p class="text-sm text-purple-100">Show demo dengan use case specific untuk audit Kimia Farma. Use their terminology, show their workflows.</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white/10 rounded-lg p-4 flex items-start gap-4">
+                                <div class="bg-purple-800 rounded-full w-10 h-10 flex items-center justify-center font-bold flex-shrink-0">5</div>
+                                <div class="flex-1">
+                                    <h3 class="font-bold mb-2">Pilot Proposal (Week 4)</h3>
+                                    <p class="text-sm text-purple-100">Offer free 2-week pilot: "Let us prove value first. Audit team test dengan real data, we measure results together."</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white/10 rounded-lg p-4 flex items-start gap-4">
+                                <div class="bg-purple-800 rounded-full w-10 h-10 flex items-center justify-center font-bold flex-shrink-0">6</div>
+                                <div class="flex-1">
+                                    <h3 class="font-bold mb-2">Internal Champion Development (Week 5-8)</h3>
+                                    <p class="text-sm text-purple-100">Work closely dengan audit team, make them successful. They become your internal sales team.</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white/10 rounded-lg p-4 flex items-start gap-4">
+                                <div class="bg-purple-800 rounded-full w-10 h-10 flex items-center justify-center font-bold flex-shrink-0">7</div>
+                                <div class="flex-1">
+                                    <h3 class="font-bold mb-2">Direksi Presentation (Week 9-10)</h3>
+                                    <p class="text-sm text-purple-100">Audit team present results + your solution ke Direksi. You support with data & ROI calculation.</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white/10 rounded-lg p-4 flex items-start gap-4">
+                                <div class="bg-purple-800 rounded-full w-10 h-10 flex items-center justify-center font-bold flex-shrink-0">8</div>
+                                <div class="flex-1">
+                                    <h3 class="font-bold mb-2">Close Deal (Week 11-12)</h3>
+                                    <p class="text-sm text-purple-100">Negotiate contract, pricing, implementation timeline. Get signed MOU/Contract.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Templates -->
+                    <div class="bg-gray-800 rounded-2xl p-8 border border-gray-700">
+                        <h2 class="text-3xl font-bold mb-6">📧 Email/Message Templates</h2>
+                        
+                        <div class="space-y-6">
+                            <div class="bg-gray-900 rounded-lg p-6">
+                                <h3 class="text-xl font-bold mb-3 text-blue-400">Template 1: LinkedIn Initial Message</h3>
+                                <div class="bg-gray-800 rounded p-4 font-mono text-sm text-gray-300">
+                                    <p class="mb-3">Subject: Innovation untuk Internal Audit Process</p>
+                                    <p class="mb-2">Bapak/Ibu [Nama],</p>
+                                    <p class="mb-2">Saya lihat Bapak/Ibu memimpin Internal Audit di Kimia Farma. Saya develop teknologi automation untuk financial reconciliation yang sudah help companies reduce audit time 80%.</p>
+                                    <p class="mb-2">Saya ingin share insights tentang bagaimana automation bisa transform audit process. Boleh minta 15 menit untuk coffee chat (virtual/offline)?</p>
+                                    <p>No sales pitch - purely knowledge sharing.</p>
+                                    <p class="mt-3">Best regards,<br>[Your Name]</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-900 rounded-lg p-6">
+                                <h3 class="text-xl font-bold mb-3 text-green-400">Template 2: Follow-up After Meeting</h3>
+                                <div class="bg-gray-800 rounded p-4 font-mono text-sm text-gray-300">
+                                    <p class="mb-3">Subject: Next Steps - MatchFinance Demo</p>
+                                    <p class="mb-2">Pak/Bu [Nama],</p>
+                                    <p class="mb-2">Thank you untuk waktunya kemarin. Saya sangat appreciate insights tentang audit challenges di Kimia Farma.</p>
+                                    <p class="mb-2">Berdasarkan diskusi kita, saya prepare custom demo yang address specific pain points yang Bapak/Ibu mention:</p>
+                                    <p class="mb-2">1. Manual reconciliation dari 20+ cabang<br>2. Time-consuming transaction categorization<br>3. Error-prone manual data entry</p>
+                                    <p class="mb-2">Available untuk 30-min demo session minggu depan?</p>
+                                    <p class="mt-3">Best regards,<br>[Your Name]</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // Remove active state from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('bg-gray-700', 'text-gray-300');
+            });
+            
+            // Show selected tab
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+            
+            // Set active button
+            document.getElementById('tab-' + tabName).classList.remove('bg-gray-700', 'text-gray-300');
+            document.getElementById('tab-' + tabName).classList.add('bg-blue-600', 'text-white');
+        }
+    </script>
+</body>
+</html>
