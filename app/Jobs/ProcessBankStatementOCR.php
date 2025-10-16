@@ -100,6 +100,8 @@ class ProcessBankStatementOCR implements ShouldQueue
                 'statement_id' => $this->bankStatement->id,
                 'bank' => $this->bankSlug,
                 'bank_name' => $parsedData['bank_name'] ?? null, // ✅ Log bank_name dari parser
+                'account_number' => $parsedData['account_number'] ?? null, // ✅ Log account_number dari parser
+                'branch_code' => $parsedData['branch_code'] ?? null, // ✅ Log branch_code dari parser
                 'transaction_count' => count($transactions),
                 'has_account_number' => !empty($parsedData['account_number']),
                 'has_period' => !empty($parsedData['period_from']),
@@ -151,11 +153,12 @@ class ProcessBankStatementOCR implements ShouldQueue
                         'uuid' => \Illuminate\Support\Str::uuid(),
                         'company_id' => $this->bankStatement->company_id,
                         'bank_statement_id' => $this->bankStatement->id,
-                        'bank_type' => $parsedData['bank_name'] ?? null, // ✅ ADDED: Bank type from OCR
+                        'bank_type' => $parsedData['bank_name'] ?? null, // ✅ Bank type from OCR (e.g., "Mandiri")
+                        'account_number' => $parsedData['account_number'] ?? null, // ✅ Account number from OCR (e.g., "1560006875217")
                         'transaction_date' => $transactionData['transaction_date'],
                         'transaction_time' => $transactionData['transaction_time'] ?? null,
                         'value_date' => $transactionData['value_date'] ?? $transactionData['transaction_date'],
-                        'branch_code' => $transactionData['branch_code'] ?? null,
+                        'branch_code' => $parsedData['branch_code'] ?? $transactionData['branch_code'] ?? null, // ✅ Branch code: prioritas dari statement level, fallback ke transaction level
                         'description' => $description,
                         'reference_no' => $transactionData['reference_no'] ?? null,
                         'debit_amount' => $transactionData['debit_amount'] ?? 0,

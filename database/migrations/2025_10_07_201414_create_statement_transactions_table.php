@@ -22,6 +22,8 @@ return new class extends Migration
             // Transaction Details - From OCR
             //bank type string
             $table->string('bank_type', 50)->comment('Type of bank (e.g., Chase, Bank of America)')->nullable();
+            //AccountNo stri
+            $table->string('account_number', 100)->comment('Bank account number')->nullable();
             $table->date('transaction_date')->comment('Date when transaction occurred');
             $table->time('transaction_time')->nullable()->comment('Time of transaction if available from OCR');
             $table->date('value_date')->nullable()->comment('Effective/value date of transaction');

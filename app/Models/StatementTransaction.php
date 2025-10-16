@@ -32,6 +32,7 @@ class StatementTransaction extends Model
         'description',
         'reference_no',
         'bank_type',
+        'account_number',
         
         // ✅ Extracted Information (for better matching)
         'extracted_keywords',
