@@ -41,7 +41,7 @@
                                 <button type="button" onclick="filterByType('all', this)" class="type-filter-btn active px-3 py-2 rounded-lg text-xs font-semibold transition-all bg-blue-600 text-white">
                                     <i class="fas fa-list mr-1"></i>All
                                 </button>
-                                @foreach(\App\Models\Type::orderBy('sort_order')->orderBy('name')->get() as $type)
+                                @foreach($types as $type)
                                     <button type="button" onclick="filterByType('{{ $type->id }}', this)" class="type-filter-btn px-3 py-2 rounded-lg text-xs font-semibold transition-all bg-slate-700 text-gray-300 hover:bg-slate-600">
                                         {{ $type->name }}
                                     </button>
@@ -77,49 +77,53 @@
                             </div>
 
                             {{-- Hidden Select for Form Submission --}}
-                            <input type="hidden" name="sub_category_id" id="sub_category_id" value="{{ old('sub_category_id', $selectedSubCategoryId ?? '') }}" required>
+                            <input type="hidden" name="sub_category_id" id="sub_category_id" value="{{ old('sub_category_id') }}" required>
                             
                             {{-- Results List (Scrollable) --}}
                             <div class="border border-slate-700 rounded-xl bg-slate-900/50 max-h-80 overflow-y-auto" id="subCategoryList">
-                                @foreach($subCategories as $categoryName => $subs)
-                                    <div class="sub-category-group" data-category="{{ $categoryName }}">
-                                        <div class="px-4 py-2 bg-slate-800/50 border-b border-slate-700 sticky top-0">
-                                            <span class="text-xs font-semibold text-gray-400">
-                                                <i class="fas fa-folder mr-2"></i>{{ $categoryName }}
-                                            </span>
-                                        </div>
-                                        @foreach($subs as $subCategory)
-                                            <div class="sub-category-item px-4 py-3 hover:bg-slate-800 cursor-pointer transition border-b border-slate-700/50 last:border-0"
-                                                 data-id="{{ $subCategory->id }}"
-                                                 data-type="{{ $subCategory->category->type_id }}"
-                                                 data-priority="{{ $subCategory->priority }}"
-                                                 data-name="{{ strtolower($subCategory->name) }}"
-                                                 data-category="{{ strtolower($categoryName) }}"
-                                                 data-type-name="{{ strtolower($subCategory->category->type->name) }}"
-                                                 onclick="selectSubCategory({{ $subCategory->id }}, '{{ $subCategory->name }}', '{{ $categoryName }}', {{ $subCategory->priority }}, this)">
-                                                <div class="flex items-center justify-between">
-                                                    <div class="flex-1">
-                                                        <div class="flex items-center space-x-2 mb-1">
-                                                            @php
-                                                                $priorityIcon = $subCategory->priority >= 8 ? '🔴' : ($subCategory->priority >= 5 ? '🟡' : '🔵');
-                                                            @endphp
-                                                            <span class="text-lg">{{ $priorityIcon }}</span>
-                                                            <span class="text-white font-semibold">{{ $subCategory->name }}</span>
-                                                            <span class="px-2 py-0.5 bg-blue-600/20 text-blue-400 rounded text-xs">
-                                                                P:{{ $subCategory->priority }}
-                                                            </span>
-                                                        </div>
-                                                        <div class="text-xs text-gray-400">
-                                                            <i class="fas fa-tag mr-1"></i>{{ $subCategory->category->type->name }}
-                                                        </div>
-                                                    </div>
-                                                    <div class="ml-2">
-                                                        <i class="fas fa-check-circle text-green-500 hidden selected-icon"></i>
-                                                    </div>
+                                @foreach($types as $type)
+                                    @foreach($type->categories as $category)
+                                        @if($category->subCategories->count() > 0)
+                                            <div class="sub-category-group" data-type-id="{{ $type->id }}" data-category="{{ $category->name }}">
+                                                <div class="px-4 py-2 bg-slate-800/50 border-b border-slate-700 sticky top-0">
+                                                    <span class="text-xs font-semibold text-gray-400">
+                                                        <i class="fas fa-folder mr-2"></i>{{ $type->name }} › {{ $category->name }}
+                                                    </span>
                                                 </div>
+                                                @foreach($category->subCategories as $subCategory)
+                                                    <div class="sub-category-item px-4 py-3 hover:bg-slate-800 cursor-pointer transition border-b border-slate-700/50 last:border-0"
+                                                         data-id="{{ $subCategory->id }}"
+                                                         data-type="{{ $type->id }}"
+                                                         data-priority="{{ $subCategory->priority }}"
+                                                         data-name="{{ strtolower($subCategory->name) }}"
+                                                         data-category="{{ strtolower($category->name) }}"
+                                                         data-type-name="{{ strtolower($type->name) }}"
+                                                         onclick="selectSubCategory({{ $subCategory->id }}, '{{ $subCategory->name }}', '{{ $type->name }} › {{ $category->name }}', {{ $subCategory->priority }}, this)">
+                                                        <div class="flex items-center justify-between">
+                                                            <div class="flex-1">
+                                                                <div class="flex items-center space-x-2 mb-1">
+                                                                    @php
+                                                                        $priorityIcon = $subCategory->priority >= 8 ? '🔴' : ($subCategory->priority >= 5 ? '🟡' : '🔵');
+                                                                    @endphp
+                                                                    <span class="text-lg">{{ $priorityIcon }}</span>
+                                                                    <span class="text-white font-semibold">{{ $subCategory->name }}</span>
+                                                                    <span class="px-2 py-0.5 bg-blue-600/20 text-blue-400 rounded text-xs">
+                                                                        P:{{ $subCategory->priority }}
+                                                                    </span>
+                                                                </div>
+                                                                <div class="text-xs text-gray-400">
+                                                                    <i class="fas fa-tag mr-1"></i>{{ $type->name }}
+                                                                </div>
+                                                            </div>
+                                                            <div class="ml-2">
+                                                                <i class="fas fa-check-circle text-green-500 hidden selected-icon"></i>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
                                             </div>
-                                        @endforeach
-                                    </div>
+                                        @endif
+                                    @endforeach
                                 @endforeach
                             </div>
 
@@ -161,6 +165,86 @@
                                     <i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}
                                 </p>
                             @enderror
+                        </div>
+
+                        {{-- Match Type Selection --}}
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-300 mb-3">
+                                <i class="fas fa-sliders-h mr-2"></i>Match Type<span class="text-red-500">*</span>
+                            </label>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                <label class="match-type-option cursor-pointer">
+                                    <input type="radio" name="match_type" value="contains" {{ old('match_type', 'contains') == 'contains' ? 'checked' : '' }} class="hidden" onchange="updateMatchType(this)">
+                                    <div class="p-4 border-2 border-slate-700 rounded-xl hover:border-blue-500 transition-all match-type-box">
+                                        <div class="flex items-center space-x-2 mb-1">
+                                            <i class="fas fa-search text-blue-400"></i>
+                                            <span class="text-white font-semibold">Contains</span>
+                                        </div>
+                                        <p class="text-xs text-gray-400">Match anywhere in text</p>
+                                    </div>
+                                </label>
+
+                                <label class="match-type-option cursor-pointer">
+                                    <input type="radio" name="match_type" value="exact" {{ old('match_type') == 'exact' ? 'checked' : '' }} class="hidden" onchange="updateMatchType(this)">
+                                    <div class="p-4 border-2 border-slate-700 rounded-xl hover:border-blue-500 transition-all match-type-box">
+                                        <div class="flex items-center space-x-2 mb-1">
+                                            <i class="fas fa-equals text-green-400"></i>
+                                            <span class="text-white font-semibold">Exact</span>
+                                        </div>
+                                        <p class="text-xs text-gray-400">Exact match only</p>
+                                    </div>
+                                </label>
+
+                                <label class="match-type-option cursor-pointer">
+                                    <input type="radio" name="match_type" value="starts_with" {{ old('match_type') == 'starts_with' ? 'checked' : '' }} class="hidden" onchange="updateMatchType(this)">
+                                    <div class="p-4 border-2 border-slate-700 rounded-xl hover:border-blue-500 transition-all match-type-box">
+                                        <div class="flex items-center space-x-2 mb-1">
+                                            <i class="fas fa-arrow-right text-purple-400"></i>
+                                            <span class="text-white font-semibold">Starts With</span>
+                                        </div>
+                                        <p class="text-xs text-gray-400">Match at beginning</p>
+                                    </div>
+                                </label>
+
+                                <label class="match-type-option cursor-pointer">
+                                    <input type="radio" name="match_type" value="ends_with" {{ old('match_type') == 'ends_with' ? 'checked' : '' }} class="hidden" onchange="updateMatchType(this)">
+                                    <div class="p-4 border-2 border-slate-700 rounded-xl hover:border-blue-500 transition-all match-type-box">
+                                        <div class="flex items-center space-x-2 mb-1">
+                                            <i class="fas fa-arrow-left text-orange-400"></i>
+                                            <span class="text-white font-semibold">Ends With</span>
+                                        </div>
+                                        <p class="text-xs text-gray-400">Match at end</p>
+                                    </div>
+                                </label>
+
+                                <label class="match-type-option cursor-pointer">
+                                    <input type="radio" name="match_type" value="regex" {{ old('match_type') == 'regex' ? 'checked' : '' }} class="hidden" onchange="updateMatchType(this)">
+                                    <div class="p-4 border-2 border-slate-700 rounded-xl hover:border-blue-500 transition-all match-type-box">
+                                        <div class="flex items-center space-x-2 mb-1">
+                                            <i class="fas fa-code text-red-400"></i>
+                                            <span class="text-white font-semibold">Regex</span>
+                                        </div>
+                                        <p class="text-xs text-gray-400">Pattern matching</p>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            @error('match_type')
+                                <p class="text-red-500 text-sm mt-2 flex items-center">
+                                    <i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+
+                        {{-- Pattern Description --}}
+                        <div>
+                            <label for="pattern_description" class="block text-sm font-semibold text-gray-300 mb-2">
+                                <i class="fas fa-info-circle mr-2"></i>Pattern Description (Optional)
+                            </label>
+                            <textarea id="pattern_description" name="pattern_description" rows="3" 
+                                      class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
+                                      placeholder="Describe what this pattern matches...">{{ old('pattern_description') }}</textarea>
                         </div>
 
                         {{-- Priority Selection (Visual Buttons) --}}
@@ -210,9 +294,9 @@
                                            onchange="updateLiveTest()">
                                     <div>
                                         <label for="is_regex" class="text-white font-semibold cursor-pointer block">
-                                            <i class="fas fa-code mr-2 text-purple-400"></i>Regex
+                                            <i class="fas fa-code mr-2 text-purple-400"></i>Regex Mode
                                         </label>
-                                        <p class="text-gray-400 text-xs">Pattern matching</p>
+                                        <p class="text-gray-400 text-xs">Use regex pattern</p>
                                     </div>
                                 </div>
                             </div>
@@ -332,7 +416,7 @@
 
     <script>
         let currentTypeFilter = 'all';
-        let currentSelectedId = '{{ old("sub_category_id", $selectedSubCategoryId ?? "") }}';
+        let currentSelectedId = '{{ old("sub_category_id") }}';
 
         // Search sub categories
         function searchSubCategories() {
@@ -465,6 +549,7 @@
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             setPriority({{ old('priority', 5) }});
+            updateMatchType();
             
             // Pre-select if old value exists
             if (currentSelectedId) {
@@ -501,15 +586,44 @@
             updateLiveTest();
         }
 
+        // Update match type visual
+        function updateMatchType(element) {
+            document.querySelectorAll('.match-type-box').forEach(box => {
+                box.classList.remove('border-blue-500', 'bg-blue-500/10');
+                box.classList.add('border-slate-700');
+            });
+            
+            if (element) {
+                const box = element.closest('.match-type-option').querySelector('.match-type-box');
+                box.classList.remove('border-slate-700');
+                box.classList.add('border-blue-500', 'bg-blue-500/10');
+            } else {
+                // Initialize - find checked radio
+                const checked = document.querySelector('input[name="match_type"]:checked');
+                if (checked) {
+                    const box = checked.closest('.match-type-option').querySelector('.match-type-box');
+                    box.classList.remove('border-slate-700');
+                    box.classList.add('border-blue-500', 'bg-blue-500/10');
+                }
+            }
+            
+            updateLiveTest();
+        }
+
         // Live test update
         function updateLiveTest() {
             const keyword = document.getElementById('keyword').value;
             const isRegex = document.getElementById('is_regex').checked;
             const caseSensitive = document.getElementById('case_sensitive').checked;
+            const matchType = document.querySelector('input[name="match_type"]:checked')?.value || 'contains';
 
             let display = keyword || 'Type keyword...';
-            if (keyword && isRegex) {
-                display = '/' + keyword + '/' + (caseSensitive ? '' : 'i');
+            if (keyword) {
+                if (isRegex || matchType === 'regex') {
+                    display = '/' + keyword + '/' + (caseSensitive ? '' : 'i');
+                } else {
+                    display = keyword + ' (' + matchType + ')';
+                }
             }
 
             document.getElementById('displayPattern').textContent = display;
@@ -522,6 +636,7 @@
             const testString = document.getElementById('testString').value;
             const isRegex = document.getElementById('is_regex').checked;
             const caseSensitive = document.getElementById('case_sensitive').checked;
+            const matchType = document.querySelector('input[name="match_type"]:checked')?.value || 'contains';
             const resultDiv = document.getElementById('testResult');
 
             if (!keyword || !testString) {
@@ -532,14 +647,28 @@
             try {
                 let matched = false;
 
-                if (isRegex) {
+                if (isRegex || matchType === 'regex') {
                     const flags = caseSensitive ? '' : 'i';
                     const regex = new RegExp(keyword, flags);
                     matched = regex.test(testString);
                 } else {
-                    const kw = caseSensitive ? keyword : keyword.toUpperCase();
-                    const str = caseSensitive ? testString : testString.toUpperCase();
-                    matched = str.includes(kw);
+                    const kw = caseSensitive ? keyword : keyword.toLowerCase();
+                    const str = caseSensitive ? testString : testString.toLowerCase();
+                    
+                    switch(matchType) {
+                        case 'exact':
+                            matched = str === kw;
+                            break;
+                        case 'contains':
+                            matched = str.includes(kw);
+                            break;
+                        case 'starts_with':
+                            matched = str.startsWith(kw);
+                            break;
+                        case 'ends_with':
+                            matched = str.endsWith(kw);
+                            break;
+                    }
                 }
 
                 if (matched) {
@@ -552,7 +681,7 @@
                 resultDiv.classList.remove('hidden');
             } catch (error) {
                 resultDiv.className = 'p-4 rounded-lg bg-red-600/20 border border-red-600/30';
-                resultDiv.innerHTML = '<div class="flex items-center space-x-2"><i class="fas fa-exclamation-triangle text-red-400 text-xl"></i><div><p class="text-red-400 font-semibold">Invalid Regex</p><p class="text-xs text-gray-400 mt-1">' + error.message + '</p></div></div>';
+                resultDiv.innerHTML = '<div class="flex items-center space-x-2"><i class="fas fa-exclamation-triangle text-red-400 text-xl"></i><div><p class="text-red-400 font-semibold">Invalid Pattern</p><p class="text-xs text-gray-400 mt-1">' + error.message + '</p></div></div>';
                 resultDiv.classList.remove('hidden');
             }
         }
@@ -567,6 +696,8 @@
         function insertPattern(pattern) {
             document.getElementById('keyword').value = pattern;
             document.getElementById('is_regex').checked = true;
+            document.querySelector('input[name="match_type"][value="regex"]').checked = true;
+            updateMatchType();
             updateLiveTest();
         }
 
@@ -575,36 +706,33 @@
     </script>
 
     <style>
-        /* Hide filtered options properly */
-        select option[style*="display: none"] {
-            display: none !important;
-        }
-        select optgroup[style*="display: none"] {
-            display: none !important;
-        }
-
-        /* Make select look better */
-        #sub_category_id {
-            scrollbar-width: thin;
-            scrollbar-color: #475569 #1e293b;
-        }
-        #sub_category_id::-webkit-scrollbar {
-            width: 8px;
-        }
-        #sub_category_id::-webkit-scrollbar-track {
-            background: #1e293b;
-        }
-        #sub_category_id::-webkit-scrollbar-thumb {
-            background: #475569;
-            border-radius: 4px;
-        }
-
         /* Priority button animation */
         .priority-btn {
             transition: all 0.2s ease;
         }
         .priority-btn:hover {
             transform: translateY(-2px);
+        }
+        
+        /* Match type box animation */
+        .match-type-box {
+            transition: all 0.2s ease;
+        }
+        
+        /* Scrollbar styling */
+        #subCategoryList {
+            scrollbar-width: thin;
+            scrollbar-color: #475569 #1e293b;
+        }
+        #subCategoryList::-webkit-scrollbar {
+            width: 8px;
+        }
+        #subCategoryList::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        #subCategoryList::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
         }
     </style>
 </x-app-layout>
