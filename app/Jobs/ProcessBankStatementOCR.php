@@ -37,7 +37,12 @@ class ProcessBankStatementOCR implements ShouldQueue
     public function handle(): void
     {
         try {
-            Log::info("Processing OCR for Bank Statement ID: {$this->bankStatement->id}");
+            // ✅ Log memory usage at start
+            Log::info("Processing OCR for Bank Statement", [
+                'statement_id' => $this->bankStatement->id,
+                'memory_start' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
+                'memory_limit' => ini_get('memory_limit'),
+            ]);
 
             // Update status to processing
             $this->bankStatement->update([
@@ -59,11 +64,21 @@ class ProcessBankStatementOCR implements ShouldQueue
             Log::info("File found and readable", [
                 'path' => $filePath,
                 'size' => filesize($filePath),
+                'size_mb' => round(filesize($filePath) / 1024 / 1024, 2) . ' MB',
                 'mime' => mime_content_type($filePath),
             ]);
 
             // Call External OCR API
             $ocrResponse = $this->callOCRApi($filePath, $this->bankSlug);
+
+            // ✅ Free memory after API call
+            unset($filePath);
+            gc_collect_cycles();
+
+            Log::info("Memory after OCR API call", [
+                'memory_current' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
+                'memory_peak' => round(memory_get_peak_usage(true) / 1024 / 1024, 2) . ' MB',
+            ]);
 
             if (!isset($ocrResponse['status']) || $ocrResponse['status'] !== 'OK') {
                 throw new \Exception("OCR API returned error status: " . ($ocrResponse['message'] ?? 'Unknown error'));
@@ -93,6 +108,10 @@ class ProcessBankStatementOCR implements ShouldQueue
             $parser = $this->getBankParser($this->bankSlug);
             $parsedData = $parser->parse($ocrResponse);
 
+            // ✅ Free memory after parsing
+            unset($ocrResponse, $ocrData);
+            gc_collect_cycles();
+
             // ASSIGN TRANSACTIONS FROM PARSED DATA
             $transactions = $parsedData['transactions'] ?? [];
 
@@ -105,6 +124,7 @@ class ProcessBankStatementOCR implements ShouldQueue
                 'transaction_count' => count($transactions),
                 'has_account_number' => !empty($parsedData['account_number']),
                 'has_period' => !empty($parsedData['period_from']),
+                'memory_before_insert' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
             ]);
 
             if (empty($transactions)) {
@@ -112,7 +132,6 @@ class ProcessBankStatementOCR implements ShouldQueue
                     'statement_id' => $this->bankStatement->id,
                     'bank' => $this->bankSlug,
                     'parsed_data_keys' => array_keys($parsedData),
-                    'ocr_data_keys' => array_keys($ocrData),
                 ]);
                 
                 throw new \Exception("No transactions found in OCR response. Parser returned empty transactions array.");
@@ -125,72 +144,81 @@ class ProcessBankStatementOCR implements ShouldQueue
                 'count' => count($transactions),
             ]);
 
-            // Store transactions with better error handling
+            // ✅ Process transactions in chunks to avoid memory issues
             $storedTransactions = [];
             $failedTransactions = [];
+            $chunkSize = 100; // Process 100 transactions at a time
             
-            foreach ($transactions as $index => $transactionData) {
-                try {
-                    if (empty($transactionData['transaction_date'])) {
-                        throw new \Exception("Missing transaction_date");
-                    }
+            foreach (array_chunk($transactions, $chunkSize) as $chunkIndex => $transactionChunk) {
+                foreach ($transactionChunk as $index => $transactionData) {
+                    $actualIndex = ($chunkIndex * $chunkSize) + $index;
+                    
+                    try {
+                        if (empty($transactionData['transaction_date'])) {
+                            throw new \Exception("Missing transaction_date");
+                        }
 
-                    $description = $transactionData['description'] ?? 'No description';
-                    if (strlen($description) > 1000) {
-                        $description = substr($description, 0, 1000);
-                        Log::warning("Description truncated", [
-                            'index' => $index,
-                            'original_length' => strlen($transactionData['description']),
+                        $description = $transactionData['description'] ?? 'No description';
+                        if (strlen($description) > 1000) {
+                            $description = substr($description, 0, 1000);
+                        }
+
+                        $description = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $description);
+
+                        $transaction = StatementTransaction::create([
+                            'uuid' => \Illuminate\Support\Str::uuid(),
+                            'company_id' => $this->bankStatement->company_id,
+                            'bank_statement_id' => $this->bankStatement->id,
+                            'bank_type' => $parsedData['bank_name'] ?? null,
+                            'account_number' => $parsedData['account_number'] ?? null,
+                            'transaction_date' => $transactionData['transaction_date'],
+                            'transaction_time' => $transactionData['transaction_time'] ?? null,
+                            'value_date' => $transactionData['value_date'] ?? $transactionData['transaction_date'],
+                            'branch_code' => $parsedData['branch_code'] ?? $transactionData['branch_code'] ?? null,
+                            'description' => $description,
+                            'reference_no' => $transactionData['reference_no'] ?? null,
+                            'debit_amount' => $transactionData['debit_amount'] ?? 0,
+                            'credit_amount' => $transactionData['credit_amount'] ?? 0,
+                            'balance' => $transactionData['balance'] ?? 0,
+                            'amount' => $transactionData['amount'] ?? 0,
+                            'transaction_type' => $transactionData['transaction_type'] ?? 'credit',
+                        ]);
+                        
+                        $storedTransactions[] = $transaction;
+                        
+                    } catch (\Exception $e) {
+                        $failedTransactions[] = [
+                            'index' => $actualIndex,
+                            'error' => $e->getMessage(),
+                        ];
+                        Log::error("Failed to store transaction", [
+                            'index' => $actualIndex,
+                            'error' => $e->getMessage(),
                         ]);
                     }
-
-                    $description = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $description);
-
-                    $transaction = StatementTransaction::create([
-                        'uuid' => \Illuminate\Support\Str::uuid(),
-                        'company_id' => $this->bankStatement->company_id,
-                        'bank_statement_id' => $this->bankStatement->id,
-                        'bank_type' => $parsedData['bank_name'] ?? null,
-                        'account_number' => $parsedData['account_number'] ?? null,
-                        'transaction_date' => $transactionData['transaction_date'],
-                        'transaction_time' => $transactionData['transaction_time'] ?? null,
-                        'value_date' => $transactionData['value_date'] ?? $transactionData['transaction_date'],
-                        'branch_code' => $parsedData['branch_code'] ?? $transactionData['branch_code'] ?? null,
-                        'description' => $description,
-                        'reference_no' => $transactionData['reference_no'] ?? null,
-                        'debit_amount' => $transactionData['debit_amount'] ?? 0,
-                        'credit_amount' => $transactionData['credit_amount'] ?? 0,
-                        'balance' => $transactionData['balance'] ?? 0,
-                        'amount' => $transactionData['amount'] ?? 0,
-                        'transaction_type' => $transactionData['transaction_type'] ?? 'credit',
-                    ]);
-                    
-                    $storedTransactions[] = $transaction;
-                    
-                    if (($index + 1) % 50 === 0) {
-                        Log::info("Transaction storage progress", [
-                            'statement_id' => $this->bankStatement->id,
-                            'processed' => $index + 1,
-                            'total' => count($transactions),
-                        ]);
-                    }
-                } catch (\Exception $e) {
-                    $errorInfo = [
-                        'index' => $index,
-                        'error' => $e->getMessage(),
-                        'data' => $transactionData,
-                    ];
-                    
-                    $failedTransactions[] = $errorInfo;
-                    Log::error("Failed to store transaction", $errorInfo);
                 }
+                
+                // ✅ Free memory after each chunk
+                unset($transactionChunk);
+                
+                // Log progress every chunk
+                Log::info("Transaction chunk processed", [
+                    'chunk' => $chunkIndex + 1,
+                    'processed' => count($storedTransactions),
+                    'failed' => count($failedTransactions),
+                    'memory' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
+                ]);
             }
+
+            // ✅ Free transaction array memory
+            unset($transactions);
+            gc_collect_cycles();
 
             Log::info("Transaction storage completed", [
                 'statement_id' => $this->bankStatement->id,
-                'total_input' => count($transactions),
                 'successfully_stored' => count($storedTransactions),
                 'failed' => count($failedTransactions),
+                'memory_final' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
             ]);
 
             if (!empty($failedTransactions)) {
@@ -204,7 +232,7 @@ class ProcessBankStatementOCR implements ShouldQueue
             $this->bankStatement->update([
                 'ocr_status' => 'completed',
                 'ocr_completed_at' => now(),
-                'ocr_response' => $ocrResponse,
+                'ocr_response' => $parsedData, // ✅ Store parsed data instead of raw response to save memory
                 'period_from' => $parsedData['period_from'] ?? null,
                 'period_to' => $parsedData['period_to'] ?? null,
                 'account_number' => $parsedData['account_number'] ?? null,
@@ -225,6 +253,7 @@ class ProcessBankStatementOCR implements ShouldQueue
                 'statement_id' => $this->bankStatement->id,
                 'transactions_stored' => count($storedTransactions),
                 'processing_time' => now()->diffInSeconds($this->bankStatement->ocr_started_at),
+                'memory_peak' => round(memory_get_peak_usage(true) / 1024 / 1024, 2) . ' MB',
             ]);
 
             event(new BankStatementOcrCompleted(
@@ -239,7 +268,8 @@ class ProcessBankStatementOCR implements ShouldQueue
             Log::error("OCR processing failed", [
                 'statement_id' => $this->bankStatement->id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'memory_at_failure' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
+                'memory_peak' => round(memory_get_peak_usage(true) / 1024 / 1024, 2) . ' MB',
             ]);
 
             $this->bankStatement->update([
@@ -410,44 +440,66 @@ class ProcessBankStatementOCR implements ShouldQueue
 
     /**
      * Call the external OCR API
+     * Memory-optimized version using stream instead of file_get_contents
      */
     private function callOCRApi(string $filePath, string $bank): array
     {
         $apiUrl = "http://38.60.179.13:40040/api/upload-pdf/bank-statement/monthly/{$bank}";
 
         try {
+            $fileSize = filesize($filePath);
+            
             Log::info("Calling OCR API", [
                 'url' => $apiUrl,
                 'bank' => $bank,
-                'file_size' => filesize($filePath),
+                'file_size' => $fileSize,
+                'file_size_mb' => round($fileSize / 1024 / 1024, 2) . ' MB',
             ]);
 
-            $response = Http::timeout(120)
-                ->attach(
-                    'file',
-                    file_get_contents($filePath),
-                    basename($filePath)
-                )
-                ->post($apiUrl);
-
-            if (!$response->successful()) {
-                throw new \Exception("OCR API request failed with status: {$response->status()}");
+            // ✅ Memory-efficient: Use fopen instead of file_get_contents
+            // This streams the file instead of loading entire file to memory
+            $fileStream = fopen($filePath, 'r');
+            
+            if (!$fileStream) {
+                throw new \Exception("Cannot open file for reading: {$filePath}");
             }
 
-            $data = $response->json();
+            try {
+                $response = Http::timeout(120)
+                    ->attach(
+                        'file',
+                        $fileStream,
+                        basename($filePath)
+                    )
+                    ->post($apiUrl);
 
-            Log::info("OCR API Response received", [
-                'status' => $data['status'] ?? 'unknown',
-                'has_ocr' => isset($data['ocr']),
-                'has_data' => isset($data['data']),
-            ]);
+                if (!$response->successful()) {
+                    throw new \Exception("OCR API request failed with status: {$response->status()}");
+                }
 
-            return $data;
+                $data = $response->json();
+
+                Log::info("OCR API Response received", [
+                    'status' => $data['status'] ?? 'unknown',
+                    'has_ocr' => isset($data['ocr']),
+                    'has_data' => isset($data['data']),
+                ]);
+
+                return $data;
+
+            } finally {
+                // ✅ Always close file stream to free memory
+                if (is_resource($fileStream)) {
+                    fclose($fileStream);
+                }
+            }
 
         } catch (\Exception $e) {
             Log::error("OCR API call failed", [
                 'url' => $apiUrl,
                 'error' => $e->getMessage(),
+                'memory_usage' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
+                'memory_peak' => round(memory_get_peak_usage(true) / 1024 / 1024, 2) . ' MB',
             ]);
             throw $e;
         }
