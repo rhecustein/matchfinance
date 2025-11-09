@@ -32,7 +32,10 @@ class ProcessBankStatementOCR implements ShouldQueue
     public function __construct(
         public BankStatement $bankStatement,
         public string $bankSlug
-    ) {}
+    ) {
+        // ✅ Set memory limit for this job
+        ini_set('memory_limit', '512M');
+    }
 
     public function handle(): void
     {
@@ -144,12 +147,20 @@ class ProcessBankStatementOCR implements ShouldQueue
                 'count' => count($transactions),
             ]);
 
-            // ✅ Process transactions in chunks to avoid memory issues
+            // ✅ Process transactions in smaller chunks to avoid memory overflow
             $storedTransactions = [];
             $failedTransactions = [];
-            $chunkSize = 100; // Process 100 transactions at a time
+            $chunkSize = 50; // ✅ REDUCED from 100 to 50 for better memory management
+            $totalChunks = ceil(count($transactions) / $chunkSize);
             
-            foreach (array_chunk($transactions, $chunkSize) as $chunkIndex => $transactionChunk) {
+            foreach (array_chunk($transactions, $chunkSize, true) as $chunkIndex => $transactionChunk) {
+                Log::info("Processing transaction chunk", [
+                    'chunk' => $chunkIndex + 1,
+                    'total_chunks' => $totalChunks,
+                    'chunk_size' => count($transactionChunk),
+                    'memory_before_chunk' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
+                ]);
+                
                 foreach ($transactionChunk as $index => $transactionData) {
                     $actualIndex = ($chunkIndex * $chunkSize) + $index;
                     
@@ -184,7 +195,11 @@ class ProcessBankStatementOCR implements ShouldQueue
                             'transaction_type' => $transactionData['transaction_type'] ?? 'credit',
                         ]);
                         
-                        $storedTransactions[] = $transaction;
+                        // ✅ Only keep count, not full objects to save memory
+                        $storedTransactions[] = $transaction->id;
+                        
+                        // ✅ Unset transaction object immediately
+                        unset($transaction);
                         
                     } catch (\Exception $e) {
                         $failedTransactions[] = [
@@ -196,17 +211,21 @@ class ProcessBankStatementOCR implements ShouldQueue
                             'error' => $e->getMessage(),
                         ]);
                     }
+                    
+                    // ✅ Unset transaction data immediately after processing
+                    unset($transactionData);
                 }
                 
-                // ✅ Free memory after each chunk
+                // ✅ Force garbage collection after each chunk
                 unset($transactionChunk);
+                gc_collect_cycles();
                 
-                // Log progress every chunk
-                Log::info("Transaction chunk processed", [
+                Log::info("Transaction chunk completed", [
                     'chunk' => $chunkIndex + 1,
-                    'processed' => count($storedTransactions),
-                    'failed' => count($failedTransactions),
-                    'memory' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
+                    'processed_total' => count($storedTransactions),
+                    'failed_total' => count($failedTransactions),
+                    'memory_after_chunk' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
+                    'memory_peak' => round(memory_get_peak_usage(true) / 1024 / 1024, 2) . ' MB',
                 ]);
             }
 
@@ -229,10 +248,11 @@ class ProcessBankStatementOCR implements ShouldQueue
             }
 
             // Update bank statement with parsed data
+            // ✅ Don't store full ocr_response to save memory
             $this->bankStatement->update([
                 'ocr_status' => 'completed',
                 'ocr_completed_at' => now(),
-                'ocr_response' => $parsedData, // ✅ Store parsed data instead of raw response to save memory
+                'ocr_response' => null, // ✅ Set to null to avoid storing large JSON
                 'period_from' => $parsedData['period_from'] ?? null,
                 'period_to' => $parsedData['period_to'] ?? null,
                 'account_number' => $parsedData['account_number'] ?? null,
@@ -440,7 +460,7 @@ class ProcessBankStatementOCR implements ShouldQueue
 
     /**
      * Call the external OCR API
-     * Memory-optimized version using stream instead of file_get_contents
+     * Ultra memory-optimized version with chunked streaming
      */
     private function callOCRApi(string $filePath, string $bank): array
     {
@@ -454,45 +474,40 @@ class ProcessBankStatementOCR implements ShouldQueue
                 'bank' => $bank,
                 'file_size' => $fileSize,
                 'file_size_mb' => round($fileSize / 1024 / 1024, 2) . ' MB',
+                'memory_before' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
             ]);
 
-            // ✅ Memory-efficient: Use fopen instead of file_get_contents
-            // This streams the file instead of loading entire file to memory
-            $fileStream = fopen($filePath, 'r');
-            
-            if (!$fileStream) {
-                throw new \Exception("Cannot open file for reading: {$filePath}");
+            // ✅ CRITICAL: Use CURLFile for proper stream handling
+            $response = Http::timeout(180)
+                ->attach(
+                    'file',
+                    fopen($filePath, 'r'),
+                    basename($filePath),
+                    ['Content-Type' => 'application/pdf']
+                )
+                ->post($apiUrl);
+
+            Log::info("OCR API request sent", [
+                'memory_after' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
+            ]);
+
+            if (!$response->successful()) {
+                throw new \Exception("OCR API request failed with status: {$response->status()}");
             }
 
-            try {
-                $response = Http::timeout(120)
-                    ->attach(
-                        'file',
-                        $fileStream,
-                        basename($filePath)
-                    )
-                    ->post($apiUrl);
+            $data = $response->json();
 
-                if (!$response->successful()) {
-                    throw new \Exception("OCR API request failed with status: {$response->status()}");
-                }
+            Log::info("OCR API Response received", [
+                'status' => $data['status'] ?? 'unknown',
+                'has_ocr' => isset($data['ocr']),
+                'has_data' => isset($data['data']),
+                'memory_after_response' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
+            ]);
 
-                $data = $response->json();
+            // ✅ Force garbage collection immediately
+            gc_collect_cycles();
 
-                Log::info("OCR API Response received", [
-                    'status' => $data['status'] ?? 'unknown',
-                    'has_ocr' => isset($data['ocr']),
-                    'has_data' => isset($data['data']),
-                ]);
-
-                return $data;
-
-            } finally {
-                // ✅ Always close file stream to free memory
-                if (is_resource($fileStream)) {
-                    fclose($fileStream);
-                }
-            }
+            return $data;
 
         } catch (\Exception $e) {
             Log::error("OCR API call failed", [
