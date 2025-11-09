@@ -1,0 +1,331 @@
+﻿company_id;type_id;slug;name;description
+1;1;penjualan-outlet-reguler;Penjualan Outlet Reguler;Penjualan produk obat-obatan di outlet apotek reguler
+1;1;penjualan-outlet-resep;Penjualan Outlet Resep;Penjualan khusus outlet resep dokter
+1;1;penjualan-klinik;Penjualan Klinik;Penjualan di klinik kesehatan (Wisma Asri, dll)
+1;1;penjualan-alkes;Penjualan Alat Kesehatan;Penjualan alat kesehatan dan medical devices
+1;2;transfer-dari-distributor;Transfer dari Distributor;Penerimaan transfer dari Kimia Farma dan distributor obat
+1;2;transfer-dari-customer;Transfer dari Customer;Penerimaan transfer dari customer/pasien
+1;2;transfer-internal;Transfer Internal;Penerimaan transfer antar cabang internal
+1;3;setor-tunai-outlet;Setor Tunai Outlet;Setoran tunai harian dari outlet (LIPH)
+1;3;setor-tunai-klinik;Setor Tunai Klinik;Setoran tunai dari klinik
+1;3;cod-pembayaran;COD / Cash on Delivery;Pembayaran COD dari customer
+1;4;qris-payment;QRIS Payment;Pembayaran via QRIS (QR Code Indonesian Standard)
+1;4;otopay-qr;OTOPAY QR;Pembayaran via OTOPAY QR system
+1;4;merchant-qr;Merchant QR;Pembayaran QR merchant specific
+1;5;klaim-asuransi-kesehatan;Klaim Asuransi Kesehatan;Klaim dari asuransi kesehatan (Sinar Mas, Hanwha, Perta)
+1;5;klaim-bpjs;Klaim BPJS;Klaim dari BPJS Kesehatan
+1;6;bop-bulanan-outlet;BOP Bulanan Outlet;Biaya Operasional Perusahaan (BOP) bulanan outlet
+1;6;bop-klinik;BOP Klinik;Biaya operasional klinik kesehatan
+1;6;rumah-tangga-outlet;Rumah Tangga Outlet;Biaya rumah tangga harian outlet (rumat)
+1;7;listrik-pln;Listrik PLN;Pembayaran listrik ke PLN
+1;7;air-pdam;Air PDAM;Pembayaran air PDAM
+1;7;internet-telepon;Internet & Telepon;Biaya internet, telepon, dan komunikasi
+1;7;ipl-gedung;IPL Gedung;Iuran Pengelolaan Lingkungan gedung/kompleks
+1;8;service-ac;Service AC;Service dan maintenance AC outlet
+1;8;perbaikan-cctv;Perbaikan CCTV;Instalasi dan perbaikan CCTV
+1;8;maintenance-peralatan;Maintenance Peralatan;Maintenance peralatan medis dan operasional
+1;8;perbaikan-gedung;Perbaikan Gedung;Perbaikan dan renovasi gedung
+1;9;biaya-sewa-general;Biaya Sewa - Umum;Kategori umum untuk Biaya Sewa
+1;10;biaya-kebersihan-keamanan-general;Biaya Kebersihan & Keamanan - Umum;Kategori umum untuk Biaya Kebersihan & Keamanan
+1;11;pembelian-obat-generic;Pembelian Obat Generic;Pembelian obat generic dari distributor
+1;11;pembelian-obat-paten;Pembelian Obat Paten;Pembelian obat paten/branded
+1;11;pembelian-alat-kesehatan;Pembelian Alat Kesehatan;Pembelian alat kesehatan dan medical devices
+1;11;pembelian-obat-khusus;Pembelian Obat Khusus;Pembelian obat khusus (cold chain, narkotika)
+1;12;pembelian-furniture;Pembelian Furniture;Pembelian furniture kantor dan outlet
+1;12;pembelian-elektronik;Pembelian Elektronik;Pembelian peralatan elektronik (komputer, printer)
+1;12;pembelian-peralatan-medis;Pembelian Peralatan Medis;Pembelian peralatan medis non-disposable
+1;13;pembelian-atk;Pembelian ATK;Pembelian alat tulis kantor
+1;13;pembelian-packaging;Pembelian Packaging;Pembelian kantong plastik, paper bag, box
+1;13;pembelian-cleaning-supplies;Pembelian Cleaning Supplies;Pembelian supplies kebersihan
+1;14;pembelian-sticker-spanduk;Sticker & Spanduk;Pembelian sticker, spanduk, banner
+1;14;pembelian-brosur;Brosur & Leaflet;Pembelian brosur dan leaflet promosi
+1;14;pembelian-merchandise;Merchandise;Pembelian merchandise promosi
+1;15;gaji-tetap-bulanan;Gaji Tetap Bulanan;Gaji pokok karyawan tetap
+1;15;gaji-parttime;Gaji Part-time;Gaji karyawan part-time
+1;15;gaji-freelance;Gaji Freelance;Pembayaran ke freelancer
+1;16;tunjangan-transport;Tunjangan Transport;Tunjangan transportasi karyawan
+1;16;tunjangan-makan;Tunjangan Makan;Tunjangan makan karyawan
+1;16;tunjangan-kesehatan;Tunjangan Kesehatan;Tunjangan kesehatan karyawan
+1;16;bonus-kinerja;Bonus Kinerja;Bonus berdasarkan kinerja
+1;17;thr-karyawan;THR Karyawan;Tunjangan Hari Raya karyawan
+1;17;dinas-lebaran-karyawan;Dinas Lebaran;Dinas lebaran untuk karyawan
+1;18;jasa-praktik-dokter-spesialis;Jasa Praktik Dokter Spesialis;Honor jasa praktik dokter spesialis
+1;18;jasa-praktik-dokter-umum;Jasa Praktik Dokter Umum;Honor jasa praktik dokter umum
+1;18;fee-apoteker;Fee Apoteker;Fee jasa apoteker
+1;18;fee-konsultan;Fee Konsultan;Fee konsultan eksternal
+1;19;reimburse-perjalanan-dinas;Reimburse Perjalanan Dinas;Penggantian biaya perjalanan dinas
+1;19;reimburse-bensin;Reimburse Bensin;Penggantian biaya bensin karyawan
+1;19;reimburse-parkir-tol;Reimburse Parkir & Tol;Penggantian parkir dan tol
+1;20;pembayaran-kimia-farma;Pembayaran Kimia Farma;Pembayaran ke Kimia Farma (distributor utama)
+1;20;pembayaran-pbf;Pembayaran PBF;Pembayaran ke Pedagang Besar Farmasi
+1;20;pembayaran-distributor-alkes;Pembayaran Distributor Alkes;Pembayaran ke distributor alat kesehatan
+1;21;pembayaran-it-support;IT Support;Pembayaran jasa IT support dan maintenance
+1;21;pembayaran-cleaning-service;Cleaning Service;Pembayaran jasa cleaning service
+1;21;pembayaran-security;Security;Pembayaran jasa security
+1;21;pembayaran-pest-control;Pest Control;Pembayaran jasa pest control
+1;22;pembayaran-percetakan;Percetakan;Pembayaran ke vendor percetakan
+1;22;pembayaran-supplier-atk;Supplier ATK;Pembayaran ke supplier ATK
+1;23;biaya-transfer-antarbank;Biaya Transfer Antar Bank;Biaya transfer ke bank lain
+1;23;biaya-admin-bank;Biaya Admin Bank;Biaya administrasi bulanan bank
+1;23;biaya-kliring;Biaya Kliring;Biaya kliring cek dan giro
+1;24;transfer-internal-sesama-bank;Transfer Internal Sesama Bank;Transfer antar rekening di bank yang sama
+1;24;pemindahan-dana;Pemindahan Dana;Pemindahan dana antar rekening perusahaan
+1;25;transfer-ke-outlet;Transfer ke Outlet;Transfer dana ke outlet/apotek
+1;25;transfer-dari-outlet;Transfer dari Outlet;Penerimaan transfer dari outlet/apotek
+1;25;mcm-inhousetrf;MCM InhouseTrf;Transfer via MCM InhouseTrf system
+1;26;premi-asuransi-kesehatan;Premi Asuransi Kesehatan;Pembayaran premi asuransi kesehatan karyawan
+1;26;premi-asuransi-jiwa;Premi Asuransi Jiwa;Pembayaran premi asuransi jiwa
+1;26;premi-asuransi-properti;Premi Asuransi Properti;Pembayaran premi asuransi properti/gedung
+1;27;klaim-dari-asuransi-kesehatan;Klaim dari Asuransi Kesehatan;Penerimaan klaim dari perusahaan asuransi
+1;27;klaim-dari-bpjs;Klaim dari BPJS;Penerimaan klaim dari BPJS Kesehatan
+1;28;pembayaran-klaim-ke-pasien;Pembayaran Klaim ke Pasien;Pembayaran klaim asuransi ke pasien
+1;29;pph-21;PPh 21;Pajak Penghasilan Pasal 21 (gaji karyawan)
+1;29;pph-23;PPh 23;Pajak Penghasilan Pasal 23 (jasa)
+1;29;pph-final;PPh Final;Pajak Penghasilan Final
+1;30;ppn-masukan;PPN Masukan;PPN yang dibayar saat pembelian
+1;30;ppn-keluaran;PPN Keluaran;PPN yang dipungut dari penjualan
+1;31;pbb;PBB;Pajak Bumi dan Bangunan
+1;31;pajak-kendaraan;Pajak Kendaraan;Pajak kendaraan bermotor
+1;32;pinjaman-diberikan-general;Pinjaman Diberikan - Umum;Kategori umum untuk Pinjaman Diberikan
+1;33;pelunasan-pinjaman-diterima-general;Pelunasan Pinjaman Diterima - Umum;Kategori umum untuk Pelunasan Pinjaman Diterima
+1;34;bon-sementara-karyawan;Bon Sementara Karyawan;Bon sementara untuk operasional
+1;34;bon-perbaikan;Bon Perbaikan;Bon untuk perbaikan dan maintenance
+1;34;bon-pembelian;Bon Pembelian;Bon pembelian kebutuhan outlet
+1;35;piutang-general;Piutang - Umum;Kategori umum untuk Piutang
+1;36;liph-outlet-reguler;LIPH Outlet Reguler;Setoran LIPH dari outlet apotek reguler
+1;36;liph-outlet-resep;LIPH Outlet Resep;Setoran LIPH dari outlet resep
+1;36;liph-klinik;LIPH Klinik;Setoran LIPH dari klinik
+1;37;kas-kecil-outlet-general;Kas Kecil Outlet - Umum;Kategori umum untuk Kas Kecil Outlet
+1;38;rumat-outlet-harian;Rumat Outlet Harian;Biaya rumah tangga outlet harian
+1;38;rumat-klinik;Rumat Klinik;Biaya rumah tangga klinik
+1;39;qris-static;QRIS Static;Pembayaran via QRIS static QR
+1;39;qris-dynamic;QRIS Dynamic;Pembayaran via QRIS dynamic QR
+1;40;edc-debit;EDC Debit Card;Pembayaran via EDC kartu debit
+1;40;edc-credit;EDC Credit Card;Pembayaran via EDC kartu kredit
+1;41;transaksi-tunai-general;Transaksi Tunai - Umum;Kategori umum untuk Transaksi Tunai
+1;42;atmb-transfer;ATMB Transfer;Transfer via ATM/Mobile Banking
+1;43;koreksi-transaksi-general;Koreksi Transaksi - Umum;Kategori umum untuk Koreksi Transaksi
+1;44;refund-return-general;Refund & Return - Umum;Kategori umum untuk Refund & Return
+1;45;investasi-general;Investasi - Umum;Kategori umum untuk Investasi
+1;46;dividen-general;Dividen - Umum;Kategori umum untuk Dividen
+1;47;lain-lain-general;Lain-lain - Umum;Kategori umum untuk Lain-lain
+1;48;penjualan-outlet-reguler;Penjualan Outlet Reguler;Penjualan produk obat-obatan di outlet apotek reguler
+1;48;penjualan-outlet-resep;Penjualan Outlet Resep;Penjualan khusus outlet resep dokter
+1;48;penjualan-klinik;Penjualan Klinik;Penjualan di klinik kesehatan (Wisma Asri, dll)
+1;48;penjualan-alkes;Penjualan Alat Kesehatan;Penjualan alat kesehatan dan medical devices
+1;49;transfer-dari-distributor;Transfer dari Distributor;Penerimaan transfer dari Kimia Farma dan distributor obat
+1;49;transfer-dari-customer;Transfer dari Customer;Penerimaan transfer dari customer/pasien
+1;49;transfer-internal;Transfer Internal;Penerimaan transfer antar cabang internal
+1;50;setor-tunai-outlet;Setor Tunai Outlet;Setoran tunai harian dari outlet (LIPH)
+1;50;setor-tunai-klinik;Setor Tunai Klinik;Setoran tunai dari klinik
+1;50;cod-pembayaran;COD / Cash on Delivery;Pembayaran COD dari customer
+1;51;qris-payment;QRIS Payment;Pembayaran via QRIS (QR Code Indonesian Standard)
+1;51;otopay-qr;OTOPAY QR;Pembayaran via OTOPAY QR system
+1;51;merchant-qr;Merchant QR;Pembayaran QR merchant specific
+1;52;klaim-asuransi-kesehatan;Klaim Asuransi Kesehatan;Klaim dari asuransi kesehatan (Sinar Mas, Hanwha, Perta)
+1;52;klaim-bpjs;Klaim BPJS;Klaim dari BPJS Kesehatan
+1;53;bop-bulanan-outlet;BOP Bulanan Outlet;Biaya Operasional Perusahaan (BOP) bulanan outlet
+1;53;bop-klinik;BOP Klinik;Biaya operasional klinik kesehatan
+1;53;rumah-tangga-outlet;Rumah Tangga Outlet;Biaya rumah tangga harian outlet (rumat)
+1;54;listrik-pln;Listrik PLN;Pembayaran listrik ke PLN
+1;54;air-pdam;Air PDAM;Pembayaran air PDAM
+1;54;internet-telepon;Internet & Telepon;Biaya internet, telepon, dan komunikasi
+1;54;ipl-gedung;IPL Gedung;Iuran Pengelolaan Lingkungan gedung/kompleks
+1;55;service-ac;Service AC;Service dan maintenance AC outlet
+1;55;perbaikan-cctv;Perbaikan CCTV;Instalasi dan perbaikan CCTV
+1;55;maintenance-peralatan;Maintenance Peralatan;Maintenance peralatan medis dan operasional
+1;55;perbaikan-gedung;Perbaikan Gedung;Perbaikan dan renovasi gedung
+1;56;biaya-sewa-general;Biaya Sewa - Umum;Kategori umum untuk Biaya Sewa
+1;57;biaya-kebersihan-keamanan-general;Biaya Kebersihan & Keamanan - Umum;Kategori umum untuk Biaya Kebersihan & Keamanan
+1;58;pembelian-obat-generic;Pembelian Obat Generic;Pembelian obat generic dari distributor
+1;58;pembelian-obat-paten;Pembelian Obat Paten;Pembelian obat paten/branded
+1;58;pembelian-alat-kesehatan;Pembelian Alat Kesehatan;Pembelian alat kesehatan dan medical devices
+1;58;pembelian-obat-khusus;Pembelian Obat Khusus;Pembelian obat khusus (cold chain, narkotika)
+1;59;pembelian-furniture;Pembelian Furniture;Pembelian furniture kantor dan outlet
+1;59;pembelian-elektronik;Pembelian Elektronik;Pembelian peralatan elektronik (komputer, printer)
+1;59;pembelian-peralatan-medis;Pembelian Peralatan Medis;Pembelian peralatan medis non-disposable
+1;60;pembelian-atk;Pembelian ATK;Pembelian alat tulis kantor
+1;60;pembelian-packaging;Pembelian Packaging;Pembelian kantong plastik, paper bag, box
+1;60;pembelian-cleaning-supplies;Pembelian Cleaning Supplies;Pembelian supplies kebersihan
+1;61;pembelian-sticker-spanduk;Sticker & Spanduk;Pembelian sticker, spanduk, banner
+1;61;pembelian-brosur;Brosur & Leaflet;Pembelian brosur dan leaflet promosi
+1;61;pembelian-merchandise;Merchandise;Pembelian merchandise promosi
+1;62;gaji-tetap-bulanan;Gaji Tetap Bulanan;Gaji pokok karyawan tetap
+1;62;gaji-parttime;Gaji Part-time;Gaji karyawan part-time
+1;62;gaji-freelance;Gaji Freelance;Pembayaran ke freelancer
+1;63;tunjangan-transport;Tunjangan Transport;Tunjangan transportasi karyawan
+1;63;tunjangan-makan;Tunjangan Makan;Tunjangan makan karyawan
+1;63;tunjangan-kesehatan;Tunjangan Kesehatan;Tunjangan kesehatan karyawan
+1;63;bonus-kinerja;Bonus Kinerja;Bonus berdasarkan kinerja
+1;64;thr-karyawan;THR Karyawan;Tunjangan Hari Raya karyawan
+1;64;dinas-lebaran-karyawan;Dinas Lebaran;Dinas lebaran untuk karyawan
+1;65;jasa-praktik-dokter-spesialis;Jasa Praktik Dokter Spesialis;Honor jasa praktik dokter spesialis
+1;65;jasa-praktik-dokter-umum;Jasa Praktik Dokter Umum;Honor jasa praktik dokter umum
+1;65;fee-apoteker;Fee Apoteker;Fee jasa apoteker
+1;65;fee-konsultan;Fee Konsultan;Fee konsultan eksternal
+1;66;reimburse-perjalanan-dinas;Reimburse Perjalanan Dinas;Penggantian biaya perjalanan dinas
+1;66;reimburse-bensin;Reimburse Bensin;Penggantian biaya bensin karyawan
+1;66;reimburse-parkir-tol;Reimburse Parkir & Tol;Penggantian parkir dan tol
+1;67;pembayaran-kimia-farma;Pembayaran Kimia Farma;Pembayaran ke Kimia Farma (distributor utama)
+1;67;pembayaran-pbf;Pembayaran PBF;Pembayaran ke Pedagang Besar Farmasi
+1;67;pembayaran-distributor-alkes;Pembayaran Distributor Alkes;Pembayaran ke distributor alat kesehatan
+1;68;pembayaran-it-support;IT Support;Pembayaran jasa IT support dan maintenance
+1;68;pembayaran-cleaning-service;Cleaning Service;Pembayaran jasa cleaning service
+1;68;pembayaran-security;Security;Pembayaran jasa security
+1;68;pembayaran-pest-control;Pest Control;Pembayaran jasa pest control
+1;69;pembayaran-percetakan;Percetakan;Pembayaran ke vendor percetakan
+1;69;pembayaran-supplier-atk;Supplier ATK;Pembayaran ke supplier ATK
+1;70;biaya-transfer-antarbank;Biaya Transfer Antar Bank;Biaya transfer ke bank lain
+1;70;biaya-admin-bank;Biaya Admin Bank;Biaya administrasi bulanan bank
+1;70;biaya-kliring;Biaya Kliring;Biaya kliring cek dan giro
+1;71;transfer-internal-sesama-bank;Transfer Internal Sesama Bank;Transfer antar rekening di bank yang sama
+1;71;pemindahan-dana;Pemindahan Dana;Pemindahan dana antar rekening perusahaan
+1;72;transfer-ke-outlet;Transfer ke Outlet;Transfer dana ke outlet/apotek
+1;72;transfer-dari-outlet;Transfer dari Outlet;Penerimaan transfer dari outlet/apotek
+1;72;mcm-inhousetrf;MCM InhouseTrf;Transfer via MCM InhouseTrf system
+1;73;premi-asuransi-kesehatan;Premi Asuransi Kesehatan;Pembayaran premi asuransi kesehatan karyawan
+1;73;premi-asuransi-jiwa;Premi Asuransi Jiwa;Pembayaran premi asuransi jiwa
+1;73;premi-asuransi-properti;Premi Asuransi Properti;Pembayaran premi asuransi properti/gedung
+1;74;klaim-dari-asuransi-kesehatan;Klaim dari Asuransi Kesehatan;Penerimaan klaim dari perusahaan asuransi
+1;74;klaim-dari-bpjs;Klaim dari BPJS;Penerimaan klaim dari BPJS Kesehatan
+1;75;pembayaran-klaim-ke-pasien;Pembayaran Klaim ke Pasien;Pembayaran klaim asuransi ke pasien
+1;76;pph-21;PPh 21;Pajak Penghasilan Pasal 21 (gaji karyawan)
+1;76;pph-23;PPh 23;Pajak Penghasilan Pasal 23 (jasa)
+1;76;pph-final;PPh Final;Pajak Penghasilan Final
+1;77;ppn-masukan;PPN Masukan;PPN yang dibayar saat pembelian
+1;77;ppn-keluaran;PPN Keluaran;PPN yang dipungut dari penjualan
+1;78;pbb;PBB;Pajak Bumi dan Bangunan
+1;78;pajak-kendaraan;Pajak Kendaraan;Pajak kendaraan bermotor
+1;79;pinjaman-diberikan-general;Pinjaman Diberikan - Umum;Kategori umum untuk Pinjaman Diberikan
+1;80;pelunasan-pinjaman-diterima-general;Pelunasan Pinjaman Diterima - Umum;Kategori umum untuk Pelunasan Pinjaman Diterima
+1;81;bon-sementara-karyawan;Bon Sementara Karyawan;Bon sementara untuk operasional
+1;81;bon-perbaikan;Bon Perbaikan;Bon untuk perbaikan dan maintenance
+1;81;bon-pembelian;Bon Pembelian;Bon pembelian kebutuhan outlet
+1;82;piutang-general;Piutang - Umum;Kategori umum untuk Piutang
+1;83;liph-outlet-reguler;LIPH Outlet Reguler;Setoran LIPH dari outlet apotek reguler
+1;83;liph-outlet-resep;LIPH Outlet Resep;Setoran LIPH dari outlet resep
+1;83;liph-klinik;LIPH Klinik;Setoran LIPH dari klinik
+1;84;kas-kecil-outlet-general;Kas Kecil Outlet - Umum;Kategori umum untuk Kas Kecil Outlet
+1;85;rumat-outlet-harian;Rumat Outlet Harian;Biaya rumah tangga outlet harian
+1;85;rumat-klinik;Rumat Klinik;Biaya rumah tangga klinik
+1;86;qris-static;QRIS Static;Pembayaran via QRIS static QR
+1;86;qris-dynamic;QRIS Dynamic;Pembayaran via QRIS dynamic QR
+1;87;edc-debit;EDC Debit Card;Pembayaran via EDC kartu debit
+1;87;edc-credit;EDC Credit Card;Pembayaran via EDC kartu kredit
+1;88;transaksi-tunai-general;Transaksi Tunai - Umum;Kategori umum untuk Transaksi Tunai
+1;89;atmb-transfer;ATMB Transfer;Transfer via ATM/Mobile Banking
+1;90;koreksi-transaksi-general;Koreksi Transaksi - Umum;Kategori umum untuk Koreksi Transaksi
+1;91;refund-return-general;Refund & Return - Umum;Kategori umum untuk Refund & Return
+1;92;investasi-general;Investasi - Umum;Kategori umum untuk Investasi
+1;93;dividen-general;Dividen - Umum;Kategori umum untuk Dividen
+1;94;lain-lain-general;Lain-lain - Umum;Kategori umum untuk Lain-lain
+1;95;penjualan-outlet-reguler;Penjualan Outlet Reguler;Penjualan produk obat-obatan di outlet apotek reguler
+1;95;penjualan-outlet-resep;Penjualan Outlet Resep;Penjualan khusus outlet resep dokter
+1;95;penjualan-klinik;Penjualan Klinik;Penjualan di klinik kesehatan (Wisma Asri, dll)
+1;95;penjualan-alkes;Penjualan Alat Kesehatan;Penjualan alat kesehatan dan medical devices
+1;96;transfer-dari-distributor;Transfer dari Distributor;Penerimaan transfer dari Kimia Farma dan distributor obat
+1;96;transfer-dari-customer;Transfer dari Customer;Penerimaan transfer dari customer/pasien
+1;96;transfer-internal;Transfer Internal;Penerimaan transfer antar cabang internal
+1;97;setor-tunai-outlet;Setor Tunai Outlet;Setoran tunai harian dari outlet (LIPH)
+1;97;setor-tunai-klinik;Setor Tunai Klinik;Setoran tunai dari klinik
+1;97;cod-pembayaran;COD / Cash on Delivery;Pembayaran COD dari customer
+1;98;qris-payment;QRIS Payment;Pembayaran via QRIS (QR Code Indonesian Standard)
+1;98;otopay-qr;OTOPAY QR;Pembayaran via OTOPAY QR system
+1;98;merchant-qr;Merchant QR;Pembayaran QR merchant specific
+1;99;klaim-asuransi-kesehatan;Klaim Asuransi Kesehatan;Klaim dari asuransi kesehatan (Sinar Mas, Hanwha, Perta)
+1;99;klaim-bpjs;Klaim BPJS;Klaim dari BPJS Kesehatan
+1;100;bop-bulanan-outlet;BOP Bulanan Outlet;Biaya Operasional Perusahaan (BOP) bulanan outlet
+1;100;bop-klinik;BOP Klinik;Biaya operasional klinik kesehatan
+1;100;rumah-tangga-outlet;Rumah Tangga Outlet;Biaya rumah tangga harian outlet (rumat)
+1;101;listrik-pln;Listrik PLN;Pembayaran listrik ke PLN
+1;101;air-pdam;Air PDAM;Pembayaran air PDAM
+1;101;internet-telepon;Internet & Telepon;Biaya internet, telepon, dan komunikasi
+1;101;ipl-gedung;IPL Gedung;Iuran Pengelolaan Lingkungan gedung/kompleks
+1;102;service-ac;Service AC;Service dan maintenance AC outlet
+1;102;perbaikan-cctv;Perbaikan CCTV;Instalasi dan perbaikan CCTV
+1;102;maintenance-peralatan;Maintenance Peralatan;Maintenance peralatan medis dan operasional
+1;102;perbaikan-gedung;Perbaikan Gedung;Perbaikan dan renovasi gedung
+1;103;biaya-sewa-general;Biaya Sewa - Umum;Kategori umum untuk Biaya Sewa
+1;104;biaya-kebersihan-keamanan-general;Biaya Kebersihan & Keamanan - Umum;Kategori umum untuk Biaya Kebersihan & Keamanan
+1;105;pembelian-obat-generic;Pembelian Obat Generic;Pembelian obat generic dari distributor
+1;105;pembelian-obat-paten;Pembelian Obat Paten;Pembelian obat paten/branded
+1;105;pembelian-alat-kesehatan;Pembelian Alat Kesehatan;Pembelian alat kesehatan dan medical devices
+1;105;pembelian-obat-khusus;Pembelian Obat Khusus;Pembelian obat khusus (cold chain, narkotika)
+1;106;pembelian-furniture;Pembelian Furniture;Pembelian furniture kantor dan outlet
+1;106;pembelian-elektronik;Pembelian Elektronik;Pembelian peralatan elektronik (komputer, printer)
+1;106;pembelian-peralatan-medis;Pembelian Peralatan Medis;Pembelian peralatan medis non-disposable
+1;107;pembelian-atk;Pembelian ATK;Pembelian alat tulis kantor
+1;107;pembelian-packaging;Pembelian Packaging;Pembelian kantong plastik, paper bag, box
+1;107;pembelian-cleaning-supplies;Pembelian Cleaning Supplies;Pembelian supplies kebersihan
+1;108;pembelian-sticker-spanduk;Sticker & Spanduk;Pembelian sticker, spanduk, banner
+1;108;pembelian-brosur;Brosur & Leaflet;Pembelian brosur dan leaflet promosi
+1;108;pembelian-merchandise;Merchandise;Pembelian merchandise promosi
+1;109;gaji-tetap-bulanan;Gaji Tetap Bulanan;Gaji pokok karyawan tetap
+1;109;gaji-parttime;Gaji Part-time;Gaji karyawan part-time
+1;109;gaji-freelance;Gaji Freelance;Pembayaran ke freelancer
+1;110;tunjangan-transport;Tunjangan Transport;Tunjangan transportasi karyawan
+1;110;tunjangan-makan;Tunjangan Makan;Tunjangan makan karyawan
+1;110;tunjangan-kesehatan;Tunjangan Kesehatan;Tunjangan kesehatan karyawan
+1;110;bonus-kinerja;Bonus Kinerja;Bonus berdasarkan kinerja
+1;111;thr-karyawan;THR Karyawan;Tunjangan Hari Raya karyawan
+1;111;dinas-lebaran-karyawan;Dinas Lebaran;Dinas lebaran untuk karyawan
+1;112;jasa-praktik-dokter-spesialis;Jasa Praktik Dokter Spesialis;Honor jasa praktik dokter spesialis
+1;112;jasa-praktik-dokter-umum;Jasa Praktik Dokter Umum;Honor jasa praktik dokter umum
+1;112;fee-apoteker;Fee Apoteker;Fee jasa apoteker
+1;112;fee-konsultan;Fee Konsultan;Fee konsultan eksternal
+1;113;reimburse-perjalanan-dinas;Reimburse Perjalanan Dinas;Penggantian biaya perjalanan dinas
+1;113;reimburse-bensin;Reimburse Bensin;Penggantian biaya bensin karyawan
+1;113;reimburse-parkir-tol;Reimburse Parkir & Tol;Penggantian parkir dan tol
+1;114;pembayaran-kimia-farma;Pembayaran Kimia Farma;Pembayaran ke Kimia Farma (distributor utama)
+1;114;pembayaran-pbf;Pembayaran PBF;Pembayaran ke Pedagang Besar Farmasi
+1;114;pembayaran-distributor-alkes;Pembayaran Distributor Alkes;Pembayaran ke distributor alat kesehatan
+1;115;pembayaran-it-support;IT Support;Pembayaran jasa IT support dan maintenance
+1;115;pembayaran-cleaning-service;Cleaning Service;Pembayaran jasa cleaning service
+1;115;pembayaran-security;Security;Pembayaran jasa security
+1;115;pembayaran-pest-control;Pest Control;Pembayaran jasa pest control
+1;116;pembayaran-percetakan;Percetakan;Pembayaran ke vendor percetakan
+1;116;pembayaran-supplier-atk;Supplier ATK;Pembayaran ke supplier ATK
+1;117;biaya-transfer-antarbank;Biaya Transfer Antar Bank;Biaya transfer ke bank lain
+1;117;biaya-admin-bank;Biaya Admin Bank;Biaya administrasi bulanan bank
+1;117;biaya-kliring;Biaya Kliring;Biaya kliring cek dan giro
+1;118;transfer-internal-sesama-bank;Transfer Internal Sesama Bank;Transfer antar rekening di bank yang sama
+1;118;pemindahan-dana;Pemindahan Dana;Pemindahan dana antar rekening perusahaan
+1;119;transfer-ke-outlet;Transfer ke Outlet;Transfer dana ke outlet/apotek
+1;119;transfer-dari-outlet;Transfer dari Outlet;Penerimaan transfer dari outlet/apotek
+1;119;mcm-inhousetrf;MCM InhouseTrf;Transfer via MCM InhouseTrf system
+1;120;premi-asuransi-kesehatan;Premi Asuransi Kesehatan;Pembayaran premi asuransi kesehatan karyawan
+1;120;premi-asuransi-jiwa;Premi Asuransi Jiwa;Pembayaran premi asuransi jiwa
+1;120;premi-asuransi-properti;Premi Asuransi Properti;Pembayaran premi asuransi properti/gedung
+1;121;klaim-dari-asuransi-kesehatan;Klaim dari Asuransi Kesehatan;Penerimaan klaim dari perusahaan asuransi
+1;121;klaim-dari-bpjs;Klaim dari BPJS;Penerimaan klaim dari BPJS Kesehatan
+1;122;pembayaran-klaim-ke-pasien;Pembayaran Klaim ke Pasien;Pembayaran klaim asuransi ke pasien
+1;123;pph-21;PPh 21;Pajak Penghasilan Pasal 21 (gaji karyawan)
+1;123;pph-23;PPh 23;Pajak Penghasilan Pasal 23 (jasa)
+1;123;pph-final;PPh Final;Pajak Penghasilan Final
+1;124;ppn-masukan;PPN Masukan;PPN yang dibayar saat pembelian
+1;124;ppn-keluaran;PPN Keluaran;PPN yang dipungut dari penjualan
+1;125;pbb;PBB;Pajak Bumi dan Bangunan
+1;125;pajak-kendaraan;Pajak Kendaraan;Pajak kendaraan bermotor
+1;126;pinjaman-diberikan-general;Pinjaman Diberikan - Umum;Kategori umum untuk Pinjaman Diberikan
+1;127;pelunasan-pinjaman-diterima-general;Pelunasan Pinjaman Diterima - Umum;Kategori umum untuk Pelunasan Pinjaman Diterima
+1;128;bon-sementara-karyawan;Bon Sementara Karyawan;Bon sementara untuk operasional
+1;128;bon-perbaikan;Bon Perbaikan;Bon untuk perbaikan dan maintenance
+1;128;bon-pembelian;Bon Pembelian;Bon pembelian kebutuhan outlet
+1;129;piutang-general;Piutang - Umum;Kategori umum untuk Piutang
+1;130;liph-outlet-reguler;LIPH Outlet Reguler;Setoran LIPH dari outlet apotek reguler
+1;130;liph-outlet-resep;LIPH Outlet Resep;Setoran LIPH dari outlet resep
+1;130;liph-klinik;LIPH Klinik;Setoran LIPH dari klinik
+1;131;kas-kecil-outlet-general;Kas Kecil Outlet - Umum;Kategori umum untuk Kas Kecil Outlet
+1;132;rumat-outlet-harian;Rumat Outlet Harian;Biaya rumah tangga outlet harian
+1;132;rumat-klinik;Rumat Klinik;Biaya rumah tangga klinik
+1;133;qris-static;QRIS Static;Pembayaran via QRIS static QR
+1;133;qris-dynamic;QRIS Dynamic;Pembayaran via QRIS dynamic QR
+1;134;edc-debit;EDC Debit Card;Pembayaran via EDC kartu debit
+1;134;edc-credit;EDC Credit Card;Pembayaran via EDC kartu kredit
+1;135;transaksi-tunai-general;Transaksi Tunai - Umum;Kategori umum untuk Transaksi Tunai
+1;136;atmb-transfer;ATMB Transfer;Transfer via ATM/Mobile Banking
+1;137;koreksi-transaksi-general;Koreksi Transaksi - Umum;Kategori umum untuk Koreksi Transaksi
+1;138;refund-return-general;Refund & Return - Umum;Kategori umum untuk Refund & Return
+1;139;investasi-general;Investasi - Umum;Kategori umum untuk Investasi
+1;140;dividen-general;Dividen - Umum;Kategori umum untuk Dividen
+1;141;lain-lain-general;Lain-lain - Umum;Kategori umum untuk Lain-lain

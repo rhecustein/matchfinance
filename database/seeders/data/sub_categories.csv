@@ -1,0 +1,859 @@
+﻿company_id;category_id;name;description
+1;1;KF 0264 Narogong;Penjualan outlet Narogong
+1;1;KF 0330 Harapan Indah;Penjualan outlet Harapan Indah
+1;1;KF 0340 Cikarang;Penjualan outlet Cikarang
+1;1;KF 0347 Pekayon;Penjualan outlet Pekayon
+1;1;KF 0367 Jati Asih;Penjualan outlet Jati Asih
+1;1;KF 0390 Cakung Gede;Penjualan outlet Cakung Gede
+1;1;KF 0405 Daan;Penjualan outlet Daan
+1;1;KF 0406 Kalimalang;Penjualan outlet Kalimalang
+1;1;KF 0007 Cibitung;Penjualan outlet Cibitung
+1;1;KF 0456 Granwis;Penjualan outlet Granwis
+1;1;KF 0503 Taman Mini;Penjualan outlet Taman Mini
+1;1;KF 0586 Cileungsi;Penjualan outlet Cileungsi
+1;1;KF 0591 Zamrud;Penjualan outlet Zamrud
+1;1;KF 0624 CISC;Penjualan outlet CISC
+1;1;KF 0618 Kranji;Penjualan outlet Kranji
+1;1;KF 0810 Kintamani;Penjualan outlet Kintamani
+1;1;KF 0944 Parungkd;Penjualan outlet Parungkd
+1;1;KF Cakra Raya;Penjualan outlet Cakra Raya
+1;1;KF Kali Abang Bekasi;Penjualan outlet Kali Abang
+1;1;KF Jati Rahayu;Penjualan outlet Jati Rahayu
+1;1;KF Rawa Lumbu;Penjualan outlet Rawa Lumbu
+1;1;KF Sepat;Penjualan outlet Sepat
+1;1;KF Boulevard;Penjualan outlet Boulevard
+1;1;KF Summarecon;Penjualan Apotek KF Summarecon
+1;1;KF Kota Serang;Penjualan outlet Kota Serang
+1;5;Transfer dari Kimia Farma Apotek;Transfer masuk dari KF Apotek
+1;5;Transfer dari Kimia Farma Trading;Transfer dari KF Trading
+1;5;Transfer dari PBF;Transfer dari Pedagang Besar Farmasi
+1;5;Transfer dari Distributor Obat;Transfer dari distributor obat lainnya
+1;8;LIPH KF Narogong;Setoran LIPH outlet Narogong
+1;8;LIPH KF Harapan Indah;Setoran LIPH outlet Harapan Indah
+1;8;LIPH KF Cikarang;Setoran LIPH outlet Cikarang
+1;8;LIPH KF Pekayon;Setoran LIPH outlet Pekayon
+1;8;LIPH KF Jati Asih;Setoran LIPH outlet Jati Asih
+1;8;LIPH KF Kalimalang;Setoran LIPH outlet Kalimalang
+1;8;LIPH KF Cibitung;Setoran LIPH outlet Cibitung
+1;8;LIPH KF Granwis;Setoran LIPH outlet Granwis
+1;8;LIPH KF Zamrud;Setoran LIPH outlet Zamrud
+1;8;LIPH KF Kali Abang;Setoran LIPH outlet Kali Abang
+1;8;LIPH KF Summarecon;Setoran LIPH outlet Summarecon
+1;8;Setoran Tunai Outlet Lain;Setoran tunai outlet lainnya
+1;11;QRIS Static KF Outlet;Pembayaran QRIS static outlet
+1;11;QRIS Dynamic;Pembayaran QRIS dynamic
+1;11;QRIS Merchant;Pembayaran QRIS merchant
+1;14;Klaim Asuransi Sinar Mas;Klaim dari Asuransi Sinar Mas
+1;14;Klaim Hanwha Life Insurance;Klaim dari Hanwha Life
+1;14;Klaim Perta Life Insurance;Klaim dari Perta Life
+1;14;Klaim Asuransi Lainnya;Klaim asuransi kesehatan lainnya
+1;16;BOP MG3 Bekasi;BOP bulanan MG3 Bekasi
+1;16;BOP BO Bekasi;BOP Branch Office Bekasi
+1;16;BOP Outlet Januari;BOP outlet bulan Januari
+1;16;BOP Outlet Februari;BOP outlet bulan Februari
+1;16;BOP Outlet Maret;BOP outlet bulan Maret
+1;16;BOP Outlet April;BOP outlet bulan April
+1;16;BOP Outlet Mei;BOP outlet bulan Mei
+1;16;BOP Outlet Juni;BOP outlet bulan Juni
+1;16;BOP Outlet Juli;BOP outlet bulan Juli
+1;16;BOP Outlet Agustus;BOP outlet bulan Agustus
+1;16;BOP Outlet September;BOP outlet bulan September
+1;16;BOP Outlet Oktober;BOP outlet bulan Oktober
+1;16;BOP Outlet November;BOP outlet bulan November
+1;16;BOP Outlet Desember;BOP outlet bulan Desember
+1;19;Listrik PLN Outlet Narogong;Pembayaran listrik outlet Narogong
+1;19;Listrik PLN Outlet Cikarang;Pembayaran listrik outlet Cikarang
+1;19;Listrik PLN Outlet Wisma Asri;Pembayaran listrik Wisma Asri
+1;19;Listrik PLN Kantor Pusat;Pembayaran listrik kantor pusat
+1;19;Listrik PLN Outlet Lainnya;Pembayaran listrik outlet lainnya
+1;23;Service AC Outlet Cikarang;Service AC outlet Cikarang
+1;23;Service AC Outlet Wisma;Service AC Wisma Asri
+1;23;Service AC Outlet Lainnya;Service AC outlet lainnya
+1;23;Service AC Kantor Pusat;Service AC kantor pusat
+1;27;Biaya Sewa - Umum - Umum;Sub kategori umum untuk Biaya Sewa - Umum
+1;28;Biaya Kebersihan & Keamanan - Umum - Umum;Sub kategori umum untuk Biaya Kebersihan & Keamanan - Umum
+1;29;Obat Generic dari Kimia Farma;Pembelian obat generic KF
+1;29;Obat Generic dari PBF;Pembelian obat generic PBF
+1;29;Obat Generic Lainnya;Obat generic distributor lain
+1;33;Meja & Kursi;Pembelian meja dan kursi
+1;33;Rak & Lemari;Pembelian rak dan lemari
+1;33;Furniture Display;Furniture display outlet
+1;36;ATK Kantor;Pembelian ATK kantor
+1;36;ATK Outlet;Pembelian ATK outlet
+1;39;Sticker & Spanduk - Umum;Sub kategori umum untuk Sticker & Spanduk
+1;42;Gaji Apoteker;Gaji apoteker penanggung jawab
+1;42;Gaji Asisten Apoteker;Gaji asisten apoteker
+1;42;Gaji Admin Outlet;Gaji admin/kasir outlet
+1;42;Gaji Manajemen;Gaji level manajemen
+1;42;Gaji Staff;Gaji staff umum
+1;45;Tunjangan Transport Karyawan Tetap;Transport karyawan tetap
+1;45;Tunjangan Transport Part-time;Transport part-time
+1;49;THR Lebaran;THR Idul Fitri
+1;49;THR Natal;THR Natal
+1;51;Jasa Praktik Spesialis Kalimalang;Jasa praktik spesialis KF Kalimalang
+1;51;Jasa Praktik Spesialis Lainnya;Jasa praktik spesialis outlet lain
+1;55;Reimburse Tiket Pesawat;Penggantian tiket pesawat
+1;55;Reimburse Hotel;Penggantian hotel
+1;55;Reimburse Transport Dinas;Transport perjalanan dinas
+1;58;Kimia Farma Apotek Pusat;Pembayaran KF Apotek pusat
+1;58;Kimia Farma Distribusi;Pembayaran KF distribusi
+1;58;Kimia Farma Trading;Pembayaran KF trading
+1;61;IT Support Hardware;Support hardware komputer
+1;61;IT Support Software;Support software & aplikasi
+1;61;IT Support Network;Support jaringan
+1;65;Percetakan Primagraphia;Primagraphia Digital PT
+1;65;Percetakan Lainnya;Vendor percetakan lainnya
+1;67;Transfer Fee BCA;Biaya transfer via BCA
+1;67;Transfer Fee BNI;Biaya transfer via BNI
+1;67;Transfer Fee Mandiri;Biaya transfer via Mandiri
+1;67;Transfer Fee Bank Lain;Biaya transfer bank lainnya
+1;70;Transfer Internal BCA;Transfer internal rekening BCA
+1;70;Transfer Internal BNI;Transfer internal rekening BNI
+1;70;Transfer Internal Mandiri;Transfer internal Mandiri
+1;72;Transfer ke Outlet Operasional;Transfer dana operasional outlet
+1;72;Transfer ke Outlet Emergency;Transfer emergency outlet
+1;75;Premi BPJS Kesehatan;Premi BPJS kesehatan karyawan
+1;75;Premi Asuransi Swasta;Premi asuransi kesehatan swasta
+1;78;Klaim Sinar Mas;Klaim dari Asuransi Sinar Mas
+1;78;Klaim Hanwha;Klaim dari Hanwha Life
+1;78;Klaim Perta;Klaim dari Perta Life
+1;80;Klaim Pasien Rawat Jalan;Pembayaran klaim pasien rawat jalan
+1;80;Klaim Pasien Rawat Inap;Pembayaran klaim pasien rawat inap
+1;81;PPh 21 Gaji Karyawan;PPh 21 dari gaji karyawan
+1;81;PPh 21 Bonus;PPh 21 dari bonus
+1;84;PPN Masukan Pembelian;PPN yang dibayar saat pembelian
+1;86;PBB Gedung Outlet;PBB gedung outlet
+1;86;PBB Kantor;PBB gedung kantor
+1;88;Pinjaman Diberikan - Umum - Umum;Sub kategori umum untuk Pinjaman Diberikan - Umum
+1;89;Pelunasan Pinjaman Diterima - Umum - Umum;Sub kategori umum untuk Pelunasan Pinjaman Diterima - Umum
+1;90;Bon Sementara Kranggan;Bon sementara outlet Kranggan
+1;90;Bon Sementara Outlet Lain;Bon sementara outlet lainnya
+1;93;Piutang - Umum - Umum;Sub kategori umum untuk Piutang - Umum
+1;94;LIPH Narogong;LIPH outlet Narogong
+1;94;LIPH Harapan Indah;LIPH outlet Harapan Indah
+1;94;LIPH Cikarang;LIPH outlet Cikarang
+1;94;LIPH Pekayon;LIPH outlet Pekayon
+1;94;LIPH Kalimalang;LIPH outlet Kalimalang
+1;94;LIPH Kali Abang;LIPH outlet Kali Abang
+1;94;LIPH Outlet Lainnya;LIPH outlet lainnya
+1;97;Kas Kecil Outlet - Umum - Umum;Sub kategori umum untuk Kas Kecil Outlet - Umum
+1;98;Rumat Wisma Asri;Rumah tangga Wisma Asri
+1;98;Rumat Cikarang;Rumah tangga Cikarang
+1;98;Rumat Outlet Lainnya;Rumah tangga outlet lainnya
+1;100;QRIS Static Outlet;Pembayaran QRIS static outlet
+1;102;EDC Debit BCA;Pembayaran EDC debit BCA
+1;102;EDC Debit Mandiri;Pembayaran EDC debit Mandiri
+1;102;EDC Debit BNI;Pembayaran EDC debit BNI
+1;104;Transaksi Tunai - Umum - Umum;Sub kategori umum untuk Transaksi Tunai - Umum
+1;105;ATMB Transfer Credit;Transfer via ATM Banking
+1;105;Mobile Banking Transfer;Transfer via mobile banking
+1;106;Koreksi Transaksi - Umum - Umum;Sub kategori umum untuk Koreksi Transaksi - Umum
+1;107;Refund & Return - Umum - Umum;Sub kategori umum untuk Refund & Return - Umum
+1;108;Investasi - Umum - Umum;Sub kategori umum untuk Investasi - Umum
+1;109;Dividen - Umum - Umum;Sub kategori umum untuk Dividen - Umum
+1;110;Lain-lain - Umum - Umum;Sub kategori umum untuk Lain-lain - Umum
+1;2;KF 264 Resep Suzi;Penjualan outlet resep Suzi (Narogong)
+1;2;KF 330 Resep HI;Penjualan outlet resep Harapan Indah
+1;2;KF 340 Resep KC;Penjualan outlet resep Cikarang
+1;2;KF 007 Resep CB;Penjualan outlet resep Cibitung
+1;2;KF Cakra Raya Resep;Penjualan outlet resep Cakra Raya
+1;6;Transfer Customer Retail;Transfer dari customer retail
+1;6;Transfer Customer Corporate;Transfer dari customer corporate
+1;6;Transfer Customer Online;Transfer dari pembelian online
+1;9;Setoran Klinik Wisma Asri;Setoran tunai Klinik Wisma Asri
+1;9;Setoran Klinik Lainnya;Setoran klinik lainnya
+1;12;OTOPAY QR KF Summarecon;OTOPAY QR outlet Summarecon
+1;12;OTOPAY QR Outlet Lain;OTOPAY QR outlet lainnya
+1;15;Klaim BPJS Kesehatan Rawat Jalan;Klaim BPJS rawat jalan
+1;15;Klaim BPJS Kesehatan Rawat Inap;Klaim BPJS rawat inap
+1;15;Klaim BPJS Obat;Klaim BPJS obat-obatan
+1;17;BOP Klinik Wisma Asri;BOP Klinik Wisma Asri
+1;17;BOP Klinik Lainnya;BOP klinik lainnya
+1;20;Air PDAM Outlet;Pembayaran air PDAM outlet
+1;20;Air PDAM Kantor Pusat;Pembayaran air PDAM kantor
+1;24;CCTV Outlet Cibitung;Instalasi/perbaikan CCTV Cibitung
+1;24;CCTV Outlet Daan;Instalasi/perbaikan CCTV Daan
+1;24;CCTV Outlet Lainnya;CCTV outlet lainnya
+1;30;Obat Paten Branded;Pembelian obat paten branded
+1;30;Obat Import;Pembelian obat import
+1;34;Komputer & Laptop;Pembelian komputer dan laptop
+1;34;Printer & Scanner;Pembelian printer scanner
+1;34;Perangkat Jaringan;Router, switch, access point
+1;37;Kantong Plastik;Pembelian kantong plastik
+1;37;Paper Bag;Pembelian paper bag
+1;37;Box Packaging;Box packaging obat
+1;40;Brosur & Leaflet - Umum;Sub kategori umum untuk Brosur & Leaflet
+1;43;Gaji Part-time Outlet;Gaji karyawan part-time outlet
+1;43;Gaji Part-time Admin;Gaji part-time admin
+1;46;Tunjangan Makan Harian;Tunjangan makan harian
+1;46;Tunjangan Makan Lembur;Tunjangan makan lembur
+1;50;Dinas Lebaran Zamrud;Dinas lebaran outlet Zamrud
+1;50;Dinas Lebaran Pekayon;Dinas lebaran outlet Pekayon
+1;50;Dinas Lebaran Outlet Lainnya;Dinas lebaran outlet lain
+1;52;Jasa Praktik Dokter Umum Klinik;Jasa dokter umum klinik
+1;56;Reimburse Bensin Karyawan;Penggantian bensin karyawan
+1;59;PBF Utama;Pembayaran PBF utama
+1;59;PBF Sekunder;Pembayaran PBF sekunder
+1;62;Cleaning Service Outlet;Jasa cleaning service outlet
+1;62;Cleaning Service Kantor;Jasa cleaning service kantor
+1;66;Supplier ATK Utama;Supplier ATK utama
+1;68;Admin Bank Bulanan;Biaya admin bulanan
+1;68;Biaya Materai;Biaya materai digital
+1;71;Pemindahan Antar Rekening;Pemindahan dana antar rekening
+1;73;Transfer dari Outlet Setoran;Penerimaan setoran outlet
+1;76;Premi Asuransi Jiwa Karyawan;Premi asuransi jiwa
+1;79;Klaim BPJS Rawat Jalan;Klaim BPJS rawat jalan
+1;79;Klaim BPJS Rawat Inap;Klaim BPJS rawat inap
+1;82;PPh 23 Jasa Profesional;PPh 23 jasa profesional
+1;82;PPh 23 Sewa;PPh 23 sewa
+1;85;PPN Keluaran Penjualan;PPN yang dipungut dari penjualan
+1;87;Pajak Motor Operasional;Pajak motor operasional
+1;87;Pajak Mobil Operasional;Pajak mobil operasional
+1;91;Bon Perbaikan Kali Abang;Bon perbaikan outlet Kali Abang
+1;91;Bon Perbaikan Outlet Lain;Bon perbaikan outlet lainnya
+1;95;LIPH Resep Narogong;LIPH outlet resep Narogong
+1;95;LIPH Resep Cikarang;LIPH outlet resep Cikarang
+1;99;Rumat Klinik Wisma;Rumah tangga Klinik Wisma
+1;101;QRIS Dynamic Transaction;Pembayaran QRIS dynamic
+1;103;EDC Credit Visa;Pembayaran kartu kredit Visa
+1;103;EDC Credit Mastercard;Pembayaran kartu kredit Mastercard
+1;3;Klinik KF Wisma Asri;Penjualan Klinik Wisma Asri
+1;3;Klinik Umum;Penjualan klinik umum
+1;7;Transfer Antar Outlet;Transfer internal antar outlet
+1;7;Transfer dari Pusat;Transfer dari kantor pusat
+1;7;Transfer Antar Cabang;Transfer antar cabang regional
+1;10;COD Obat;Pembayaran COD pembelian obat
+1;10;COD Alkes;Pembayaran COD alat kesehatan
+1;10;COD Layanan;Pembayaran COD layanan kesehatan
+1;13;Merchant QR BCA;Pembayaran via Merchant QR BCA
+1;13;Merchant QR Mandiri;Pembayaran via Merchant QR Mandiri
+1;13;Merchant QR Lainnya;Merchant QR bank lainnya
+1;18;Rumat KF Wisma Asri;Rumah tangga outlet Wisma Asri
+1;18;Rumat KF Cikarang;Rumah tangga outlet Cikarang
+1;18;Rumat KF Narogong;Rumah tangga outlet Narogong
+1;18;Rumat KF Kalimalang;Rumah tangga outlet Kalimalang
+1;18;Rumat Outlet Lainnya;Rumah tangga outlet lainnya
+1;21;Internet Indihome;Biaya internet Indihome
+1;21;Internet Corporate;Internet corporate dedicated
+1;21;Telepon Kantor;Biaya telepon kantor
+1;25;Maintenance PC/Komputer;Maintenance PC outlet
+1;25;Maintenance Printer;Maintenance printer outlet
+1;25;Maintenance Peralatan Medis;Maintenance peralatan medis
+1;31;Alat Medis;Pembelian alat medis
+1;31;Alat Kesehatan Personal;Alat kesehatan personal
+1;31;Consumables Medis;Pembelian consumables medis
+1;35;Peralatan Diagnostik;Peralatan diagnostik medis
+1;35;Peralatan Penunjang;Peralatan penunjang medis
+1;38;Pembersih & Disinfektan;Pembersih dan disinfektan
+1;38;Supplies Kebersihan;Tissue, sapu, pel, dll
+1;41;Merchandise - Umum;Sub kategori umum untuk Merchandise
+1;44;Fee Freelancer IT;Fee freelancer IT
+1;44;Fee Freelancer Marketing;Fee freelancer marketing
+1;47;Tunjangan Kesehatan Karyawan;Tunjangan kesehatan
+1;47;Asuransi Kesehatan Karyawan;Premi asuransi kesehatan
+1;53;Fee Apoteker Konsultasi;Fee konsultasi apoteker
+1;57;Reimburse Parkir;Penggantian parkir
+1;57;Reimburse Tol;Penggantian tol
+1;60;Distributor Alkes Utama;Distributor alkes utama
+1;60;Distributor Alkes Lainnya;Distributor alkes lainnya
+1;63;Security Outlet;Jasa security outlet
+1;63;Security Kantor;Jasa security kantor
+1;69;Biaya Kliring Cek;Biaya kliring cek
+1;69;Biaya Kliring Giro;Biaya kliring giro
+1;74;MCM InhouseTrf KE Karyawan;Transfer MCM ke karyawan
+1;74;MCM InhouseTrf DARI Vendor;Penerimaan MCM dari vendor
+1;74;MCM InhouseTrf Internal;Transfer MCM internal
+1;77;Premi Asuransi Gedung;Premi asuransi gedung/properti
+1;77;Premi Asuransi Inventaris;Premi asuransi inventaris
+1;83;PPh Final Usaha;PPh final usaha
+1;92;Bon Pembelian Operasional;Bon pembelian kebutuhan operasional
+1;96;LIPH Klinik Wisma Asri;LIPH Klinik Wisma Asri
+1;4;Alat Kesehatan Medis;Penjualan alat kesehatan medis
+1;4;Alat Kesehatan Personal;Penjualan alat kesehatan personal
+1;4;Consumables Medis;Penjualan consumables medis
+1;22;IPL KF Outlet;IPL gedung outlet
+1;22;IPL Kantor;IPL gedung kantor
+1;26;Renovasi Outlet;Renovasi dan perbaikan outlet
+1;26;Cat & Pengecatan;Pengecatan gedung
+1;26;Perbaikan Atap;Perbaikan atap gedung
+1;32;Obat Cold Chain;Pembelian obat cold chain
+1;32;Obat Narkotika & Psikotropika;Pembelian obat narkotika
+1;32;Obat Onkologi;Pembelian obat onkologi
+1;48;Bonus Target Penjualan;Bonus achievement target
+1;48;Bonus Kinerja Tahunan;Bonus kinerja tahunan
+1;54;Fee Konsultan IT;Fee konsultan IT
+1;54;Fee Konsultan Bisnis;Fee konsultan bisnis
+1;64;Pest Control Rutin;Jasa pest control rutin
+1;64;Pest Control Emergency;Pest control emergency
+1;111;KF 0264 Narogong;Penjualan outlet Narogong
+1;111;KF 0330 Harapan Indah;Penjualan outlet Harapan Indah
+1;111;KF 0340 Cikarang;Penjualan outlet Cikarang
+1;111;KF 0347 Pekayon;Penjualan outlet Pekayon
+1;111;KF 0367 Jati Asih;Penjualan outlet Jati Asih
+1;111;KF 0390 Cakung Gede;Penjualan outlet Cakung Gede
+1;111;KF 0405 Daan;Penjualan outlet Daan
+1;111;KF 0406 Kalimalang;Penjualan outlet Kalimalang
+1;111;KF 0007 Cibitung;Penjualan outlet Cibitung
+1;111;KF 0456 Granwis;Penjualan outlet Granwis
+1;111;KF 0503 Taman Mini;Penjualan outlet Taman Mini
+1;111;KF 0586 Cileungsi;Penjualan outlet Cileungsi
+1;111;KF 0591 Zamrud;Penjualan outlet Zamrud
+1;111;KF 0624 CISC;Penjualan outlet CISC
+1;111;KF 0618 Kranji;Penjualan outlet Kranji
+1;111;KF 0810 Kintamani;Penjualan outlet Kintamani
+1;111;KF 0944 Parungkd;Penjualan outlet Parungkd
+1;111;KF Cakra Raya;Penjualan outlet Cakra Raya
+1;111;KF Kali Abang Bekasi;Penjualan outlet Kali Abang
+1;111;KF Jati Rahayu;Penjualan outlet Jati Rahayu
+1;111;KF Rawa Lumbu;Penjualan outlet Rawa Lumbu
+1;111;KF Sepat;Penjualan outlet Sepat
+1;111;KF Boulevard;Penjualan outlet Boulevard
+1;111;KF Summarecon;Penjualan Apotek KF Summarecon
+1;111;KF Kota Serang;Penjualan outlet Kota Serang
+1;115;Transfer dari Kimia Farma Apotek;Transfer masuk dari KF Apotek
+1;115;Transfer dari Kimia Farma Trading;Transfer dari KF Trading
+1;115;Transfer dari PBF;Transfer dari Pedagang Besar Farmasi
+1;115;Transfer dari Distributor Obat;Transfer dari distributor obat lainnya
+1;118;LIPH KF Narogong;Setoran LIPH outlet Narogong
+1;118;LIPH KF Harapan Indah;Setoran LIPH outlet Harapan Indah
+1;118;LIPH KF Cikarang;Setoran LIPH outlet Cikarang
+1;118;LIPH KF Pekayon;Setoran LIPH outlet Pekayon
+1;118;LIPH KF Jati Asih;Setoran LIPH outlet Jati Asih
+1;118;LIPH KF Kalimalang;Setoran LIPH outlet Kalimalang
+1;118;LIPH KF Cibitung;Setoran LIPH outlet Cibitung
+1;118;LIPH KF Granwis;Setoran LIPH outlet Granwis
+1;118;LIPH KF Zamrud;Setoran LIPH outlet Zamrud
+1;118;LIPH KF Kali Abang;Setoran LIPH outlet Kali Abang
+1;118;LIPH KF Summarecon;Setoran LIPH outlet Summarecon
+1;118;Setoran Tunai Outlet Lain;Setoran tunai outlet lainnya
+1;121;QRIS Static KF Outlet;Pembayaran QRIS static outlet
+1;121;QRIS Dynamic;Pembayaran QRIS dynamic
+1;121;QRIS Merchant;Pembayaran QRIS merchant
+1;124;Klaim Asuransi Sinar Mas;Klaim dari Asuransi Sinar Mas
+1;124;Klaim Hanwha Life Insurance;Klaim dari Hanwha Life
+1;124;Klaim Perta Life Insurance;Klaim dari Perta Life
+1;124;Klaim Asuransi Lainnya;Klaim asuransi kesehatan lainnya
+1;126;BOP MG3 Bekasi;BOP bulanan MG3 Bekasi
+1;126;BOP BO Bekasi;BOP Branch Office Bekasi
+1;126;BOP Outlet Januari;BOP outlet bulan Januari
+1;126;BOP Outlet Februari;BOP outlet bulan Februari
+1;126;BOP Outlet Maret;BOP outlet bulan Maret
+1;126;BOP Outlet April;BOP outlet bulan April
+1;126;BOP Outlet Mei;BOP outlet bulan Mei
+1;126;BOP Outlet Juni;BOP outlet bulan Juni
+1;126;BOP Outlet Juli;BOP outlet bulan Juli
+1;126;BOP Outlet Agustus;BOP outlet bulan Agustus
+1;126;BOP Outlet September;BOP outlet bulan September
+1;126;BOP Outlet Oktober;BOP outlet bulan Oktober
+1;126;BOP Outlet November;BOP outlet bulan November
+1;126;BOP Outlet Desember;BOP outlet bulan Desember
+1;129;Listrik PLN Outlet Narogong;Pembayaran listrik outlet Narogong
+1;129;Listrik PLN Outlet Cikarang;Pembayaran listrik outlet Cikarang
+1;129;Listrik PLN Outlet Wisma Asri;Pembayaran listrik Wisma Asri
+1;129;Listrik PLN Kantor Pusat;Pembayaran listrik kantor pusat
+1;129;Listrik PLN Outlet Lainnya;Pembayaran listrik outlet lainnya
+1;133;Service AC Outlet Cikarang;Service AC outlet Cikarang
+1;133;Service AC Outlet Wisma;Service AC Wisma Asri
+1;133;Service AC Outlet Lainnya;Service AC outlet lainnya
+1;133;Service AC Kantor Pusat;Service AC kantor pusat
+1;137;Biaya Sewa - Umum - Umum;Sub kategori umum untuk Biaya Sewa - Umum
+1;138;Biaya Kebersihan & Keamanan - Umum - Umum;Sub kategori umum untuk Biaya Kebersihan & Keamanan - Umum
+1;139;Obat Generic dari Kimia Farma;Pembelian obat generic KF
+1;139;Obat Generic dari PBF;Pembelian obat generic PBF
+1;139;Obat Generic Lainnya;Obat generic distributor lain
+1;143;Meja & Kursi;Pembelian meja dan kursi
+1;143;Rak & Lemari;Pembelian rak dan lemari
+1;143;Furniture Display;Furniture display outlet
+1;146;ATK Kantor;Pembelian ATK kantor
+1;146;ATK Outlet;Pembelian ATK outlet
+1;149;Sticker & Spanduk - Umum;Sub kategori umum untuk Sticker & Spanduk
+1;152;Gaji Apoteker;Gaji apoteker penanggung jawab
+1;152;Gaji Asisten Apoteker;Gaji asisten apoteker
+1;152;Gaji Admin Outlet;Gaji admin/kasir outlet
+1;152;Gaji Manajemen;Gaji level manajemen
+1;152;Gaji Staff;Gaji staff umum
+1;155;Tunjangan Transport Karyawan Tetap;Transport karyawan tetap
+1;155;Tunjangan Transport Part-time;Transport part-time
+1;159;THR Lebaran;THR Idul Fitri
+1;159;THR Natal;THR Natal
+1;161;Jasa Praktik Spesialis Kalimalang;Jasa praktik spesialis KF Kalimalang
+1;161;Jasa Praktik Spesialis Lainnya;Jasa praktik spesialis outlet lain
+1;165;Reimburse Tiket Pesawat;Penggantian tiket pesawat
+1;165;Reimburse Hotel;Penggantian hotel
+1;165;Reimburse Transport Dinas;Transport perjalanan dinas
+1;168;Kimia Farma Apotek Pusat;Pembayaran KF Apotek pusat
+1;168;Kimia Farma Distribusi;Pembayaran KF distribusi
+1;168;Kimia Farma Trading;Pembayaran KF trading
+1;171;IT Support Hardware;Support hardware komputer
+1;171;IT Support Software;Support software & aplikasi
+1;171;IT Support Network;Support jaringan
+1;175;Percetakan Primagraphia;Primagraphia Digital PT
+1;175;Percetakan Lainnya;Vendor percetakan lainnya
+1;177;Transfer Fee BCA;Biaya transfer via BCA
+1;177;Transfer Fee BNI;Biaya transfer via BNI
+1;177;Transfer Fee Mandiri;Biaya transfer via Mandiri
+1;177;Transfer Fee Bank Lain;Biaya transfer bank lainnya
+1;180;Transfer Internal BCA;Transfer internal rekening BCA
+1;180;Transfer Internal BNI;Transfer internal rekening BNI
+1;180;Transfer Internal Mandiri;Transfer internal Mandiri
+1;182;Transfer ke Outlet Operasional;Transfer dana operasional outlet
+1;182;Transfer ke Outlet Emergency;Transfer emergency outlet
+1;185;Premi BPJS Kesehatan;Premi BPJS kesehatan karyawan
+1;185;Premi Asuransi Swasta;Premi asuransi kesehatan swasta
+1;188;Klaim Sinar Mas;Klaim dari Asuransi Sinar Mas
+1;188;Klaim Hanwha;Klaim dari Hanwha Life
+1;188;Klaim Perta;Klaim dari Perta Life
+1;190;Klaim Pasien Rawat Jalan;Pembayaran klaim pasien rawat jalan
+1;190;Klaim Pasien Rawat Inap;Pembayaran klaim pasien rawat inap
+1;191;PPh 21 Gaji Karyawan;PPh 21 dari gaji karyawan
+1;191;PPh 21 Bonus;PPh 21 dari bonus
+1;194;PPN Masukan Pembelian;PPN yang dibayar saat pembelian
+1;196;PBB Gedung Outlet;PBB gedung outlet
+1;196;PBB Kantor;PBB gedung kantor
+1;198;Pinjaman Diberikan - Umum - Umum;Sub kategori umum untuk Pinjaman Diberikan - Umum
+1;199;Pelunasan Pinjaman Diterima - Umum - Umum;Sub kategori umum untuk Pelunasan Pinjaman Diterima - Umum
+1;200;Bon Sementara Kranggan;Bon sementara outlet Kranggan
+1;200;Bon Sementara Outlet Lain;Bon sementara outlet lainnya
+1;203;Piutang - Umum - Umum;Sub kategori umum untuk Piutang - Umum
+1;204;LIPH Narogong;LIPH outlet Narogong
+1;204;LIPH Harapan Indah;LIPH outlet Harapan Indah
+1;204;LIPH Cikarang;LIPH outlet Cikarang
+1;204;LIPH Pekayon;LIPH outlet Pekayon
+1;204;LIPH Kalimalang;LIPH outlet Kalimalang
+1;204;LIPH Kali Abang;LIPH outlet Kali Abang
+1;204;LIPH Outlet Lainnya;LIPH outlet lainnya
+1;207;Kas Kecil Outlet - Umum - Umum;Sub kategori umum untuk Kas Kecil Outlet - Umum
+1;208;Rumat Wisma Asri;Rumah tangga Wisma Asri
+1;208;Rumat Cikarang;Rumah tangga Cikarang
+1;208;Rumat Outlet Lainnya;Rumah tangga outlet lainnya
+1;210;QRIS Static Outlet;Pembayaran QRIS static outlet
+1;212;EDC Debit BCA;Pembayaran EDC debit BCA
+1;212;EDC Debit Mandiri;Pembayaran EDC debit Mandiri
+1;212;EDC Debit BNI;Pembayaran EDC debit BNI
+1;214;Transaksi Tunai - Umum - Umum;Sub kategori umum untuk Transaksi Tunai - Umum
+1;215;ATMB Transfer Credit;Transfer via ATM Banking
+1;215;Mobile Banking Transfer;Transfer via mobile banking
+1;216;Koreksi Transaksi - Umum - Umum;Sub kategori umum untuk Koreksi Transaksi - Umum
+1;217;Refund & Return - Umum - Umum;Sub kategori umum untuk Refund & Return - Umum
+1;218;Investasi - Umum - Umum;Sub kategori umum untuk Investasi - Umum
+1;219;Dividen - Umum - Umum;Sub kategori umum untuk Dividen - Umum
+1;220;Lain-lain - Umum - Umum;Sub kategori umum untuk Lain-lain - Umum
+1;112;KF 264 Resep Suzi;Penjualan outlet resep Suzi (Narogong)
+1;112;KF 330 Resep HI;Penjualan outlet resep Harapan Indah
+1;112;KF 340 Resep KC;Penjualan outlet resep Cikarang
+1;112;KF 007 Resep CB;Penjualan outlet resep Cibitung
+1;112;KF Cakra Raya Resep;Penjualan outlet resep Cakra Raya
+1;116;Transfer Customer Retail;Transfer dari customer retail
+1;116;Transfer Customer Corporate;Transfer dari customer corporate
+1;116;Transfer Customer Online;Transfer dari pembelian online
+1;119;Setoran Klinik Wisma Asri;Setoran tunai Klinik Wisma Asri
+1;119;Setoran Klinik Lainnya;Setoran klinik lainnya
+1;122;OTOPAY QR KF Summarecon;OTOPAY QR outlet Summarecon
+1;122;OTOPAY QR Outlet Lain;OTOPAY QR outlet lainnya
+1;125;Klaim BPJS Kesehatan Rawat Jalan;Klaim BPJS rawat jalan
+1;125;Klaim BPJS Kesehatan Rawat Inap;Klaim BPJS rawat inap
+1;125;Klaim BPJS Obat;Klaim BPJS obat-obatan
+1;127;BOP Klinik Wisma Asri;BOP Klinik Wisma Asri
+1;127;BOP Klinik Lainnya;BOP klinik lainnya
+1;130;Air PDAM Outlet;Pembayaran air PDAM outlet
+1;130;Air PDAM Kantor Pusat;Pembayaran air PDAM kantor
+1;134;CCTV Outlet Cibitung;Instalasi/perbaikan CCTV Cibitung
+1;134;CCTV Outlet Daan;Instalasi/perbaikan CCTV Daan
+1;134;CCTV Outlet Lainnya;CCTV outlet lainnya
+1;140;Obat Paten Branded;Pembelian obat paten branded
+1;140;Obat Import;Pembelian obat import
+1;144;Komputer & Laptop;Pembelian komputer dan laptop
+1;144;Printer & Scanner;Pembelian printer scanner
+1;144;Perangkat Jaringan;Router, switch, access point
+1;147;Kantong Plastik;Pembelian kantong plastik
+1;147;Paper Bag;Pembelian paper bag
+1;147;Box Packaging;Box packaging obat
+1;150;Brosur & Leaflet - Umum;Sub kategori umum untuk Brosur & Leaflet
+1;153;Gaji Part-time Outlet;Gaji karyawan part-time outlet
+1;153;Gaji Part-time Admin;Gaji part-time admin
+1;156;Tunjangan Makan Harian;Tunjangan makan harian
+1;156;Tunjangan Makan Lembur;Tunjangan makan lembur
+1;160;Dinas Lebaran Zamrud;Dinas lebaran outlet Zamrud
+1;160;Dinas Lebaran Pekayon;Dinas lebaran outlet Pekayon
+1;160;Dinas Lebaran Outlet Lainnya;Dinas lebaran outlet lain
+1;162;Jasa Praktik Dokter Umum Klinik;Jasa dokter umum klinik
+1;166;Reimburse Bensin Karyawan;Penggantian bensin karyawan
+1;169;PBF Utama;Pembayaran PBF utama
+1;169;PBF Sekunder;Pembayaran PBF sekunder
+1;172;Cleaning Service Outlet;Jasa cleaning service outlet
+1;172;Cleaning Service Kantor;Jasa cleaning service kantor
+1;176;Supplier ATK Utama;Supplier ATK utama
+1;178;Admin Bank Bulanan;Biaya admin bulanan
+1;178;Biaya Materai;Biaya materai digital
+1;181;Pemindahan Antar Rekening;Pemindahan dana antar rekening
+1;183;Transfer dari Outlet Setoran;Penerimaan setoran outlet
+1;186;Premi Asuransi Jiwa Karyawan;Premi asuransi jiwa
+1;189;Klaim BPJS Rawat Jalan;Klaim BPJS rawat jalan
+1;189;Klaim BPJS Rawat Inap;Klaim BPJS rawat inap
+1;192;PPh 23 Jasa Profesional;PPh 23 jasa profesional
+1;192;PPh 23 Sewa;PPh 23 sewa
+1;195;PPN Keluaran Penjualan;PPN yang dipungut dari penjualan
+1;197;Pajak Motor Operasional;Pajak motor operasional
+1;197;Pajak Mobil Operasional;Pajak mobil operasional
+1;201;Bon Perbaikan Kali Abang;Bon perbaikan outlet Kali Abang
+1;201;Bon Perbaikan Outlet Lain;Bon perbaikan outlet lainnya
+1;205;LIPH Resep Narogong;LIPH outlet resep Narogong
+1;205;LIPH Resep Cikarang;LIPH outlet resep Cikarang
+1;209;Rumat Klinik Wisma;Rumah tangga Klinik Wisma
+1;211;QRIS Dynamic Transaction;Pembayaran QRIS dynamic
+1;213;EDC Credit Visa;Pembayaran kartu kredit Visa
+1;213;EDC Credit Mastercard;Pembayaran kartu kredit Mastercard
+1;113;Klinik KF Wisma Asri;Penjualan Klinik Wisma Asri
+1;113;Klinik Umum;Penjualan klinik umum
+1;117;Transfer Antar Outlet;Transfer internal antar outlet
+1;117;Transfer dari Pusat;Transfer dari kantor pusat
+1;117;Transfer Antar Cabang;Transfer antar cabang regional
+1;120;COD Obat;Pembayaran COD pembelian obat
+1;120;COD Alkes;Pembayaran COD alat kesehatan
+1;120;COD Layanan;Pembayaran COD layanan kesehatan
+1;123;Merchant QR BCA;Pembayaran via Merchant QR BCA
+1;123;Merchant QR Mandiri;Pembayaran via Merchant QR Mandiri
+1;123;Merchant QR Lainnya;Merchant QR bank lainnya
+1;128;Rumat KF Wisma Asri;Rumah tangga outlet Wisma Asri
+1;128;Rumat KF Cikarang;Rumah tangga outlet Cikarang
+1;128;Rumat KF Narogong;Rumah tangga outlet Narogong
+1;128;Rumat KF Kalimalang;Rumah tangga outlet Kalimalang
+1;128;Rumat Outlet Lainnya;Rumah tangga outlet lainnya
+1;131;Internet Indihome;Biaya internet Indihome
+1;131;Internet Corporate;Internet corporate dedicated
+1;131;Telepon Kantor;Biaya telepon kantor
+1;135;Maintenance PC/Komputer;Maintenance PC outlet
+1;135;Maintenance Printer;Maintenance printer outlet
+1;135;Maintenance Peralatan Medis;Maintenance peralatan medis
+1;141;Alat Medis;Pembelian alat medis
+1;141;Alat Kesehatan Personal;Alat kesehatan personal
+1;141;Consumables Medis;Pembelian consumables medis
+1;145;Peralatan Diagnostik;Peralatan diagnostik medis
+1;145;Peralatan Penunjang;Peralatan penunjang medis
+1;148;Pembersih & Disinfektan;Pembersih dan disinfektan
+1;148;Supplies Kebersihan;Tissue, sapu, pel, dll
+1;151;Merchandise - Umum;Sub kategori umum untuk Merchandise
+1;154;Fee Freelancer IT;Fee freelancer IT
+1;154;Fee Freelancer Marketing;Fee freelancer marketing
+1;157;Tunjangan Kesehatan Karyawan;Tunjangan kesehatan
+1;157;Asuransi Kesehatan Karyawan;Premi asuransi kesehatan
+1;163;Fee Apoteker Konsultasi;Fee konsultasi apoteker
+1;167;Reimburse Parkir;Penggantian parkir
+1;167;Reimburse Tol;Penggantian tol
+1;170;Distributor Alkes Utama;Distributor alkes utama
+1;170;Distributor Alkes Lainnya;Distributor alkes lainnya
+1;173;Security Outlet;Jasa security outlet
+1;173;Security Kantor;Jasa security kantor
+1;179;Biaya Kliring Cek;Biaya kliring cek
+1;179;Biaya Kliring Giro;Biaya kliring giro
+1;184;MCM InhouseTrf KE Karyawan;Transfer MCM ke karyawan
+1;184;MCM InhouseTrf DARI Vendor;Penerimaan MCM dari vendor
+1;184;MCM InhouseTrf Internal;Transfer MCM internal
+1;187;Premi Asuransi Gedung;Premi asuransi gedung/properti
+1;187;Premi Asuransi Inventaris;Premi asuransi inventaris
+1;193;PPh Final Usaha;PPh final usaha
+1;202;Bon Pembelian Operasional;Bon pembelian kebutuhan operasional
+1;206;LIPH Klinik Wisma Asri;LIPH Klinik Wisma Asri
+1;114;Alat Kesehatan Medis;Penjualan alat kesehatan medis
+1;114;Alat Kesehatan Personal;Penjualan alat kesehatan personal
+1;114;Consumables Medis;Penjualan consumables medis
+1;132;IPL KF Outlet;IPL gedung outlet
+1;132;IPL Kantor;IPL gedung kantor
+1;136;Renovasi Outlet;Renovasi dan perbaikan outlet
+1;136;Cat & Pengecatan;Pengecatan gedung
+1;136;Perbaikan Atap;Perbaikan atap gedung
+1;142;Obat Cold Chain;Pembelian obat cold chain
+1;142;Obat Narkotika & Psikotropika;Pembelian obat narkotika
+1;142;Obat Onkologi;Pembelian obat onkologi
+1;158;Bonus Target Penjualan;Bonus achievement target
+1;158;Bonus Kinerja Tahunan;Bonus kinerja tahunan
+1;164;Fee Konsultan IT;Fee konsultan IT
+1;164;Fee Konsultan Bisnis;Fee konsultan bisnis
+1;174;Pest Control Rutin;Jasa pest control rutin
+1;174;Pest Control Emergency;Pest control emergency
+1;256;ATK Kantor;Pembelian ATK kantor
+1;256;ATK Outlet;Pembelian ATK outlet
+1;259;Sticker & Spanduk - Umum;Sub kategori umum untuk Sticker & Spanduk
+1;262;Gaji Apoteker;Gaji apoteker penanggung jawab
+1;262;Gaji Asisten Apoteker;Gaji asisten apoteker
+1;262;Gaji Admin Outlet;Gaji admin/kasir outlet
+1;262;Gaji Manajemen;Gaji level manajemen
+1;262;Gaji Staff;Gaji staff umum
+1;265;Tunjangan Transport Karyawan Tetap;Transport karyawan tetap
+1;265;Tunjangan Transport Part-time;Transport part-time
+1;269;THR Lebaran;THR Idul Fitri
+1;269;THR Natal;THR Natal
+1;271;Jasa Praktik Spesialis Kalimalang;Jasa praktik spesialis KF Kalimalang
+1;271;Jasa Praktik Spesialis Lainnya;Jasa praktik spesialis outlet lain
+1;275;Reimburse Tiket Pesawat;Penggantian tiket pesawat
+1;275;Reimburse Hotel;Penggantian hotel
+1;275;Reimburse Transport Dinas;Transport perjalanan dinas
+1;278;Kimia Farma Apotek Pusat;Pembayaran KF Apotek pusat
+1;278;Kimia Farma Distribusi;Pembayaran KF distribusi
+1;278;Kimia Farma Trading;Pembayaran KF trading
+1;281;IT Support Hardware;Support hardware komputer
+1;281;IT Support Software;Support software & aplikasi
+1;281;IT Support Network;Support jaringan
+1;285;Percetakan Primagraphia;Primagraphia Digital PT
+1;285;Percetakan Lainnya;Vendor percetakan lainnya
+1;287;Transfer Fee BCA;Biaya transfer via BCA
+1;287;Transfer Fee BNI;Biaya transfer via BNI
+1;287;Transfer Fee Mandiri;Biaya transfer via Mandiri
+1;287;Transfer Fee Bank Lain;Biaya transfer bank lainnya
+1;290;Transfer Internal BCA;Transfer internal rekening BCA
+1;290;Transfer Internal BNI;Transfer internal rekening BNI
+1;290;Transfer Internal Mandiri;Transfer internal Mandiri
+1;292;Transfer ke Outlet Operasional;Transfer dana operasional outlet
+1;292;Transfer ke Outlet Emergency;Transfer emergency outlet
+1;295;Premi BPJS Kesehatan;Premi BPJS kesehatan karyawan
+1;295;Premi Asuransi Swasta;Premi asuransi kesehatan swasta
+1;298;Klaim Sinar Mas;Klaim dari Asuransi Sinar Mas
+1;298;Klaim Hanwha;Klaim dari Hanwha Life
+1;298;Klaim Perta;Klaim dari Perta Life
+1;300;Klaim Pasien Rawat Jalan;Pembayaran klaim pasien rawat jalan
+1;300;Klaim Pasien Rawat Inap;Pembayaran klaim pasien rawat inap
+1;301;PPh 21 Gaji Karyawan;PPh 21 dari gaji karyawan
+1;301;PPh 21 Bonus;PPh 21 dari bonus
+1;304;PPN Masukan Pembelian;PPN yang dibayar saat pembelian
+1;306;PBB Gedung Outlet;PBB gedung outlet
+1;306;PBB Kantor;PBB gedung kantor
+1;308;Pinjaman Diberikan - Umum - Umum;Sub kategori umum untuk Pinjaman Diberikan - Umum
+1;309;Pelunasan Pinjaman Diterima - Umum - Umum;Sub kategori umum untuk Pelunasan Pinjaman Diterima - Umum
+1;310;Bon Sementara Kranggan;Bon sementara outlet Kranggan
+1;310;Bon Sementara Outlet Lain;Bon sementara outlet lainnya
+1;313;Piutang - Umum - Umum;Sub kategori umum untuk Piutang - Umum
+1;314;LIPH Narogong;LIPH outlet Narogong
+1;314;LIPH Harapan Indah;LIPH outlet Harapan Indah
+1;314;LIPH Cikarang;LIPH outlet Cikarang
+1;314;LIPH Pekayon;LIPH outlet Pekayon
+1;314;LIPH Kalimalang;LIPH outlet Kalimalang
+1;314;LIPH Kali Abang;LIPH outlet Kali Abang
+1;314;LIPH Outlet Lainnya;LIPH outlet lainnya
+1;317;Kas Kecil Outlet - Umum - Umum;Sub kategori umum untuk Kas Kecil Outlet - Umum
+1;318;Rumat Wisma Asri;Rumah tangga Wisma Asri
+1;318;Rumat Cikarang;Rumah tangga Cikarang
+1;318;Rumat Outlet Lainnya;Rumah tangga outlet lainnya
+1;320;QRIS Static Outlet;Pembayaran QRIS static outlet
+1;322;EDC Debit BCA;Pembayaran EDC debit BCA
+1;322;EDC Debit Mandiri;Pembayaran EDC debit Mandiri
+1;322;EDC Debit BNI;Pembayaran EDC debit BNI
+1;324;Transaksi Tunai - Umum - Umum;Sub kategori umum untuk Transaksi Tunai - Umum
+1;325;ATMB Transfer Credit;Transfer via ATM Banking
+1;325;Mobile Banking Transfer;Transfer via mobile banking
+1;326;Koreksi Transaksi - Umum - Umum;Sub kategori umum untuk Koreksi Transaksi - Umum
+1;327;Refund & Return - Umum - Umum;Sub kategori umum untuk Refund & Return - Umum
+1;328;Investasi - Umum - Umum;Sub kategori umum untuk Investasi - Umum
+1;329;Dividen - Umum - Umum;Sub kategori umum untuk Dividen - Umum
+1;330;Lain-lain - Umum - Umum;Sub kategori umum untuk Lain-lain - Umum
+1;221;KF 0264 Narogong;Penjualan outlet Narogong
+1;221;KF 0330 Harapan Indah;Penjualan outlet Harapan Indah
+1;221;KF 0340 Cikarang;Penjualan outlet Cikarang
+1;221;KF 0347 Pekayon;Penjualan outlet Pekayon
+1;221;KF 0367 Jati Asih;Penjualan outlet Jati Asih
+1;221;KF 0390 Cakung Gede;Penjualan outlet Cakung Gede
+1;221;KF 0405 Daan;Penjualan outlet Daan
+1;221;KF 0406 Kalimalang;Penjualan outlet Kalimalang
+1;221;KF 0007 Cibitung;Penjualan outlet Cibitung
+1;221;KF 0456 Granwis;Penjualan outlet Granwis
+1;221;KF 0503 Taman Mini;Penjualan outlet Taman Mini
+1;221;KF 0586 Cileungsi;Penjualan outlet Cileungsi
+1;221;KF 0591 Zamrud;Penjualan outlet Zamrud
+1;221;KF 0624 CISC;Penjualan outlet CISC
+1;221;KF 0618 Kranji;Penjualan outlet Kranji
+1;221;KF 0810 Kintamani;Penjualan outlet Kintamani
+1;221;KF 0944 Parungkd;Penjualan outlet Parungkd
+1;221;KF Cakra Raya;Penjualan outlet Cakra Raya
+1;221;KF Kali Abang Bekasi;Penjualan outlet Kali Abang
+1;221;KF Jati Rahayu;Penjualan outlet Jati Rahayu
+1;221;KF Rawa Lumbu;Penjualan outlet Rawa Lumbu
+1;221;KF Sepat;Penjualan outlet Sepat
+1;221;KF Boulevard;Penjualan outlet Boulevard
+1;221;KF Summarecon;Penjualan Apotek KF Summarecon
+1;221;KF Kota Serang;Penjualan outlet Kota Serang
+1;225;Transfer dari Kimia Farma Apotek;Transfer masuk dari KF Apotek
+1;225;Transfer dari Kimia Farma Trading;Transfer dari KF Trading
+1;225;Transfer dari PBF;Transfer dari Pedagang Besar Farmasi
+1;225;Transfer dari Distributor Obat;Transfer dari distributor obat lainnya
+1;228;LIPH KF Narogong;Setoran LIPH outlet Narogong
+1;228;LIPH KF Harapan Indah;Setoran LIPH outlet Harapan Indah
+1;228;LIPH KF Cikarang;Setoran LIPH outlet Cikarang
+1;228;LIPH KF Pekayon;Setoran LIPH outlet Pekayon
+1;228;LIPH KF Jati Asih;Setoran LIPH outlet Jati Asih
+1;228;LIPH KF Kalimalang;Setoran LIPH outlet Kalimalang
+1;228;LIPH KF Cibitung;Setoran LIPH outlet Cibitung
+1;228;LIPH KF Granwis;Setoran LIPH outlet Granwis
+1;228;LIPH KF Zamrud;Setoran LIPH outlet Zamrud
+1;228;LIPH KF Kali Abang;Setoran LIPH outlet Kali Abang
+1;228;LIPH KF Summarecon;Setoran LIPH outlet Summarecon
+1;228;Setoran Tunai Outlet Lain;Setoran tunai outlet lainnya
+1;231;QRIS Static KF Outlet;Pembayaran QRIS static outlet
+1;231;QRIS Dynamic;Pembayaran QRIS dynamic
+1;231;QRIS Merchant;Pembayaran QRIS merchant
+1;234;Klaim Asuransi Sinar Mas;Klaim dari Asuransi Sinar Mas
+1;234;Klaim Hanwha Life Insurance;Klaim dari Hanwha Life
+1;234;Klaim Perta Life Insurance;Klaim dari Perta Life
+1;234;Klaim Asuransi Lainnya;Klaim asuransi kesehatan lainnya
+1;236;BOP MG3 Bekasi;BOP bulanan MG3 Bekasi
+1;236;BOP BO Bekasi;BOP Branch Office Bekasi
+1;236;BOP Outlet Januari;BOP outlet bulan Januari
+1;236;BOP Outlet Februari;BOP outlet bulan Februari
+1;236;BOP Outlet Maret;BOP outlet bulan Maret
+1;236;BOP Outlet April;BOP outlet bulan April
+1;236;BOP Outlet Mei;BOP outlet bulan Mei
+1;236;BOP Outlet Juni;BOP outlet bulan Juni
+1;236;BOP Outlet Juli;BOP outlet bulan Juli
+1;236;BOP Outlet Agustus;BOP outlet bulan Agustus
+1;236;BOP Outlet September;BOP outlet bulan September
+1;236;BOP Outlet Oktober;BOP outlet bulan Oktober
+1;236;BOP Outlet November;BOP outlet bulan November
+1;236;BOP Outlet Desember;BOP outlet bulan Desember
+1;239;Listrik PLN Outlet Narogong;Pembayaran listrik outlet Narogong
+1;239;Listrik PLN Outlet Cikarang;Pembayaran listrik outlet Cikarang
+1;239;Listrik PLN Outlet Wisma Asri;Pembayaran listrik Wisma Asri
+1;239;Listrik PLN Kantor Pusat;Pembayaran listrik kantor pusat
+1;239;Listrik PLN Outlet Lainnya;Pembayaran listrik outlet lainnya
+1;243;Service AC Outlet Cikarang;Service AC outlet Cikarang
+1;243;Service AC Outlet Wisma;Service AC Wisma Asri
+1;243;Service AC Outlet Lainnya;Service AC outlet lainnya
+1;243;Service AC Kantor Pusat;Service AC kantor pusat
+1;247;Biaya Sewa - Umum - Umum;Sub kategori umum untuk Biaya Sewa - Umum
+1;248;Biaya Kebersihan & Keamanan - Umum - Umum;Sub kategori umum untuk Biaya Kebersihan & Keamanan - Umum
+1;249;Obat Generic dari Kimia Farma;Pembelian obat generic KF
+1;249;Obat Generic dari PBF;Pembelian obat generic PBF
+1;249;Obat Generic Lainnya;Obat generic distributor lain
+1;253;Meja & Kursi;Pembelian meja dan kursi
+1;253;Rak & Lemari;Pembelian rak dan lemari
+1;253;Furniture Display;Furniture display outlet
+1;257;Kantong Plastik;Pembelian kantong plastik
+1;257;Paper Bag;Pembelian paper bag
+1;257;Box Packaging;Box packaging obat
+1;260;Brosur & Leaflet - Umum;Sub kategori umum untuk Brosur & Leaflet
+1;263;Gaji Part-time Outlet;Gaji karyawan part-time outlet
+1;263;Gaji Part-time Admin;Gaji part-time admin
+1;266;Tunjangan Makan Harian;Tunjangan makan harian
+1;266;Tunjangan Makan Lembur;Tunjangan makan lembur
+1;270;Dinas Lebaran Zamrud;Dinas lebaran outlet Zamrud
+1;270;Dinas Lebaran Pekayon;Dinas lebaran outlet Pekayon
+1;270;Dinas Lebaran Outlet Lainnya;Dinas lebaran outlet lain
+1;272;Jasa Praktik Dokter Umum Klinik;Jasa dokter umum klinik
+1;276;Reimburse Bensin Karyawan;Penggantian bensin karyawan
+1;279;PBF Utama;Pembayaran PBF utama
+1;279;PBF Sekunder;Pembayaran PBF sekunder
+1;282;Cleaning Service Outlet;Jasa cleaning service outlet
+1;282;Cleaning Service Kantor;Jasa cleaning service kantor
+1;286;Supplier ATK Utama;Supplier ATK utama
+1;288;Admin Bank Bulanan;Biaya admin bulanan
+1;288;Biaya Materai;Biaya materai digital
+1;291;Pemindahan Antar Rekening;Pemindahan dana antar rekening
+1;293;Transfer dari Outlet Setoran;Penerimaan setoran outlet
+1;296;Premi Asuransi Jiwa Karyawan;Premi asuransi jiwa
+1;299;Klaim BPJS Rawat Jalan;Klaim BPJS rawat jalan
+1;299;Klaim BPJS Rawat Inap;Klaim BPJS rawat inap
+1;302;PPh 23 Jasa Profesional;PPh 23 jasa profesional
+1;302;PPh 23 Sewa;PPh 23 sewa
+1;305;PPN Keluaran Penjualan;PPN yang dipungut dari penjualan
+1;307;Pajak Motor Operasional;Pajak motor operasional
+1;307;Pajak Mobil Operasional;Pajak mobil operasional
+1;311;Bon Perbaikan Kali Abang;Bon perbaikan outlet Kali Abang
+1;311;Bon Perbaikan Outlet Lain;Bon perbaikan outlet lainnya
+1;315;LIPH Resep Narogong;LIPH outlet resep Narogong
+1;315;LIPH Resep Cikarang;LIPH outlet resep Cikarang
+1;319;Rumat Klinik Wisma;Rumah tangga Klinik Wisma
+1;321;QRIS Dynamic Transaction;Pembayaran QRIS dynamic
+1;323;EDC Credit Visa;Pembayaran kartu kredit Visa
+1;323;EDC Credit Mastercard;Pembayaran kartu kredit Mastercard
+1;222;KF 264 Resep Suzi;Penjualan outlet resep Suzi (Narogong)
+1;222;KF 330 Resep HI;Penjualan outlet resep Harapan Indah
+1;222;KF 340 Resep KC;Penjualan outlet resep Cikarang
+1;222;KF 007 Resep CB;Penjualan outlet resep Cibitung
+1;222;KF Cakra Raya Resep;Penjualan outlet resep Cakra Raya
+1;226;Transfer Customer Retail;Transfer dari customer retail
+1;226;Transfer Customer Corporate;Transfer dari customer corporate
+1;226;Transfer Customer Online;Transfer dari pembelian online
+1;229;Setoran Klinik Wisma Asri;Setoran tunai Klinik Wisma Asri
+1;229;Setoran Klinik Lainnya;Setoran klinik lainnya
+1;232;OTOPAY QR KF Summarecon;OTOPAY QR outlet Summarecon
+1;232;OTOPAY QR Outlet Lain;OTOPAY QR outlet lainnya
+1;235;Klaim BPJS Kesehatan Rawat Jalan;Klaim BPJS rawat jalan
+1;235;Klaim BPJS Kesehatan Rawat Inap;Klaim BPJS rawat inap
+1;235;Klaim BPJS Obat;Klaim BPJS obat-obatan
+1;237;BOP Klinik Wisma Asri;BOP Klinik Wisma Asri
+1;237;BOP Klinik Lainnya;BOP klinik lainnya
+1;240;Air PDAM Outlet;Pembayaran air PDAM outlet
+1;240;Air PDAM Kantor Pusat;Pembayaran air PDAM kantor
+1;244;CCTV Outlet Cibitung;Instalasi/perbaikan CCTV Cibitung
+1;244;CCTV Outlet Daan;Instalasi/perbaikan CCTV Daan
+1;244;CCTV Outlet Lainnya;CCTV outlet lainnya
+1;250;Obat Paten Branded;Pembelian obat paten branded
+1;250;Obat Import;Pembelian obat import
+1;254;Komputer & Laptop;Pembelian komputer dan laptop
+1;254;Printer & Scanner;Pembelian printer scanner
+1;254;Perangkat Jaringan;Router, switch, access point
+1;258;Pembersih & Disinfektan;Pembersih dan disinfektan
+1;258;Supplies Kebersihan;Tissue, sapu, pel, dll
+1;261;Merchandise - Umum;Sub kategori umum untuk Merchandise
+1;264;Fee Freelancer IT;Fee freelancer IT
+1;264;Fee Freelancer Marketing;Fee freelancer marketing
+1;267;Tunjangan Kesehatan Karyawan;Tunjangan kesehatan
+1;267;Asuransi Kesehatan Karyawan;Premi asuransi kesehatan
+1;273;Fee Apoteker Konsultasi;Fee konsultasi apoteker
+1;277;Reimburse Parkir;Penggantian parkir
+1;277;Reimburse Tol;Penggantian tol
+1;280;Distributor Alkes Utama;Distributor alkes utama
+1;280;Distributor Alkes Lainnya;Distributor alkes lainnya
+1;283;Security Outlet;Jasa security outlet
+1;283;Security Kantor;Jasa security kantor
+1;289;Biaya Kliring Cek;Biaya kliring cek
+1;289;Biaya Kliring Giro;Biaya kliring giro
+1;294;MCM InhouseTrf KE Karyawan;Transfer MCM ke karyawan
+1;294;MCM InhouseTrf DARI Vendor;Penerimaan MCM dari vendor
+1;294;MCM InhouseTrf Internal;Transfer MCM internal
+1;297;Premi Asuransi Gedung;Premi asuransi gedung/properti
+1;297;Premi Asuransi Inventaris;Premi asuransi inventaris
+1;303;PPh Final Usaha;PPh final usaha
+1;312;Bon Pembelian Operasional;Bon pembelian kebutuhan operasional
+1;316;LIPH Klinik Wisma Asri;LIPH Klinik Wisma Asri
+1;223;Klinik KF Wisma Asri;Penjualan Klinik Wisma Asri
+1;223;Klinik Umum;Penjualan klinik umum
+1;227;Transfer Antar Outlet;Transfer internal antar outlet
+1;227;Transfer dari Pusat;Transfer dari kantor pusat
+1;227;Transfer Antar Cabang;Transfer antar cabang regional
+1;230;COD Obat;Pembayaran COD pembelian obat
+1;230;COD Alkes;Pembayaran COD alat kesehatan
+1;230;COD Layanan;Pembayaran COD layanan kesehatan
+1;233;Merchant QR BCA;Pembayaran via Merchant QR BCA
+1;233;Merchant QR Mandiri;Pembayaran via Merchant QR Mandiri
+1;233;Merchant QR Lainnya;Merchant QR bank lainnya
+1;238;Rumat KF Wisma Asri;Rumah tangga outlet Wisma Asri
+1;238;Rumat KF Cikarang;Rumah tangga outlet Cikarang
+1;238;Rumat KF Narogong;Rumah tangga outlet Narogong
+1;238;Rumat KF Kalimalang;Rumah tangga outlet Kalimalang
+1;238;Rumat Outlet Lainnya;Rumah tangga outlet lainnya
+1;241;Internet Indihome;Biaya internet Indihome
+1;241;Internet Corporate;Internet corporate dedicated
+1;241;Telepon Kantor;Biaya telepon kantor
+1;245;Maintenance PC/Komputer;Maintenance PC outlet
+1;245;Maintenance Printer;Maintenance printer outlet
+1;245;Maintenance Peralatan Medis;Maintenance peralatan medis
+1;251;Alat Medis;Pembelian alat medis
+1;251;Alat Kesehatan Personal;Alat kesehatan personal
+1;251;Consumables Medis;Pembelian consumables medis
+1;255;Peralatan Diagnostik;Peralatan diagnostik medis
+1;255;Peralatan Penunjang;Peralatan penunjang medis
+1;268;Bonus Target Penjualan;Bonus achievement target
+1;268;Bonus Kinerja Tahunan;Bonus kinerja tahunan
+1;274;Fee Konsultan IT;Fee konsultan IT
+1;274;Fee Konsultan Bisnis;Fee konsultan bisnis
+1;284;Pest Control Rutin;Jasa pest control rutin
+1;284;Pest Control Emergency;Pest control emergency
+1;224;Alat Kesehatan Medis;Penjualan alat kesehatan medis
+1;224;Alat Kesehatan Personal;Penjualan alat kesehatan personal
+1;224;Consumables Medis;Penjualan consumables medis
+1;242;IPL KF Outlet;IPL gedung outlet
+1;242;IPL Kantor;IPL gedung kantor
+1;246;Renovasi Outlet;Renovasi dan perbaikan outlet
+1;246;Cat & Pengecatan;Pengecatan gedung
+1;246;Perbaikan Atap;Perbaikan atap gedung
+1;252;Obat Cold Chain;Pembelian obat cold chain
+1;252;Obat Narkotika & Psikotropika;Pembelian obat narkotika
+1;252;Obat Onkologi;Pembelian obat onkologi

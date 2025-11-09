@@ -14,73 +14,112 @@ class KeywordSeeder extends Seeder
     /**
      * Run the database seeds.
      * 
-     * ULTRA FULL VERSION - Comprehensive Keywords
-     * Berdasarkan analisis 26,357 transaksi bank real
+     * CSV VERSION - Import from keywords.csv
      * 
      * Note: Seeder ini membutuhkan:
+     * - Companies table sudah terisi (CompanySeeder)
+     * - Types table sudah terisi (TypeSeeder)
+     * - Categories table sudah terisi (CategorySeeder)
      * - SubCategories table sudah terisi (SubCategorySeeder)
+     * - File database/seeders/data/keywords.csv harus ada
      */
     public function run(): void
     {
-        $this->command->info('🔑 Seeding Keywords (ULTRA FULL VERSION)...');
+        $this->command->info('🔑 Seeding Keywords from CSV...');
         $this->command->newLine();
         
         $this->now = Carbon::now();
 
-        // Get all sub-categories
-        $subCategories = DB::table('sub_categories')
-            ->select('id', 'company_id', 'name')
-            ->orderBy('company_id')
-            ->orderBy('priority', 'desc')
-            ->get();
+        // Path ke file CSV
+        $csvPath = database_path('seeders/data/keywords.csv');
+        
+        // Validasi file CSV exists
+        if (!file_exists($csvPath)) {
+            $this->command->error('❌ CSV file not found at: ' . $csvPath);
+            $this->command->info('💡 Please create the file at: database/seeders/data/keywords.csv');
+            return;
+        }
+
+        // Ambil companies
+        $companies = DB::table('companies')->get();
+        
+        if ($companies->isEmpty()) {
+            $this->command->error('❌ No companies found! Please run CompanySeeder first.');
+            return;
+        }
+
+        // Ambil sub-categories
+        $subCategories = DB::table('sub_categories')->get();
         
         if ($subCategories->isEmpty()) {
             $this->command->error('❌ No sub-categories found! Please run SubCategorySeeder first.');
             return;
         }
 
-        $this->command->info("   Processing {$subCategories->count()} sub-categories...");
+        // Baca dan parse CSV
+        $keywords = $this->readCsvFile($csvPath);
+        
+        if ($keywords->isEmpty()) {
+            $this->command->error('❌ No data found in CSV file!');
+            return;
+        }
+
+        $this->command->info("📄 Found {$keywords->count()} keywords in CSV");
+        $this->command->newLine();
 
         $allKeywords = [];
-        $keywordsCreated = 0;
-        
-        // Get comprehensive keyword mappings
-        $keywordMappings = $this->getKeywordMappings();
 
-        // Generate keywords for each sub-category
-        foreach ($subCategories as $subCategory) {
-            $subCategoryName = $subCategory->name;
+        // Generate keywords untuk setiap company
+        foreach ($companies as $company) {
+            $this->command->info("   Processing company: {$company->name}");
             
-            // Check if we have specific keywords for this sub-category
-            if (isset($keywordMappings[$subCategoryName])) {
-                foreach ($keywordMappings[$subCategoryName] as $keyword) {
-                    $allKeywords[] = $this->makeKeyword(
-                        $subCategory->company_id,
-                        $subCategory->id,
-                        $keyword
-                    );
-                    $keywordsCreated++;
+            // Filter keywords untuk company ini dari CSV
+            $companyKeywords = $keywords->where('company_id', $company->id);
+            
+            foreach ($companyKeywords as $keyword) {
+                // Cari sub_category_id yang sesuai untuk company ini
+                $subCategory = $subCategories->where('company_id', $company->id)
+                                            ->where('id', $keyword['sub_category_id'])
+                                            ->first();
+                
+                if (!$subCategory) {
+                    $this->command->warn("   ⚠️  SubCategory ID {$keyword['sub_category_id']} not found for company {$company->id}, skipping...");
+                    continue;
                 }
-            } else {
-                // Add generic fallback keyword
-                $genericKeyword = strtolower(str_replace([' - ', ' ', '/'], ['_', '_', '_'], $subCategoryName));
-                $allKeywords[] = $this->makeKeyword(
-                    $subCategory->company_id,
-                    $subCategory->id,
-                    [
-                        'keyword' => $genericKeyword,
-                        'match_type' => 'contains',
-                        'priority' => 5,
-                        'is_regex' => false,
-                        'pattern_description' => "Generic fallback for {$subCategoryName}",
-                    ]
-                );
-                $keywordsCreated++;
+
+                $allKeywords[] = [
+                    'uuid' => Str::uuid(),
+                    'company_id' => $company->id,
+                    'sub_category_id' => $subCategory->id,
+                    'keyword' => $keyword['keyword'],
+                    'is_regex' => $keyword['is_regex'],
+                    'case_sensitive' => $keyword['case_sensitive'],
+                    'match_type' => $keyword['match_type'],
+                    'pattern_description' => $keyword['pattern_description'],
+                    'min_amount' => $keyword['min_amount'],
+                    'max_amount' => $keyword['max_amount'],
+                    'valid_days' => $keyword['valid_days'],
+                    'valid_months' => $keyword['valid_months'],
+                    'priority' => $keyword['priority'],
+                    'is_active' => $keyword['is_active'],
+                    'match_count' => $keyword['match_count'],
+                    'last_matched_at' => $keyword['last_matched_at'],
+                    'auto_learned' => $keyword['auto_learned'],
+                    'learning_source' => $keyword['learning_source'],
+                    'effectiveness_score' => $keyword['effectiveness_score'],
+                    'false_positive_count' => $keyword['false_positive_count'],
+                    'true_positive_count' => $keyword['true_positive_count'],
+                    'last_reviewed_at' => $keyword['last_reviewed_at'],
+                    'reviewed_by' => $keyword['reviewed_by'],
+                    'created_at' => $this->now->copy()->subDays(rand(5, 120)),
+                    'updated_at' => $this->now,
+                    'deleted_at' => null,
+                ];
             }
         }
 
         if (!empty($allKeywords)) {
-            // Insert in chunks
+            // Insert in chunks to avoid memory issues
             $chunks = array_chunk($allKeywords, 200);
             foreach ($chunks as $chunk) {
                 DB::table('keywords')->insert($chunk);
@@ -88,390 +127,165 @@ class KeywordSeeder extends Seeder
             
             $this->command->newLine();
             $this->command->info('✅ Keywords seeded successfully!');
-            $this->command->info("   Total keywords: {$keywordsCreated}");
+            $this->command->info("   Total keywords created: " . count($allKeywords));
+            $this->command->info("   Companies: " . $companies->count());
             
             $this->displayStatistics();
         } else {
-            $this->command->warn('⚠️  No keywords created. Check if sub-categories exist.');
+            $this->command->warn('⚠️  No keywords created. Check if sub-categories and companies exist.');
         }
     }
 
     /**
-     * Get comprehensive keyword mappings
-     * Berdasarkan pola transaksi real dari 26,357 data
+     * Read and parse CSV file
+     * 
+     * @param string $csvPath
+     * @return \Illuminate\Support\Collection
      */
-    private function getKeywordMappings(): array
+    private function readCsvFile(string $csvPath): \Illuminate\Support\Collection
     {
-        return [
-            // ========================================
-            // KEYWORDS: PENJUALAN OUTLET (Priority 10)
-            // ========================================
-            'KF 0264 Narogong' => [
-                ['keyword' => 'KF 0264', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF number match'],
-                ['keyword' => 'KF0264', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF number no space'],
-                ['keyword' => 'KF 264', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false, 'pattern_description' => 'KF number no zero'],
-                ['keyword' => 'NAROGONG', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Location name'],
-                ['keyword' => '0264', 'match_type' => 'contains', 'priority' => 8, 'is_regex' => false, 'pattern_description' => 'Number only'],
-            ],
+        $keywords = collect();
+        
+        try {
+            $file = fopen($csvPath, 'r');
+            
+            if ($file === false) {
+                throw new \Exception('Failed to open CSV file');
+            }
 
-            'KF 0330 Harapan Indah' => [
-                ['keyword' => 'KF 0330', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF number match'],
-                ['keyword' => 'KF0330', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF number no space'],
-                ['keyword' => 'HARAPAN INDAH', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Location name'],
-                ['keyword' => 'HARAPAN INDA', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false, 'pattern_description' => 'Common typo'],
-                ['keyword' => '0330', 'match_type' => 'contains', 'priority' => 8, 'is_regex' => false, 'pattern_description' => 'Number only'],
-            ],
+            // Skip header row
+            $header = fgetcsv($file, 0, ';'); // Delimiter adalah semicolon
+            
+            // Validasi header
+            $expectedHeaders = [
+                'company_id', 'sub_category_id', 'keyword', 'is_regex', 
+                'case_sensitive', 'match_type', 'pattern_description', 
+                'min_amount', 'max_amount', 'valid_days', 'valid_months',
+                'priority', 'is_active', 'match_count', 'last_matched_at',
+                'auto_learned', 'learning_source', 'effectiveness_score',
+                'false_positive_count', 'true_positive_count', 
+                'last_reviewed_at', 'reviewed_by'
+            ];
+            
+            if ($header !== $expectedHeaders) {
+                $this->command->warn('⚠️  CSV header format mismatch');
+                $this->command->warn('    Expected: ' . implode(', ', $expectedHeaders));
+                $this->command->warn('    Got: ' . implode(', ', $header));
+            }
 
-            'KF 0340 Cikarang' => [
-                ['keyword' => 'KF 0340', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF number match'],
-                ['keyword' => 'KF0340', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF number no space'],
-                ['keyword' => 'KF CIKARANG', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF + location'],
-                ['keyword' => 'CIKARANG', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false, 'pattern_description' => 'Location name'],
-                ['keyword' => 'CKRG', 'match_type' => 'contains', 'priority' => 7, 'is_regex' => false, 'pattern_description' => 'Abbreviation'],
-            ],
+            // Baca setiap baris
+            $lineNumber = 1;
+            while (($row = fgetcsv($file, 0, ';')) !== false) {
+                $lineNumber++;
+                
+                // Skip empty rows
+                if (empty($row[0]) && empty($row[1]) && empty($row[2])) {
+                    continue;
+                }
 
-            'KF 0347 Pekayon' => [
-                ['keyword' => 'KF 0347', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF number match'],
-                ['keyword' => 'PEKAYON', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Location name'],
-                ['keyword' => 'KF PEKAYON', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF + location'],
-            ],
+                // Validasi data minimal
+                if (count($row) < 22) {
+                    $this->command->warn("   ⚠️  Line {$lineNumber}: Incomplete data (expected 22 columns, got " . count($row) . "), skipping...");
+                    continue;
+                }
 
-            'KF 0367 Jati Asih' => [
-                ['keyword' => 'KF 0367', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF number match'],
-                ['keyword' => 'JATI ASIH', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Location name'],
-                ['keyword' => 'JATIASIH', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false, 'pattern_description' => 'No space variant'],
-                ['keyword' => 'KF JATIASIH', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF + location'],
-            ],
+                // Parse dan konversi data
+                $keywords->push([
+                    'company_id' => (int) trim($row[0]),
+                    'sub_category_id' => (int) trim($row[1]),
+                    'keyword' => trim($row[2]),
+                    'is_regex' => (bool) (int) trim($row[3]),
+                    'case_sensitive' => (bool) (int) trim($row[4]),
+                    'match_type' => trim($row[5]),
+                    'pattern_description' => trim($row[6]),
+                    'min_amount' => $this->parseNullableDecimal($row[7]),
+                    'max_amount' => $this->parseNullableDecimal($row[8]),
+                    'valid_days' => $this->parseNullableJson($row[9]),
+                    'valid_months' => $this->parseNullableJson($row[10]),
+                    'priority' => (int) trim($row[11]),
+                    'is_active' => (bool) (int) trim($row[12]),
+                    'match_count' => (int) trim($row[13]),
+                    'last_matched_at' => $this->parseNullableDateTime($row[14]),
+                    'auto_learned' => (bool) (int) trim($row[15]),
+                    'learning_source' => $this->parseNullableString($row[16]),
+                    'effectiveness_score' => $this->parseNullableDecimal($row[17]),
+                    'false_positive_count' => (int) trim($row[18]),
+                    'true_positive_count' => (int) trim($row[19]),
+                    'last_reviewed_at' => $this->parseNullableDateTime($row[20]),
+                    'reviewed_by' => $this->parseNullableInt($row[21]),
+                ]);
+            }
 
-            'KF 0406 Kalimalang' => [
-                ['keyword' => 'KF 0406', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF number match'],
-                ['keyword' => 'KALIMALANG', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Location name'],
-                ['keyword' => 'KF KALIMALANG', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF + location'],
-                ['keyword' => 'KRG', 'match_type' => 'contains', 'priority' => 6, 'is_regex' => false, 'pattern_description' => 'Abbreviation'],
-            ],
+            fclose($file);
 
-            'KF 0007 Cibitung' => [
-                ['keyword' => 'KF 0007', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF number match'],
-                ['keyword' => 'KF 007', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF number no leading zero'],
-                ['keyword' => 'CIBITUNG', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Location name'],
-                ['keyword' => 'KF CIBITUNG', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF + location'],
-            ],
+            return $keywords;
 
-            'KF 0456 Granwis' => [
-                ['keyword' => 'KF 0456', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF number match'],
-                ['keyword' => 'GRANWIS', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Location name'],
-                ['keyword' => 'KF GRANWIS', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF + location'],
-                ['keyword' => 'GRANWISATA', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false, 'pattern_description' => 'Full location name'],
-            ],
-
-            'KF 0591 Zamrud' => [
-                ['keyword' => 'KF 0591', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF number match'],
-                ['keyword' => 'ZAMRUD', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Location name'],
-                ['keyword' => 'KF ZAMRUD', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF + location'],
-            ],
-
-            'KF 0624 CISC' => [
-                ['keyword' => 'KF 0624', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF number match'],
-                ['keyword' => 'KF0624', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF number no space'],
-                ['keyword' => 'CISC', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Location code'],
-                ['keyword' => 'GGC', 'match_type' => 'contains', 'priority' => 8, 'is_regex' => false, 'pattern_description' => 'Alternative code'],
-            ],
-
-            'KF Wisma Asri' => [
-                ['keyword' => 'WISMA ASRI', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Full location name'],
-                ['keyword' => 'KF WISMA', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF + location'],
-                ['keyword' => 'KFWISMA', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false, 'pattern_description' => 'No space variant'],
-                ['keyword' => 'WISMA', 'match_type' => 'contains', 'priority' => 7, 'is_regex' => false, 'pattern_description' => 'Short form'],
-            ],
-
-            'KF Kali Abang Bekasi' => [
-                ['keyword' => 'KALI ABANG', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Location name'],
-                ['keyword' => 'KALIABANG', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'No space variant'],
-                ['keyword' => 'KF KALIABANG', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF + location'],
-            ],
-
-            'KF Summarecon' => [
-                ['keyword' => 'SUMMARECON', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Location name'],
-                ['keyword' => 'KF SUMMARECON', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF + location'],
-                ['keyword' => 'SUMMA', 'match_type' => 'contains', 'priority' => 7, 'is_regex' => false, 'pattern_description' => 'Abbreviation'],
-            ],
-
-            // ========================================
-            // KEYWORDS: OUTLET RESEP
-            // ========================================
-            'KF 264 Resep Suzi' => [
-                ['keyword' => 'RESEP SUZI', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Resep identifier'],
-                ['keyword' => 'KF.*264.*RESEP', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'KF + number + resep'],
-                ['keyword' => 'RESEP.*264', 'match_type' => 'regex', 'priority' => 9, 'is_regex' => true, 'pattern_description' => 'Resep + number'],
-            ],
-
-            'KF 330 Resep HI' => [
-                ['keyword' => 'RESEP HI', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Resep identifier'],
-                ['keyword' => 'KF.*330.*RESEP', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'KF + number + resep'],
-            ],
-
-            'KF 340 Resep KC' => [
-                ['keyword' => 'RESEP KC', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Resep identifier'],
-                ['keyword' => 'KF.*340.*RESEP', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'KF + number + resep'],
-            ],
-
-            'KF 007 Resep CB' => [
-                ['keyword' => 'RESEP CB', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Resep identifier'],
-                ['keyword' => 'KF.*007.*RESEP', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'KF + number + resep'],
-            ],
-
-            // ========================================
-            // KEYWORDS: KLINIK
-            // ========================================
-            'Klinik KF Wisma Asri' => [
-                ['keyword' => 'KLINIK.*WISMA', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'Klinik + Wisma'],
-                ['keyword' => 'KLINIK KF WISMA', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Full klinik name'],
-                ['keyword' => 'KLINIK WISMA ASRI', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Klinik location'],
-            ],
-
-            // ========================================
-            // KEYWORDS: SETOR TUNAI / LIPH
-            // ========================================
-            'LIPH KF Narogong' => [
-                ['keyword' => 'LIPH.*0264', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'LIPH + KF number'],
-                ['keyword' => 'LIPH.*NAROGONG', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'LIPH + location'],
-                ['keyword' => 'LIPH KF.*0264', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'LIPH KF + number'],
-            ],
-
-            'LIPH KF Harapan Indah' => [
-                ['keyword' => 'LIPH.*0330', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'LIPH + KF number'],
-                ['keyword' => 'LIPH.*HARAPAN', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'LIPH + location'],
-            ],
-
-            'LIPH KF Cikarang' => [
-                ['keyword' => 'LIPH.*0340', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'LIPH + KF number'],
-                ['keyword' => 'LIPH.*CIKARANG', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'LIPH + location'],
-                ['keyword' => 'LIPH KF CIKARANG', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Full LIPH name'],
-            ],
-
-            'LIPH KF Kalimalang' => [
-                ['keyword' => 'LIPH.*0406', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'LIPH + KF number'],
-                ['keyword' => 'LIPH.*KALIMALANG', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'LIPH + location'],
-            ],
-
-            'LIPH KF Kali Abang' => [
-                ['keyword' => 'LIPH.*KALIABANG', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'LIPH + location'],
-                ['keyword' => 'LIPH KF KALIABANG', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Full LIPH name'],
-            ],
-
-            'LIPH KF Summarecon' => [
-                ['keyword' => 'LIPH.*SUMMARECON', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'LIPH + location'],
-                ['keyword' => 'LIPH KF SUMMARECON', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Full LIPH name'],
-            ],
-
-            'Setoran Klinik Wisma Asri' => [
-                ['keyword' => 'KLINIK.*WISMA.*SETOR', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'Klinik setoran'],
-                ['keyword' => 'SETOR.*KLINIK.*WISMA', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'Setoran klinik'],
-            ],
-
-            // ========================================
-            // KEYWORDS: QR CODE PAYMENT
-            // ========================================
-            'QRIS Static Outlet' => [
-                ['keyword' => 'QR.*STATIC', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'QR static pattern'],
-                ['keyword' => 'QRIS.*STATIC', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'QRIS static'],
-            ],
-
-            'OTOPAY QR KF Summarecon' => [
-                ['keyword' => 'OTOPAY.*QR.*SUMMARECON', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'OTOPAY Summarecon'],
-                ['keyword' => 'OTOPAY QR', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false, 'pattern_description' => 'OTOPAY general'],
-            ],
-
-            // ========================================
-            // KEYWORDS: KLAIM ASURANSI
-            // ========================================
-            'Klaim Asuransi Sinar Mas' => [
-                ['keyword' => 'ASURANSI SINAR MAS', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Sinar Mas insurance'],
-                ['keyword' => 'SINAR MAS', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false, 'pattern_description' => 'Company name'],
-            ],
-
-            'Klaim Hanwha Life Insurance' => [
-                ['keyword' => 'HANWHA LIFE', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Hanwha insurance'],
-                ['keyword' => 'HANWHA', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false, 'pattern_description' => 'Company name'],
-            ],
-
-            'Klaim Perta Life Insurance' => [
-                ['keyword' => 'PERTA LIFE', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Perta insurance'],
-                ['keyword' => 'PERTA', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false, 'pattern_description' => 'Company name'],
-            ],
-
-            // ========================================
-            // KEYWORDS: BOP (Biaya Operasional)
-            // ========================================
-            'BOP MG3 Bekasi' => [
-                ['keyword' => 'BOP.*MG3.*BEKASI', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'BOP MG3'],
-                ['keyword' => 'MG3 BEKASI', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'MG3 location'],
-            ],
-
-            'BOP BO Bekasi' => [
-                ['keyword' => 'BO.*BEKASI', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'BO Bekasi'],
-                ['keyword' => 'TBHBO BEKASI', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'TBH BO'],
-            ],
-
-            'BOP Outlet Januari' => [
-                ['keyword' => 'BOP.*JANUARI', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'BOP month January'],
-            ],
-
-            'BOP Outlet Februari' => [
-                ['keyword' => 'BOP.*FEBRUARI', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'BOP month February'],
-                ['keyword' => 'BOP FEBRUARI 2025', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'BOP Feb 2025'],
-            ],
-
-            'Rumat KF Wisma Asri' => [
-                ['keyword' => 'RUMAT.*WISMA', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'Rumat Wisma'],
-                ['keyword' => 'RUMATKFWISMA', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Rumat no space'],
-                ['keyword' => 'RUMAT KF WISMA', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Full rumat name'],
-            ],
-
-            // ========================================
-            // KEYWORDS: UTILITAS
-            // ========================================
-            'Listrik PLN Kantor Pusat' => [
-                ['keyword' => 'PERUSAHAAN LISTRIK NEGARA', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'PLN full name'],
-                ['keyword' => 'LISTRIK NEGARA', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false, 'pattern_description' => 'PLN short'],
-            ],
-
-            'IPL KF Outlet' => [
-                ['keyword' => 'IPL.*KF', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'IPL + KF'],
-                ['keyword' => 'IPL', 'match_type' => 'contains', 'priority' => 7, 'is_regex' => false, 'pattern_description' => 'IPL general'],
-            ],
-
-            // ========================================
-            // KEYWORDS: MAINTENANCE
-            // ========================================
-            'Service AC Outlet Cikarang' => [
-                ['keyword' => 'SERVICE.*AC.*CIKARANG', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'AC service Cikarang'],
-                ['keyword' => 'SERVICE AC2 KF CKRG', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'AC service pattern'],
-            ],
-
-            'CCTV Outlet Cibitung' => [
-                ['keyword' => 'CCTV.*CIBITUNG', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'CCTV Cibitung'],
-            ],
-
-            'CCTV Outlet Daan' => [
-                ['keyword' => 'CCTV.*POGE', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'CCTV Daan (POGE)'],
-                ['keyword' => 'PENGADAAN CCTV', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false, 'pattern_description' => 'CCTV procurement'],
-            ],
-
-            'Maintenance PC/Komputer' => [
-                ['keyword' => 'PC.*OUTLET', 'match_type' => 'regex', 'priority' => 9, 'is_regex' => true, 'pattern_description' => 'PC outlet'],
-                ['keyword' => 'TBH.*PC', 'match_type' => 'regex', 'priority' => 9, 'is_regex' => true, 'pattern_description' => 'Additional PC'],
-                ['keyword' => 'BS.*PC.*KF', 'match_type' => 'regex', 'priority' => 9, 'is_regex' => true, 'pattern_description' => 'PC maintenance'],
-            ],
-
-            // ========================================
-            // KEYWORDS: PEMBELIAN MARKETING
-            // ========================================
-            'Sticker KF Summarecon' => [
-                ['keyword' => 'STICKER.*KF.*SMC', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'Sticker SMC'],
-                ['keyword' => 'STICKER KF', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false, 'pattern_description' => 'Sticker general'],
-            ],
-
-            'Percetakan Primagraphia' => [
-                ['keyword' => 'PRIMAGRAPHIA', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Primagraphia company'],
-                ['keyword' => 'PRIMAGRAPHIA DIGITAL', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Full company name'],
-            ],
-
-            // ========================================
-            // KEYWORDS: PAYROLL - THR & DINAS
-            // ========================================
-            'Dinas Lebaran Zamrud' => [
-                ['keyword' => 'DINAS.*LEBRAN.*ZAMRUD', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'Dinas Zamrud'],
-                ['keyword' => 'DINAS LEBARAN ZAMRUD', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Full dinas name'],
-            ],
-
-            'Dinas Lebaran Pekayon' => [
-                ['keyword' => 'DINAS.*LEBRAN.*PEKAYON', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'Dinas Pekayon'],
-                ['keyword' => 'DINAS LBRAN PEKAYON', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Dinas abbr'],
-            ],
-
-            'Jasa Praktik Spesialis Kalimalang' => [
-                ['keyword' => 'JASA PRAKTEK SPESIALIS.*KALIMALANG', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'Doctor fee'],
-                ['keyword' => 'JASA PRAKTEK SPESIALIS KF KALIMALANG', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Full doctor fee'],
-            ],
-
-            // ========================================
-            // KEYWORDS: BON KARYAWAN
-            // ========================================
-            'Bon Sementara Kranggan' => [
-                ['keyword' => 'BON.*SEMENTARA.*KRANGGAN', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'Bon Kranggan'],
-                ['keyword' => 'KF KRANGGAN BON', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Kranggan bon'],
-            ],
-
-            'Bon Perbaikan Kali Abang' => [
-                ['keyword' => 'BON.*PERBAIKAN.*KALIABANG', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'Bon repair'],
-                ['keyword' => 'KALIABANG BON PERBAIKAN', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'Full bon name'],
-            ],
-
-            // ========================================
-            // KEYWORDS: VENDOR
-            // ========================================
-            'Kimia Farma Apotek Pusat' => [
-                ['keyword' => 'KIMIA FARMA APOTEK', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'KF Apotek'],
-                ['keyword' => 'DARI KIMIA FARMA', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'From KF'],
-                ['keyword' => 'KE KIMIA FARMA', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'To KF'],
-            ],
-
-            // ========================================
-            // KEYWORDS: TRANSFER & BANKING
-            // ========================================
-            'Transfer Fee BCA' => [
-                ['keyword' => 'TRANSFER FEE.*BCA', 'match_type' => 'regex', 'priority' => 10, 'is_regex' => true, 'pattern_description' => 'BCA fee'],
-                ['keyword' => 'TRANSFER FEE', 'match_type' => 'contains', 'priority' => 8, 'is_regex' => false, 'pattern_description' => 'General transfer fee'],
-            ],
-
-            'MCM InhouseTrf KE Karyawan' => [
-                ['keyword' => 'MCM INHOUSETRF KE', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'MCM to employee'],
-                ['keyword' => 'INHOUSETRF KE', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false, 'pattern_description' => 'Inhouse to'],
-            ],
-
-            'MCM InhouseTrf DARI Vendor' => [
-                ['keyword' => 'MCM INHOUSETRF DARI', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'MCM from vendor'],
-                ['keyword' => 'INHOUSETRF DARI', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false, 'pattern_description' => 'Inhouse from'],
-            ],
-
-            'ATMB Transfer Credit' => [
-                ['keyword' => 'ATMB TRF', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'ATM Banking transfer'],
-                ['keyword' => 'ATMB TRF CREDT', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'ATM transfer credit'],
-            ],
-
-            // ========================================
-            // KEYWORDS: KODE BANK
-            // ========================================
-            'Transfer dari Kimia Farma Apotek' => [
-                ['keyword' => 'KIMIA FARMA APOTEK', 'match_type' => 'contains', 'priority' => 10, 'is_regex' => false, 'pattern_description' => 'From KF Apotek'],
-                ['keyword' => 'IRKF BEKASI', 'match_type' => 'contains', 'priority' => 9, 'is_regex' => false, 'pattern_description' => 'IR KF Bekasi'],
-            ],
-        ];
+        } catch (\Exception $e) {
+            $this->command->error('❌ Error reading CSV: ' . $e->getMessage());
+            return collect();
+        }
     }
 
     /**
-     * Make keyword array
+     * Parse nullable string
      */
-    private function makeKeyword(int $companyId, int $subCategoryId, array $data): array
+    private function parseNullableString($value): ?string
     {
-        return [
-            'uuid' => Str::uuid(),
-            'company_id' => $companyId,
-            'sub_category_id' => $subCategoryId,
-            'keyword' => $data['keyword'],
-            'is_regex' => $data['is_regex'],
-            'case_sensitive' => false,
-            'match_type' => $data['match_type'],
-            'pattern_description' => $data['pattern_description'],
-            'priority' => $data['priority'],
-            'is_active' => true,
-            'match_count' => 0,
-            'last_matched_at' => null,
-            'created_at' => $this->now->copy()->subDays(rand(5, 120)),
-            'updated_at' => $this->now,
-            'deleted_at' => null,
-        ];
+        $trimmed = trim($value);
+        return ($trimmed === '' || strtoupper($trimmed) === 'NULL') ? null : $trimmed;
+    }
+
+    /**
+     * Parse nullable integer
+     */
+    private function parseNullableInt($value): ?int
+    {
+        $trimmed = trim($value);
+        return ($trimmed === '' || strtoupper($trimmed) === 'NULL') ? null : (int) $trimmed;
+    }
+
+    /**
+     * Parse nullable decimal
+     */
+    private function parseNullableDecimal($value): ?float
+    {
+        $trimmed = trim($value);
+        return ($trimmed === '' || strtoupper($trimmed) === 'NULL') ? null : (float) $trimmed;
+    }
+
+    /**
+     * Parse nullable datetime
+     */
+    private function parseNullableDateTime($value): ?string
+    {
+        $trimmed = trim($value);
+        if ($trimmed === '' || strtoupper($trimmed) === 'NULL') {
+            return null;
+        }
+        
+        try {
+            return Carbon::parse($trimmed)->format('Y-m-d H:i:s');
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Parse nullable JSON
+     */
+    private function parseNullableJson($value): ?string
+    {
+        $trimmed = trim($value);
+        if ($trimmed === '' || strtoupper($trimmed) === 'NULL') {
+            return null;
+        }
+        
+        // Jika sudah JSON format, return as is
+        if (json_decode($trimmed) !== null) {
+            return $trimmed;
+        }
+        
+        return null;
     }
 
     /**
@@ -492,7 +306,7 @@ class KeywordSeeder extends Seeder
         $this->command->newLine();
         $this->command->info('📋 Match Type Distribution:');
         foreach ($matchTypes as $type) {
-            $bar = str_repeat('█', min($type->count / 10, 30));
+            $bar = str_repeat('█', min((int)($type->count / 10), 30));
             $this->command->info(sprintf("   %-15s %s (%d)", $type->match_type, $bar, $type->count));
         }
 
@@ -506,7 +320,8 @@ class KeywordSeeder extends Seeder
         $this->command->info('🔍 Pattern Complexity:');
         foreach ($regexStats as $stat) {
             $type = $stat->is_regex ? 'Regex patterns' : 'Simple patterns';
-            $percent = round(($stat->count / array_sum(array_column($regexStats->toArray(), 'count'))) * 100, 1);
+            $total = array_sum(array_column($regexStats->toArray(), 'count'));
+            $percent = $total > 0 ? round(($stat->count / $total) * 100, 1) : 0;
             $this->command->info(sprintf("   %-20s %d (%s%%)", $type, $stat->count, $percent));
         }
 
@@ -520,8 +335,34 @@ class KeywordSeeder extends Seeder
         $this->command->newLine();
         $this->command->info('🎯 Priority Distribution:');
         foreach ($priorities as $prio) {
-            $bar = str_repeat('█', min($prio->count / 10, 30));
+            $bar = str_repeat('█', min((int)($prio->count / 10), 30));
             $this->command->info(sprintf("   Priority %d: %s (%d)", $prio->priority, $bar, $prio->count));
+        }
+
+        // Learning source distribution
+        $learningSources = DB::table('keywords')
+            ->select('learning_source', DB::raw('count(*) as count'))
+            ->groupBy('learning_source')
+            ->get();
+
+        $this->command->newLine();
+        $this->command->info('📚 Learning Source Distribution:');
+        foreach ($learningSources as $source) {
+            $sourceName = $source->learning_source ?? 'manual';
+            $this->command->info(sprintf("   %-20s %d keywords", $sourceName, $source->count));
+        }
+
+        // Auto-learned vs manual
+        $autoLearnedStats = DB::table('keywords')
+            ->select('auto_learned', DB::raw('count(*) as count'))
+            ->groupBy('auto_learned')
+            ->get();
+
+        $this->command->newLine();
+        $this->command->info('🤖 Auto-Learning Statistics:');
+        foreach ($autoLearnedStats as $stat) {
+            $type = $stat->auto_learned ? 'Auto-learned' : 'Manual';
+            $this->command->info(sprintf("   %-20s %d keywords", $type, $stat->count));
         }
 
         // Top sub-categories
@@ -536,13 +377,30 @@ class KeywordSeeder extends Seeder
         $this->command->newLine();
         $this->command->info('🏆 Top 10 Sub-Categories by Keywords:');
         foreach ($topSubs as $idx => $sub) {
-            $this->command->info(sprintf("   %2d. %-50s %d keywords", $idx + 1, $sub->name, $sub->keyword_count));
+            $this->command->info(sprintf("   %2d. %-50s %d keywords", 
+                $idx + 1, 
+                substr($sub->name, 0, 50), 
+                $sub->keyword_count
+            ));
+        }
+
+        // Active vs Inactive
+        $activeStats = DB::table('keywords')
+            ->select('is_active', DB::raw('count(*) as count'))
+            ->groupBy('is_active')
+            ->get();
+
+        $this->command->newLine();
+        $this->command->info('✅ Active Status:');
+        foreach ($activeStats as $stat) {
+            $status = $stat->is_active ? 'Active' : 'Inactive';
+            $this->command->info(sprintf("   %-20s %d keywords", $status, $stat->count));
         }
 
         $total = DB::table('keywords')->count();
         $this->command->newLine();
         $this->command->info("Total Keywords: {$total}");
         $this->command->newLine();
-        $this->command->info('💡 Keywords are optimized for high-accuracy transaction matching!');
+        $this->command->info('💡 Keywords are ready for high-accuracy transaction matching!');
     }
 }

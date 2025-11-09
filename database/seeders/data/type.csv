@@ -1,0 +1,142 @@
+﻿company_id;name;description
+1;Penerimaan Penjualan;Penerimaan dari penjualan produk/obat di outlet (LIPH, Setor Tunai outlet)
+1;Penerimaan Transfer;Penerimaan uang via transfer bank dari customer atau pihak lain
+1;Penerimaan Tunai;Penerimaan uang tunai (Setor Tunai, COD)
+1;Penerimaan QR Code;Penerimaan pembayaran via QR Code (QRIS, OTOPAY)
+1;Penerimaan Klaim Asuransi;Penerimaan klaim dari asuransi kesehatan
+1;Biaya Operasional Outlet;BOP, biaya operasional harian outlet (listrik, air, maintenance)
+1;Biaya Utilitas;Pembayaran listrik (PLN), air, internet, telepon
+1;Biaya Maintenance & Perbaikan;Service AC, perbaikan CCTV, maintenance peralatan
+1;Biaya Sewa;Sewa tempat, sewa kendaraan, sewa peralatan
+1;Biaya Kebersihan & Keamanan;Cleaning service, security, pest control
+1;Pembelian Obat & Alkes;Pembelian obat-obatan dan alat kesehatan dari distributor
+1;Pembelian Inventaris;Pembelian barang inventaris (furniture, elektronik, komputer)
+1;Pembelian Supplies;Pembelian supplies kantor (ATK, printer, toner)
+1;Pembelian Marketing Material;Pembelian sticker, spanduk, brosur, merchandise
+1;Gaji Karyawan;Pembayaran gaji bulanan karyawan tetap
+1;Tunjangan & Bonus;Tunjangan karyawan (transport, makan, kesehatan) dan bonus
+1;THR & Dinas Lebaran;THR (Tunjangan Hari Raya) dan dinas lebaran karyawan
+1;Honor & Fee Professional;Jasa praktik spesialis, honor dokter, konsultan
+1;Reimburse Karyawan;Penggantian biaya karyawan (perjalanan dinas, bensin)
+1;Pembayaran Vendor Obat;Pembayaran ke distributor obat (Kimia Farma, PBF)
+1;Pembayaran Vendor Service;Pembayaran vendor jasa (IT support, service AC, cleaning)
+1;Pembayaran Vendor Supplies;Pembayaran vendor supplies (percetakan, ATK)
+1;Transfer Fee & Admin Bank;Biaya transfer, admin bank, biaya transaksi
+1;Transfer Antar Rekening;Transfer internal antar rekening perusahaan
+1;Transfer Antar Cabang;Transfer dana antar outlet/cabang (MCM InhouseTrf)
+1;Premi Asuransi;Pembayaran premi asuransi (kesehatan, jiwa, properti)
+1;Klaim Asuransi Masuk;Penerimaan klaim dari asuransi
+1;Klaim Asuransi Keluar;Pembayaran klaim ke pasien/customer
+1;Pajak Penghasilan;Pembayaran PPh 21, PPh 23, PPh Final
+1;PPN & PPnBM;Pembayaran PPN, PPnBM
+1;Pajak Lainnya;PBB, pajak kendaraan, retribusi
+1;Pinjaman Diberikan;Pemberian pinjaman ke karyawan atau pihak lain
+1;Pelunasan Pinjaman Diterima;Penerimaan pelunasan pinjaman dari peminjam
+1;Bon Karyawan;Bon sementara, bon pembelian karyawan
+1;Piutang;Piutang usaha, tagihan ke customer
+1;Setoran Outlet;Setoran penjualan harian dari outlet (LIPH)
+1;Kas Kecil Outlet;Pengeluaran kas kecil outlet untuk operasional
+1;Rumah Tangga Outlet;Biaya rumah tangga outlet (rumat), operasional harian
+1;Transaksi QR Code;Transaksi via QR Code (QRIS, OTOPAY QR)
+1;Transaksi EDC;Transaksi via mesin EDC, kartu debit/kredit
+1;Transaksi Tunai;Transaksi pembayaran tunai (cash)
+1;Transaksi Mobile Banking;Transaksi via mobile banking/ATM
+1;Koreksi Transaksi;Koreksi, reversal, atau penyesuaian transaksi
+1;Refund & Return;Pengembalian dana ke customer, retur barang
+1;Investasi;Investasi jangka pendek/panjang
+1;Dividen;Pembagian dividen ke pemegang saham
+1;Lain-lain;Transaksi yang tidak termasuk kategori lainnya
+1;Penerimaan Penjualan;Penerimaan dari penjualan produk/obat di outlet (LIPH, Setor Tunai outlet)
+1;Penerimaan Transfer;Penerimaan uang via transfer bank dari customer atau pihak lain
+1;Penerimaan Tunai;Penerimaan uang tunai (Setor Tunai, COD)
+1;Penerimaan QR Code;Penerimaan pembayaran via QR Code (QRIS, OTOPAY)
+1;Penerimaan Klaim Asuransi;Penerimaan klaim dari asuransi kesehatan
+1;Biaya Operasional Outlet;BOP, biaya operasional harian outlet (listrik, air, maintenance)
+1;Biaya Utilitas;Pembayaran listrik (PLN), air, internet, telepon
+1;Biaya Maintenance & Perbaikan;Service AC, perbaikan CCTV, maintenance peralatan
+1;Biaya Sewa;Sewa tempat, sewa kendaraan, sewa peralatan
+1;Biaya Kebersihan & Keamanan;Cleaning service, security, pest control
+1;Pembelian Obat & Alkes;Pembelian obat-obatan dan alat kesehatan dari distributor
+1;Pembelian Inventaris;Pembelian barang inventaris (furniture, elektronik, komputer)
+1;Pembelian Supplies;Pembelian supplies kantor (ATK, printer, toner)
+1;Pembelian Marketing Material;Pembelian sticker, spanduk, brosur, merchandise
+1;Gaji Karyawan;Pembayaran gaji bulanan karyawan tetap
+1;Tunjangan & Bonus;Tunjangan karyawan (transport, makan, kesehatan) dan bonus
+1;THR & Dinas Lebaran;THR (Tunjangan Hari Raya) dan dinas lebaran karyawan
+1;Honor & Fee Professional;Jasa praktik spesialis, honor dokter, konsultan
+1;Reimburse Karyawan;Penggantian biaya karyawan (perjalanan dinas, bensin)
+1;Pembayaran Vendor Obat;Pembayaran ke distributor obat (Kimia Farma, PBF)
+1;Pembayaran Vendor Service;Pembayaran vendor jasa (IT support, service AC, cleaning)
+1;Pembayaran Vendor Supplies;Pembayaran vendor supplies (percetakan, ATK)
+1;Transfer Fee & Admin Bank;Biaya transfer, admin bank, biaya transaksi
+1;Transfer Antar Rekening;Transfer internal antar rekening perusahaan
+1;Transfer Antar Cabang;Transfer dana antar outlet/cabang (MCM InhouseTrf)
+1;Premi Asuransi;Pembayaran premi asuransi (kesehatan, jiwa, properti)
+1;Klaim Asuransi Masuk;Penerimaan klaim dari asuransi
+1;Klaim Asuransi Keluar;Pembayaran klaim ke pasien/customer
+1;Pajak Penghasilan;Pembayaran PPh 21, PPh 23, PPh Final
+1;PPN & PPnBM;Pembayaran PPN, PPnBM
+1;Pajak Lainnya;PBB, pajak kendaraan, retribusi
+1;Pinjaman Diberikan;Pemberian pinjaman ke karyawan atau pihak lain
+1;Pelunasan Pinjaman Diterima;Penerimaan pelunasan pinjaman dari peminjam
+1;Bon Karyawan;Bon sementara, bon pembelian karyawan
+1;Piutang;Piutang usaha, tagihan ke customer
+1;Setoran Outlet;Setoran penjualan harian dari outlet (LIPH)
+1;Kas Kecil Outlet;Pengeluaran kas kecil outlet untuk operasional
+1;Rumah Tangga Outlet;Biaya rumah tangga outlet (rumat), operasional harian
+1;Transaksi QR Code;Transaksi via QR Code (QRIS, OTOPAY QR)
+1;Transaksi EDC;Transaksi via mesin EDC, kartu debit/kredit
+1;Transaksi Tunai;Transaksi pembayaran tunai (cash)
+1;Transaksi Mobile Banking;Transaksi via mobile banking/ATM
+1;Koreksi Transaksi;Koreksi, reversal, atau penyesuaian transaksi
+1;Refund & Return;Pengembalian dana ke customer, retur barang
+1;Investasi;Investasi jangka pendek/panjang
+1;Dividen;Pembagian dividen ke pemegang saham
+1;Lain-lain;Transaksi yang tidak termasuk kategori lainnya
+1;Penerimaan Penjualan;Penerimaan dari penjualan produk/obat di outlet (LIPH, Setor Tunai outlet)
+1;Penerimaan Transfer;Penerimaan uang via transfer bank dari customer atau pihak lain
+1;Penerimaan Tunai;Penerimaan uang tunai (Setor Tunai, COD)
+1;Penerimaan QR Code;Penerimaan pembayaran via QR Code (QRIS, OTOPAY)
+1;Penerimaan Klaim Asuransi;Penerimaan klaim dari asuransi kesehatan
+1;Biaya Operasional Outlet;BOP, biaya operasional harian outlet (listrik, air, maintenance)
+1;Biaya Utilitas;Pembayaran listrik (PLN), air, internet, telepon
+1;Biaya Maintenance & Perbaikan;Service AC, perbaikan CCTV, maintenance peralatan
+1;Biaya Sewa;Sewa tempat, sewa kendaraan, sewa peralatan
+1;Biaya Kebersihan & Keamanan;Cleaning service, security, pest control
+1;Pembelian Obat & Alkes;Pembelian obat-obatan dan alat kesehatan dari distributor
+1;Pembelian Inventaris;Pembelian barang inventaris (furniture, elektronik, komputer)
+1;Pembelian Supplies;Pembelian supplies kantor (ATK, printer, toner)
+1;Pembelian Marketing Material;Pembelian sticker, spanduk, brosur, merchandise
+1;Gaji Karyawan;Pembayaran gaji bulanan karyawan tetap
+1;Tunjangan & Bonus;Tunjangan karyawan (transport, makan, kesehatan) dan bonus
+1;THR & Dinas Lebaran;THR (Tunjangan Hari Raya) dan dinas lebaran karyawan
+1;Honor & Fee Professional;Jasa praktik spesialis, honor dokter, konsultan
+1;Reimburse Karyawan;Penggantian biaya karyawan (perjalanan dinas, bensin)
+1;Pembayaran Vendor Obat;Pembayaran ke distributor obat (Kimia Farma, PBF)
+1;Pembayaran Vendor Service;Pembayaran vendor jasa (IT support, service AC, cleaning)
+1;Pembayaran Vendor Supplies;Pembayaran vendor supplies (percetakan, ATK)
+1;Transfer Fee & Admin Bank;Biaya transfer, admin bank, biaya transaksi
+1;Transfer Antar Rekening;Transfer internal antar rekening perusahaan
+1;Transfer Antar Cabang;Transfer dana antar outlet/cabang (MCM InhouseTrf)
+1;Premi Asuransi;Pembayaran premi asuransi (kesehatan, jiwa, properti)
+1;Klaim Asuransi Masuk;Penerimaan klaim dari asuransi
+1;Klaim Asuransi Keluar;Pembayaran klaim ke pasien/customer
+1;Pajak Penghasilan;Pembayaran PPh 21, PPh 23, PPh Final
+1;PPN & PPnBM;Pembayaran PPN, PPnBM
+1;Pajak Lainnya;PBB, pajak kendaraan, retribusi
+1;Pinjaman Diberikan;Pemberian pinjaman ke karyawan atau pihak lain
+1;Pelunasan Pinjaman Diterima;Penerimaan pelunasan pinjaman dari peminjam
+1;Bon Karyawan;Bon sementara, bon pembelian karyawan
+1;Piutang;Piutang usaha, tagihan ke customer
+1;Setoran Outlet;Setoran penjualan harian dari outlet (LIPH)
+1;Kas Kecil Outlet;Pengeluaran kas kecil outlet untuk operasional
+1;Rumah Tangga Outlet;Biaya rumah tangga outlet (rumat), operasional harian
+1;Transaksi QR Code;Transaksi via QR Code (QRIS, OTOPAY QR)
+1;Transaksi EDC;Transaksi via mesin EDC, kartu debit/kredit
+1;Transaksi Tunai;Transaksi pembayaran tunai (cash)
+1;Transaksi Mobile Banking;Transaksi via mobile banking/ATM
+1;Koreksi Transaksi;Koreksi, reversal, atau penyesuaian transaksi
+1;Refund & Return;Pengembalian dana ke customer, retur barang
+1;Investasi;Investasi jangka pendek/panjang
+1;Dividen;Pembagian dividen ke pemegang saham
+1;Lain-lain;Transaksi yang tidak termasuk kategori lainnya

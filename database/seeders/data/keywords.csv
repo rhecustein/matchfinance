@@ -1,0 +1,1099 @@
+﻿company_id;sub_category_id;keyword;is_regex;case_sensitive;match_type;pattern_description;min_amount;max_amount;valid_days;valid_months;priority;is_active;match_count;last_matched_at;auto_learned;learning_source;effectiveness_score;false_positive_count;true_positive_count;last_reviewed_at;reviewed_by
+1;109;transfer_internal_bca;0;0;contains;Generic fallback for Transfer Internal BCA;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;92;JASA PRAKTEK SPESIALIS.*KALIMALANG;1;0;regex;Doctor fee;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;92;JASA PRAKTEK SPESIALIS KF KALIMALANG;0;0;contains;Full doctor fee;NULL;NULL;NULL;NULL;10;1;49;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;208;ppn_keluaran_penjualan;0;0;contains;Generic fallback for PPN Keluaran Penjualan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;206;pph_23_jasa_profesional;0;0;contains;Generic fallback for PPh 23 Jasa Profesional;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;205;klaim_bpjs_rawat_inap;0;0;contains;Generic fallback for Klaim BPJS Rawat Inap;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;97;KIMIA FARMA APOTEK;0;0;contains;KF Apotek;NULL;NULL;NULL;NULL;10;1;4272;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;97;DARI KIMIA FARMA;0;0;contains;From KF;NULL;NULL;NULL;NULL;10;1;795;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;97;KE KIMIA FARMA;0;0;contains;To KF;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;98;kimia_farma_distribusi;0;0;contains;Generic fallback for Kimia Farma Distribusi;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;204;klaim_bpjs_rawat_jalan;0;0;contains;Generic fallback for Klaim BPJS Rawat Jalan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;202;transfer_dari_outlet_setoran;0;0;contains;Generic fallback for Transfer dari Outlet Setoran;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;201;pemindahan_antar_rekening;0;0;contains;Generic fallback for Pemindahan Antar Rekening;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;194;pbf_utama;0;0;contains;Generic fallback for PBF Utama;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;192;jasa_praktik_dokter_umum_klinik;0;0;contains;Generic fallback for Jasa Praktik Dokter Umum Klinik;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;90;thr_lebaran;0;0;contains;Generic fallback for THR Lebaran;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;213;liph_resep_narogong;0;0;contains;Generic fallback for LIPH Resep Narogong;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;214;liph_resep_cikarang;0;0;contains;Generic fallback for LIPH Resep Cikarang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;244;peralatan_diagnostik;0;0;contains;Generic fallback for Peralatan Diagnostik;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;241;alat_medis;0;0;contains;Generic fallback for Alat Medis;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;66;PERUSAHAAN LISTRIK NEGARA;0;0;contains;PLN full name;NULL;NULL;NULL;NULL;10;1;86;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;66;LISTRIK NEGARA;0;0;contains;PLN short;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;240;maintenance_peralatan_medis;0;0;contains;Generic fallback for Maintenance Peralatan Medis;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;236;internet_corporate;0;0;contains;Generic fallback for Internet Corporate;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;74;obat_generic_dari_kimia_farma;0;0;contains;Generic fallback for Obat Generic dari Kimia Farma;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;230;RUMAT.*WISMA;1;0;regex;Rumat Wisma;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;230;RUMATKFWISMA;0;0;contains;Rumat no space;NULL;NULL;NULL;NULL;10;1;1;16/10/2025 10.36;0;manual;50;0;0;NULL;NULL
+1;230;RUMAT KF WISMA;0;0;contains;Full rumat name;NULL;NULL;NULL;NULL;10;1;214;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;132;liph_harapan_indah;0;0;contains;Generic fallback for LIPH Harapan Indah;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;221;transfer_antar_outlet;0;0;contains;Generic fallback for Transfer Antar Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;83;gaji_apoteker;0;0;contains;Generic fallback for Gaji Apoteker;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;86;gaji_manajemen;0;0;contains;Generic fallback for Gaji Manajemen;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;215;rumat_klinik_wisma;0;0;contains;Generic fallback for Rumat Klinik Wisma;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;110;transfer_internal_bni;0;0;contains;Generic fallback for Transfer Internal BNI;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;136;liph_kali_abang;0;0;contains;Generic fallback for LIPH Kali Abang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;167;klaim_bpjs_kesehatan_rawat_inap;0;0;contains;Generic fallback for Klaim BPJS Kesehatan Rawat Inap;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;166;klaim_bpjs_kesehatan_rawat_jalan;0;0;contains;Generic fallback for Klaim BPJS Kesehatan Rawat Jalan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;139;rumat_wisma_asri;0;0;contains;Generic fallback for Rumat Wisma Asri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;219;KLINIK.*WISMA;1;0;regex;Klinik + Wisma;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;219;KLINIK KF WISMA;0;0;contains;Full klinik name;NULL;NULL;NULL;NULL;10;1;36;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;219;KLINIK WISMA ASRI;0;0;contains;Klinik location;NULL;NULL;NULL;NULL;10;1;21;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;164;OTOPAY.*QR.*SUMMARECON;1;0;regex;OTOPAY Summarecon;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;164;OTOPAY QR;0;0;contains;OTOPAY general;NULL;NULL;NULL;NULL;9;1;204;16/10/2025 10.54;0;manual;50;0;0;NULL;NULL
+1;142;QR.*STATIC;1;0;regex;QR static pattern;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;142;QRIS.*STATIC;1;0;regex;QRIS static;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;162;KLINIK.*WISMA.*SETOR;1;0;regex;Klinik setoran;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;162;SETOR.*KLINIK.*WISMA;1;0;regex;Setoran klinik;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;157;RESEP CB;0;0;contains;Resep identifier;NULL;NULL;NULL;NULL;10;1;2;16/10/2025 10.53;0;manual;50;0;0;NULL;NULL
+1;157;KF.*007.*RESEP;1;0;regex;KF + number + resep;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;156;RESEP KC;0;0;contains;Resep identifier;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;156;KF.*340.*RESEP;1;0;regex;KF + number + resep;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;155;RESEP HI;0;0;contains;Resep identifier;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;155;KF.*330.*RESEP;1;0;regex;KF + number + resep;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;135;liph_kalimalang;0;0;contains;Generic fallback for LIPH Kalimalang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;134;liph_pekayon;0;0;contains;Generic fallback for LIPH Pekayon;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;133;liph_cikarang;0;0;contains;Generic fallback for LIPH Cikarang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;111;transfer_internal_mandiri;0;0;contains;Generic fallback for Transfer Internal Mandiri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;112;transfer_ke_outlet_operasional;0;0;contains;Generic fallback for Transfer ke Outlet Operasional;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;114;premi_bpjs_kesehatan;0;0;contains;Generic fallback for Premi BPJS Kesehatan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;116;klaim_sinar_mas;0;0;contains;Generic fallback for Klaim Sinar Mas;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;117;klaim_hanwha;0;0;contains;Generic fallback for Klaim Hanwha;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;118;klaim_perta;0;0;contains;Generic fallback for Klaim Perta;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;121;pph_21_gaji_karyawan;0;0;contains;Generic fallback for PPh 21 Gaji Karyawan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;123;ppn_masukan_pembelian;0;0;contains;Generic fallback for PPN Masukan Pembelian;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;176;obat_paten_branded;0;0;contains;Generic fallback for Obat Paten Branded;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;169;bop_klinik_wisma_asri;0;0;contains;Generic fallback for BOP Klinik Wisma Asri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;131;liph_narogong;0;0;contains;Generic fallback for LIPH Narogong;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;154;RESEP SUZI;0;0;contains;Resep identifier;NULL;NULL;NULL;NULL;10;1;12;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;154;KF.*264.*RESEP;1;0;regex;KF + number + resep;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;154;RESEP.*264;1;0;regex;Resep + number;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;278;obat_cold_chain;0;0;contains;Generic fallback for Obat Cold Chain;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;38;liph_kf_zamrud;0;0;contains;Generic fallback for LIPH KF Zamrud;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;39;LIPH.*KALIABANG;1;0;regex;LIPH + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;39;LIPH KF KALIABANG;0;0;contains;Full LIPH name;NULL;NULL;NULL;NULL;10;1;740;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;1;KF 0264;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;1;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;1;KF0264;0;0;contains;KF number no space;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;1;KF 264;0;0;contains;KF number no zero;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;1;NAROGONG;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;47;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;1;264;0;0;contains;Number only;NULL;NULL;NULL;NULL;8;1;14;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;40;LIPH.*SUMMARECON;1;0;regex;LIPH + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;40;LIPH KF SUMMARECON;0;0;contains;Full LIPH name;NULL;NULL;NULL;NULL;10;1;2;16/10/2025 10.44;0;manual;50;0;0;NULL;NULL
+1;42;qris_static_kf_outlet;0;0;contains;Generic fallback for QRIS Static KF Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;267;pph_final_usaha;0;0;contains;Generic fallback for PPh Final Usaha;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;17;kf_0944_parungkd;0;0;contains;Generic fallback for KF 0944 Parungkd;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;16;kf_0810_kintamani;0;0;contains;Generic fallback for KF 0810 Kintamani;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;45;ASURANSI SINAR MAS;0;0;contains;Sinar Mas insurance;NULL;NULL;NULL;NULL;10;1;295;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;45;SINAR MAS;0;0;contains;Company name;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;15;kf_0618_kranji;0;0;contains;Generic fallback for KF 0618 Kranji;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;37;liph_kf_granwis;0;0;contains;Generic fallback for LIPH KF Granwis;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;36;liph_kf_cibitung;0;0;contains;Generic fallback for LIPH KF Cibitung;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;279;obat_narkotika_&_psikotropika;0;0;contains;Generic fallback for Obat Narkotika & Psikotropika;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;26;KIMIA FARMA APOTEK;0;0;contains;From KF Apotek;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;26;IRKF BEKASI;0;0;contains;IR KF Bekasi;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;30;LIPH.*0264;1;0;regex;LIPH + KF number;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;30;LIPH.*NAROGONG;1;0;regex;LIPH + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;30;LIPH KF.*0264;1;0;regex;LIPH KF + number;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;282;bonus_kinerja_tahunan;0;0;contains;Generic fallback for Bonus Kinerja Tahunan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;31;LIPH.*0330;1;0;regex;LIPH + KF number;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;31;LIPH.*HARAPAN;1;0;regex;LIPH + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;32;LIPH.*0340;1;0;regex;LIPH + KF number;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;32;LIPH.*CIKARANG;1;0;regex;LIPH + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;32;LIPH KF CIKARANG;0;0;contains;Full LIPH name;NULL;NULL;NULL;NULL;10;1;30;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;269;liph_klinik_wisma_asri;0;0;contains;Generic fallback for LIPH Klinik Wisma Asri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;33;liph_kf_pekayon;0;0;contains;Generic fallback for LIPH KF Pekayon;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;34;liph_kf_jati_asih;0;0;contains;Generic fallback for LIPH KF Jati Asih;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;35;LIPH.*0406;1;0;regex;LIPH + KF number;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;35;LIPH.*KALIMALANG;1;0;regex;LIPH + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;14;KF 0624;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;215;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;14;KF0624;0;0;contains;KF number no space;NULL;NULL;NULL;NULL;10;1;1;16/10/2025 10.38;0;manual;50;0;0;NULL;NULL
+1;14;CISC;0;0;contains;Location code;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;14;GGC;0;0;contains;Alternative code;NULL;NULL;NULL;NULL;8;1;19;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;13;KF 0591;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;117;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;13;ZAMRUD;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;312;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;13;KF ZAMRUD;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;10;KF 0456;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;10;GRANWIS;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;52;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;10;KF GRANWIS;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;10;GRANWISATA;0;0;contains;Full location name;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;6;kf_0390_cakung_gede;0;0;contains;Generic fallback for KF 0390 Cakung Gede;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;263;MCM INHOUSETRF DARI;0;0;contains;MCM from vendor;NULL;NULL;NULL;NULL;10;1;1564;16/10/2025 10.45;0;manual;50;0;0;NULL;NULL
+1;263;INHOUSETRF DARI;0;0;contains;Inhouse from;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;5;KF 0367;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;131;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;5;JATI ASIH;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;332;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;5;JATIASIH;0;0;contains;No space variant;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;5;KF JATIASIH;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;35;16/10/2025 10.55;0;manual;50;0;0;NULL;NULL
+1;262;MCM INHOUSETRF KE;0;0;contains;MCM to employee;NULL;NULL;NULL;NULL;10;1;353;16/10/2025 10.38;0;manual;50;0;0;NULL;NULL
+1;262;INHOUSETRF KE;0;0;contains;Inhouse to;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;49;BOP.*MG3.*BEKASI;1;0;regex;BOP MG3;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;49;MG3 BEKASI;0;0;contains;MG3 location;NULL;NULL;NULL;NULL;10;1;145;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;4;KF 0347;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;111;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;4;PEKAYON;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;35;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;4;KF PEKAYON;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;3;KF 0340;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;97;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;3;KF0340;0;0;contains;KF number no space;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;3;KF CIKARANG;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;11;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;3;CIKARANG;0;0;contains;Location name;NULL;NULL;NULL;NULL;9;1;11;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;3;CKRG;0;0;contains;Abbreviation;NULL;NULL;NULL;NULL;7;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;2;KF 0330;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;208;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;2;KF0330;0;0;contains;KF number no space;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;2;HARAPAN INDAH;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;12;16/10/2025 10.53;0;manual;50;0;0;NULL;NULL
+1;2;HARAPAN INDA;0;0;contains;Common typo;NULL;NULL;NULL;NULL;9;1;5;16/10/2025 10.55;0;manual;50;0;0;NULL;NULL
+1;2;330;0;0;contains;Number only;NULL;NULL;NULL;NULL;8;1;2;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;50;BO.*BEKASI;1;0;regex;BO Bekasi;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;50;TBHBO BEKASI;0;0;contains;TBH BO;NULL;NULL;NULL;NULL;10;1;10;16/10/2025 10.38;0;manual;50;0;0;NULL;NULL
+1;7;kf_0405_daan;0;0;contains;Generic fallback for KF 0405 Daan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;8;KF 0406;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;8;KALIMALANG;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;38;16/10/2025 10.54;0;manual;50;0;0;NULL;NULL
+1;8;KF KALIMALANG;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;8;KRG;0;0;contains;Abbreviation;NULL;NULL;NULL;NULL;6;1;2;16/10/2025 10.44;0;manual;50;0;0;NULL;NULL
+1;47;PERTA LIFE;0;0;contains;Perta insurance;NULL;NULL;NULL;NULL;10;1;102;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;47;PERTA;0;0;contains;Company name;NULL;NULL;NULL;NULL;9;1;20;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;265;premi_asuransi_gedung;0;0;contains;Generic fallback for Premi Asuransi Gedung;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;11;kf_0503_taman_mini;0;0;contains;Generic fallback for KF 0503 Taman Mini;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;46;HANWHA LIFE;0;0;contains;Hanwha insurance;NULL;NULL;NULL;NULL;10;1;15;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;46;HANWHA;0;0;contains;Company name;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;12;kf_0586_cileungsi;0;0;contains;Generic fallback for KF 0586 Cileungsi;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;9;KF 0007;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;9;KF 007;0;0;contains;KF number no leading zero;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;9;CIBITUNG;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;69;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;9;KF CIBITUNG;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;173;CCTV.*CIBITUNG;1;0;regex;CCTV Cibitung;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;280;obat_onkologi;0;0;contains;Generic fallback for Obat Onkologi;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;181;kantong_plastik;0;0;contains;Generic fallback for Kantong Plastik;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;178;komputer_&_laptop;0;0;contains;Generic fallback for Komputer & Laptop;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;286;pest_control_emergency;0;0;contains;Generic fallback for Pest Control Emergency;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;228;merchant_qr_mandiri;0;0;contains;Generic fallback for Merchant QR Mandiri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;281;bonus_target_penjualan;0;0;contains;Generic fallback for Bonus Target Penjualan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;177;obat_import;0;0;contains;Generic fallback for Obat Import;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;174;CCTV.*POGE;1;0;regex;CCTV Daan (POGE);NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;174;PENGADAAN CCTV;0;0;contains;CCTV procurement;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;172;air_pdam_kantor_pusat;0;0;contains;Generic fallback for Air PDAM Kantor Pusat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;259;security_kantor;0;0;contains;Generic fallback for Security Kantor;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;171;air_pdam_outlet;0;0;contains;Generic fallback for Air PDAM Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;168;klaim_bpjs_obat;0;0;contains;Generic fallback for Klaim BPJS Obat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;159;transfer_customer_retail;0;0;contains;Generic fallback for Transfer Customer Retail;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;158;kf_cakra_raya_resep;0;0;contains;Generic fallback for KF Cakra Raya Resep;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;160;transfer_customer_corporate;0;0;contains;Generic fallback for Transfer Customer Corporate;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;187;tunjangan_makan_harian;0;0;contains;Generic fallback for Tunjangan Makan Harian;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;275;renovasi_outlet;0;0;contains;Generic fallback for Renovasi Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;223;transfer_antar_cabang;0;0;contains;Generic fallback for Transfer Antar Cabang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;224;cod_obat;0;0;contains;Generic fallback for COD Obat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;227;merchant_qr_bca;0;0;contains;Generic fallback for Merchant QR BCA;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;231;rumat_kf_cikarang;0;0;contains;Generic fallback for Rumat KF Cikarang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;232;rumat_kf_narogong;0;0;contains;Generic fallback for Rumat KF Narogong;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;233;rumat_kf_kalimalang;0;0;contains;Generic fallback for Rumat KF Kalimalang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;235;internet_indihome;0;0;contains;Generic fallback for Internet Indihome;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;238;PC.*OUTLET;1;0;regex;PC outlet;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;238;TBH.*PC;1;0;regex;Additional PC;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;238;BS.*PC.*KF;1;0;regex;PC maintenance;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;264;mcm_inhousetrf_internal;0;0;contains;Generic fallback for MCM InhouseTrf Internal;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;243;consumables_medis;0;0;contains;Generic fallback for Consumables Medis;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;245;peralatan_penunjang;0;0;contains;Generic fallback for Peralatan Penunjang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;246;pembersih_&_disinfektan;0;0;contains;Generic fallback for Pembersih & Disinfektan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;251;tunjangan_kesehatan_karyawan;0;0;contains;Generic fallback for Tunjangan Kesehatan Karyawan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;252;asuransi_kesehatan_karyawan;0;0;contains;Generic fallback for Asuransi Kesehatan Karyawan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;253;fee_apoteker_konsultasi;0;0;contains;Generic fallback for Fee Apoteker Konsultasi;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;256;distributor_alkes_utama;0;0;contains;Generic fallback for Distributor Alkes Utama;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;222;transfer_dari_pusat;0;0;contains;Generic fallback for Transfer dari Pusat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;165;otopay_qr_outlet_lain;0;0;contains;Generic fallback for OTOPAY QR Outlet Lain;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;189;DINAS.*LEBRAN.*ZAMRUD;1;0;regex;Dinas Zamrud;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;189;DINAS LEBARAN ZAMRUD;0;0;contains;Full dinas name;NULL;NULL;NULL;NULL;10;1;5;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;274;ipl_kantor;0;0;contains;Generic fallback for IPL Kantor;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;273;IPL.*KF;1;0;regex;IPL + KF;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;273;IPL;0;0;contains;IPL general;NULL;NULL;NULL;NULL;7;1;7;16/10/2025 10.55;0;manual;50;0;0;NULL;NULL
+1;190;DINAS.*LEBRAN.*PEKAYON;1;0;regex;Dinas Pekayon;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;190;DINAS LBRAN PEKAYON;0;0;contains;Dinas abbr;NULL;NULL;NULL;NULL;10;1;1;16/10/2025 10.36;0;manual;50;0;0;NULL;NULL
+1;270;alat_kesehatan_medis;0;0;contains;Generic fallback for Alat Kesehatan Medis;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;196;cleaning_service_outlet;0;0;contains;Generic fallback for Cleaning Service Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;197;cleaning_service_kantor;0;0;contains;Generic fallback for Cleaning Service Kantor;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;199;admin_bank_bulanan;0;0;contains;Generic fallback for Admin Bank Bulanan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;203;premi_asuransi_jiwa_karyawan;0;0;contains;Generic fallback for Premi Asuransi Jiwa Karyawan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;207;pph_23_sewa;0;0;contains;Generic fallback for PPh 23 Sewa;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;211;BON.*PERBAIKAN.*KALIABANG;1;0;regex;Bon repair;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;211;KALIABANG BON PERBAIKAN;0;0;contains;Full bon name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;268;bon_pembelian_operasional;0;0;contains;Generic fallback for Bon Pembelian Operasional;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;216;qris_dynamic_transaction;0;0;contains;Generic fallback for QRIS Dynamic Transaction;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;217;edc_credit_visa;0;0;contains;Generic fallback for EDC Credit Visa;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;218;edc_credit_mastercard;0;0;contains;Generic fallback for EDC Credit Mastercard;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;266;premi_asuransi_inventaris;0;0;contains;Generic fallback for Premi Asuransi Inventaris;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;258;security_outlet;0;0;contains;Generic fallback for Security Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;75;obat_generic_dari_pbf;0;0;contains;Generic fallback for Obat Generic dari PBF;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;59;bop_outlet_september;0;0;contains;Generic fallback for BOP Outlet September;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;99;kimia_farma_trading;0;0;contains;Generic fallback for Kimia Farma Trading;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;100;it_support_hardware;0;0;contains;Generic fallback for IT Support Hardware;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;102;it_support_network;0;0;contains;Generic fallback for IT Support Network;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;58;bop_outlet_agustus;0;0;contains;Generic fallback for BOP Outlet Agustus;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;103;PRIMAGRAPHIA;0;0;contains;Primagraphia company;NULL;NULL;NULL;NULL;10;1;1;16/10/2025 10.36;0;manual;50;0;0;NULL;NULL
+1;103;PRIMAGRAPHIA DIGITAL;0;0;contains;Full company name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;57;bop_outlet_juli;0;0;contains;Generic fallback for BOP Outlet Juli;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;105;TRANSFER FEE.*BCA;1;0;regex;BCA fee;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;105;TRANSFER FEE;0;0;contains;General transfer fee;NULL;NULL;NULL;NULL;8;1;117;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;56;bop_outlet_juni;0;0;contains;Generic fallback for BOP Outlet Juni;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;106;transfer_fee_bni;0;0;contains;Generic fallback for Transfer Fee BNI;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;54;bop_outlet_april;0;0;contains;Generic fallback for BOP Outlet April;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;107;transfer_fee_mandiri;0;0;contains;Generic fallback for Transfer Fee Mandiri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;55;bop_outlet_mei;0;0;contains;Generic fallback for BOP Outlet Mei;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;113;transfer_ke_outlet_emergency;0;0;contains;Generic fallback for Transfer ke Outlet Emergency;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;115;premi_asuransi_swasta;0;0;contains;Generic fallback for Premi Asuransi Swasta;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;95;reimburse_hotel;0;0;contains;Generic fallback for Reimburse Hotel;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;94;reimburse_tiket_pesawat;0;0;contains;Generic fallback for Reimburse Tiket Pesawat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;69;service_ac_outlet_wisma;0;0;contains;Generic fallback for Service AC Outlet Wisma;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;68;SERVICE.*AC.*CIKARANG;1;0;regex;AC service Cikarang;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;68;SERVICE AC2 KF CKRG;0;0;contains;AC service pattern;NULL;NULL;NULL;NULL;10;1;4;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;61;bop_outlet_november;0;0;contains;Generic fallback for BOP Outlet November;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;65;listrik_pln_outlet_wisma_asri;0;0;contains;Generic fallback for Listrik PLN Outlet Wisma Asri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;64;listrik_pln_outlet_cikarang;0;0;contains;Generic fallback for Listrik PLN Outlet Cikarang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;63;listrik_pln_outlet_narogong;0;0;contains;Generic fallback for Listrik PLN Outlet Narogong;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;84;gaji_asisten_apoteker;0;0;contains;Generic fallback for Gaji Asisten Apoteker;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;85;gaji_admin_outlet;0;0;contains;Generic fallback for Gaji Admin Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;87;gaji_staff;0;0;contains;Generic fallback for Gaji Staff;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;62;bop_outlet_desember;0;0;contains;Generic fallback for BOP Outlet Desember;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;88;tunjangan_transport_karyawan_tetap;0;0;contains;Generic fallback for Tunjangan Transport Karyawan Tetap;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;71;service_ac_kantor_pusat;0;0;contains;Generic fallback for Service AC Kantor Pusat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;91;thr_natal;0;0;contains;Generic fallback for THR Natal;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;60;bop_outlet_oktober;0;0;contains;Generic fallback for BOP Outlet Oktober;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;93;jasa_praktik_spesialis_lainnya;0;0;contains;Generic fallback for Jasa Praktik Spesialis Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;53;bop_outlet_maret;0;0;contains;Generic fallback for BOP Outlet Maret;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;52;BOP.*FEBRUARI;1;0;regex;BOP month February;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;52;BOP FEBRUARI 2025;0;0;contains;BOP Feb 2025;NULL;NULL;NULL;NULL;10;1;673;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;125;pbb_kantor;0;0;contains;Generic fallback for PBB Kantor;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;25;kf_kota_serang;0;0;contains;Generic fallback for KF Kota Serang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;24;SUMMARECON;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;88;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;24;KF SUMMARECON;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;12;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;24;SUMMA;0;0;contains;Abbreviation;NULL;NULL;NULL;NULL;7;1;60;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;137;liph_outlet_lainnya;0;0;contains;Generic fallback for LIPH Outlet Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;23;kf_boulevard;0;0;contains;Generic fallback for KF Boulevard;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;140;rumat_cikarang;0;0;contains;Generic fallback for Rumat Cikarang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;22;kf_sepat;0;0;contains;Generic fallback for KF Sepat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;21;kf_rawa_lumbu;0;0;contains;Generic fallback for KF Rawa Lumbu;NULL;NULL;NULL;NULL;5;1;6;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;143;edc_debit_bca;0;0;contains;Generic fallback for EDC Debit BCA;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;20;kf_jati_rahayu;0;0;contains;Generic fallback for KF Jati Rahayu;NULL;NULL;NULL;NULL;5;1;34;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;144;edc_debit_mandiri;0;0;contains;Generic fallback for EDC Debit Mandiri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;145;edc_debit_bni;0;0;contains;Generic fallback for EDC Debit BNI;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;19;KALI ABANG;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;239;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;19;KALIABANG;0;0;contains;No space variant;NULL;NULL;NULL;NULL;10;1;10;16/10/2025 10.55;0;manual;50;0;0;NULL;NULL
+1;19;KF KALIABANG;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;1;16/10/2025 10.36;0;manual;50;0;0;NULL;NULL
+1;147;ATMB TRF;0;0;contains;ATM Banking transfer;NULL;NULL;NULL;NULL;10;1;48;16/10/2025 10.45;0;manual;50;0;0;NULL;NULL
+1;147;ATMB TRF CREDT;0;0;contains;ATM transfer credit;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;148;mobile_banking_transfer;0;0;contains;Generic fallback for Mobile Banking Transfer;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;18;kf_cakra_raya;0;0;contains;Generic fallback for KF Cakra Raya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;128;BON.*SEMENTARA.*KRANGGAN;1;0;regex;Bon Kranggan;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;128;KF KRANGGAN BON;0;0;contains;Kranggan bon;NULL;NULL;NULL;NULL;10;1;49;16/10/2025 10.56;0;manual;50;0;0;NULL;NULL
+1;119;klaim_pasien_rawat_jalan;0;0;contains;Generic fallback for Klaim Pasien Rawat Jalan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;101;it_support_software;0;0;contains;Generic fallback for IT Support Software;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;124;pbb_gedung_outlet;0;0;contains;Generic fallback for PBB Gedung Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;43;qris_dynamic;0;0;contains;Generic fallback for QRIS Dynamic;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;120;klaim_pasien_rawat_inap;0;0;contains;Generic fallback for Klaim Pasien Rawat Inap;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;122;pph_21_bonus;0;0;contains;Generic fallback for PPh 21 Bonus;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;27;transfer_dari_kimia_farma_trading;0;0;contains;Generic fallback for Transfer dari Kimia Farma Trading;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;28;transfer_dari_pbf;0;0;contains;Generic fallback for Transfer dari PBF;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;51;BOP.*JANUARI;1;0;regex;BOP month January;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;48;klaim_asuransi_lainnya;0;0;contains;Generic fallback for Klaim Asuransi Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;284;fee_konsultan_bisnis;0;0;contains;Generic fallback for Fee Konsultan Bisnis;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;234;rumat_outlet_lainnya;0;0;contains;Generic fallback for Rumat Outlet Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;67;listrik_pln_outlet_lainnya;0;0;contains;Generic fallback for Listrik PLN Outlet Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;70;service_ac_outlet_lainnya;0;0;contains;Generic fallback for Service AC Outlet Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;239;maintenance_printer;0;0;contains;Generic fallback for Maintenance Printer;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;285;pest_control_rutin;0;0;contains;Generic fallback for Pest Control Rutin;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;237;telepon_kantor;0;0;contains;Generic fallback for Telepon Kantor;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;283;fee_konsultan_it;0;0;contains;Generic fallback for Fee Konsultan IT;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;242;alat_kesehatan_personal;0;0;contains;Generic fallback for Alat Kesehatan Personal;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;261;biaya_kliring_giro;0;0;contains;Generic fallback for Biaya Kliring Giro;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;272;consumables_medis;0;0;contains;Generic fallback for Consumables Medis;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;277;perbaikan_atap;0;0;contains;Generic fallback for Perbaikan Atap;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;271;alat_kesehatan_personal;0;0;contains;Generic fallback for Alat Kesehatan Personal;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;257;distributor_alkes_lainnya;0;0;contains;Generic fallback for Distributor Alkes Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;249;fee_freelancer_it;0;0;contains;Generic fallback for Fee Freelancer IT;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;260;biaya_kliring_cek;0;0;contains;Generic fallback for Biaya Kliring Cek;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;29;transfer_dari_distributor_obat;0;0;contains;Generic fallback for Transfer dari Distributor Obat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;41;setoran_tunai_outlet_lain;0;0;contains;Generic fallback for Setoran Tunai Outlet Lain;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;44;qris_merchant;0;0;contains;Generic fallback for QRIS Merchant;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;247;supplies_kebersihan;0;0;contains;Generic fallback for Supplies Kebersihan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;129;bon_sementara_outlet_lain;0;0;contains;Generic fallback for Bon Sementara Outlet Lain;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;163;setoran_klinik_lainnya;0;0;contains;Generic fallback for Setoran Klinik Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;198;supplier_atk_utama;0;0;contains;Generic fallback for Supplier ATK Utama;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;104;percetakan_lainnya;0;0;contains;Generic fallback for Percetakan Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;195;pbf_sekunder;0;0;contains;Generic fallback for PBF Sekunder;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;188;tunjangan_makan_lembur;0;0;contains;Generic fallback for Tunjangan Makan Lembur;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;186;gaji_part-time_admin;0;0;contains;Generic fallback for Gaji Part-time Admin;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;185;gaji_part-time_outlet;0;0;contains;Generic fallback for Gaji Part-time Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;161;transfer_customer_online;0;0;contains;Generic fallback for Transfer Customer Online;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;183;box_packaging;0;0;contains;Generic fallback for Box Packaging;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;182;paper_bag;0;0;contains;Generic fallback for Paper Bag;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;180;perangkat_jaringan;0;0;contains;Generic fallback for Perangkat Jaringan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;179;printer_&_scanner;0;0;contains;Generic fallback for Printer & Scanner;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;175;cctv_outlet_lainnya;0;0;contains;Generic fallback for CCTV Outlet Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;81;atk_outlet;0;0;contains;Generic fallback for ATK Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;141;rumat_outlet_lainnya;0;0;contains;Generic fallback for Rumat Outlet Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;170;bop_klinik_lainnya;0;0;contains;Generic fallback for BOP Klinik Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;96;reimburse_transport_dinas;0;0;contains;Generic fallback for Reimburse Transport Dinas;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;209;pajak_motor_operasional;0;0;contains;Generic fallback for Pajak Motor Operasional;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;191;dinas_lebaran_outlet_lainnya;0;0;contains;Generic fallback for Dinas Lebaran Outlet Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;80;atk_kantor;0;0;contains;Generic fallback for ATK Kantor;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;78;rak_&_lemari;0;0;contains;Generic fallback for Rak & Lemari;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;225;cod_alkes;0;0;contains;Generic fallback for COD Alkes;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;226;cod_layanan;0;0;contains;Generic fallback for COD Layanan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;77;meja_&_kursi;0;0;contains;Generic fallback for Meja & Kursi;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;76;obat_generic_lainnya;0;0;contains;Generic fallback for Obat Generic Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;229;merchant_qr_lainnya;0;0;contains;Generic fallback for Merchant QR Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;193;reimburse_bensin_karyawan;0;0;contains;Generic fallback for Reimburse Bensin Karyawan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;220;klinik_umum;0;0;contains;Generic fallback for Klinik Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;212;bon_perbaikan_outlet_lain;0;0;contains;Generic fallback for Bon Perbaikan Outlet Lain;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;108;transfer_fee_bank_lain;0;0;contains;Generic fallback for Transfer Fee Bank Lain;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;210;pajak_mobil_operasional;0;0;contains;Generic fallback for Pajak Mobil Operasional;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;89;tunjangan_transport_part-time;0;0;contains;Generic fallback for Tunjangan Transport Part-time;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;255;reimburse_tol;0;0;contains;Generic fallback for Reimburse Tol;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;79;furniture_display;0;0;contains;Generic fallback for Furniture Display;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;254;reimburse_parkir;0;0;contains;Generic fallback for Reimburse Parkir;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;200;biaya_materai;0;0;contains;Generic fallback for Biaya Materai;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;250;fee_freelancer_marketing;0;0;contains;Generic fallback for Fee Freelancer Marketing;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;276;cat_&_pengecatan;0;0;contains;Generic fallback for Cat & Pengecatan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;152;dividen_umum_umum;0;0;contains;Generic fallback for Dividen - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;150;refund_&_return_umum_umum;0;0;contains;Generic fallback for Refund & Return - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;149;koreksi_transaksi_umum_umum;0;0;contains;Generic fallback for Koreksi Transaksi - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;146;transaksi_tunai_umum_umum;0;0;contains;Generic fallback for Transaksi Tunai - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;153;lain-lain_umum_umum;0;0;contains;Generic fallback for Lain-lain - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;138;kas_kecil_outlet_umum_umum;0;0;contains;Generic fallback for Kas Kecil Outlet - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;130;piutang_umum_umum;0;0;contains;Generic fallback for Piutang - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;73;biaya_kebersihan_&_keamanan_umum_umum;0;0;contains;Generic fallback for Biaya Kebersihan & Keamanan - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;151;investasi_umum_umum;0;0;contains;Generic fallback for Investasi - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;82;sticker_&_spanduk_umum;0;0;contains;Generic fallback for Sticker & Spanduk - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;248;merchandise_umum;0;0;contains;Generic fallback for Merchandise - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;72;biaya_sewa_umum_umum;0;0;contains;Generic fallback for Biaya Sewa - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;184;brosur_&_leaflet_umum;0;0;contains;Generic fallback for Brosur & Leaflet - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;126;pinjaman_diberikan_umum_umum;0;0;contains;Generic fallback for Pinjaman Diberikan - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;127;pelunasan_pinjaman_diterima_umum_umum;0;0;contains;Generic fallback for Pelunasan Pinjaman Diterima - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;491;klaim_bpjs_rawat_inap;0;0;contains;Generic fallback for Klaim BPJS Rawat Inap;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;492;pph_23_jasa_profesional;0;0;contains;Generic fallback for PPh 23 Jasa Profesional;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;494;ppn_keluaran_penjualan;0;0;contains;Generic fallback for PPN Keluaran Penjualan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;378;JASA PRAKTEK SPESIALIS.*KALIMALANG;1;0;regex;Doctor fee;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;378;JASA PRAKTEK SPESIALIS KF KALIMALANG;0;0;contains;Full doctor fee;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;376;thr_lebaran;0;0;contains;Generic fallback for THR Lebaran;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;383;KIMIA FARMA APOTEK;0;0;contains;KF Apotek;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;383;DARI KIMIA FARMA;0;0;contains;From KF;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;383;KE KIMIA FARMA;0;0;contains;To KF;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;384;kimia_farma_distribusi;0;0;contains;Generic fallback for Kimia Farma Distribusi;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;490;klaim_bpjs_rawat_jalan;0;0;contains;Generic fallback for Klaim BPJS Rawat Jalan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;488;transfer_dari_outlet_setoran;0;0;contains;Generic fallback for Transfer dari Outlet Setoran;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;487;pemindahan_antar_rekening;0;0;contains;Generic fallback for Pemindahan Antar Rekening;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;480;pbf_utama;0;0;contains;Generic fallback for PBF Utama;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;478;jasa_praktik_dokter_umum_klinik;0;0;contains;Generic fallback for Jasa Praktik Dokter Umum Klinik;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;499;liph_resep_narogong;0;0;contains;Generic fallback for LIPH Resep Narogong;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;500;liph_resep_cikarang;0;0;contains;Generic fallback for LIPH Resep Cikarang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;530;peralatan_diagnostik;0;0;contains;Generic fallback for Peralatan Diagnostik;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;527;alat_medis;0;0;contains;Generic fallback for Alat Medis;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;526;maintenance_peralatan_medis;0;0;contains;Generic fallback for Maintenance Peralatan Medis;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;352;PERUSAHAAN LISTRIK NEGARA;0;0;contains;PLN full name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;352;LISTRIK NEGARA;0;0;contains;PLN short;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;522;internet_corporate;0;0;contains;Generic fallback for Internet Corporate;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;516;RUMAT.*WISMA;1;0;regex;Rumat Wisma;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;516;RUMATKFWISMA;0;0;contains;Rumat no space;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;516;RUMAT KF WISMA;0;0;contains;Full rumat name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;360;obat_generic_dari_kimia_farma;0;0;contains;Generic fallback for Obat Generic dari Kimia Farma;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;507;transfer_antar_outlet;0;0;contains;Generic fallback for Transfer Antar Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;505;KLINIK.*WISMA;1;0;regex;Klinik + Wisma;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;505;KLINIK KF WISMA;0;0;contains;Full klinik name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;505;KLINIK WISMA ASRI;0;0;contains;Klinik location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;369;gaji_apoteker;0;0;contains;Generic fallback for Gaji Apoteker;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;372;gaji_manajemen;0;0;contains;Generic fallback for Gaji Manajemen;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;501;rumat_klinik_wisma;0;0;contains;Generic fallback for Rumat Klinik Wisma;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;395;transfer_internal_bca;0;0;contains;Generic fallback for Transfer Internal BCA;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;396;transfer_internal_bni;0;0;contains;Generic fallback for Transfer Internal BNI;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;420;liph_pekayon;0;0;contains;Generic fallback for LIPH Pekayon;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;421;liph_kalimalang;0;0;contains;Generic fallback for LIPH Kalimalang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;422;liph_kali_abang;0;0;contains;Generic fallback for LIPH Kali Abang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;453;klaim_bpjs_kesehatan_rawat_inap;0;0;contains;Generic fallback for Klaim BPJS Kesehatan Rawat Inap;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;452;klaim_bpjs_kesehatan_rawat_jalan;0;0;contains;Generic fallback for Klaim BPJS Kesehatan Rawat Jalan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;425;rumat_wisma_asri;0;0;contains;Generic fallback for Rumat Wisma Asri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;450;OTOPAY.*QR.*SUMMARECON;1;0;regex;OTOPAY Summarecon;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;450;OTOPAY QR;0;0;contains;OTOPAY general;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;428;QR.*STATIC;1;0;regex;QR static pattern;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;428;QRIS.*STATIC;1;0;regex;QRIS static;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;448;KLINIK.*WISMA.*SETOR;1;0;regex;Klinik setoran;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;448;SETOR.*KLINIK.*WISMA;1;0;regex;Setoran klinik;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;443;RESEP CB;0;0;contains;Resep identifier;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;443;KF.*007.*RESEP;1;0;regex;KF + number + resep;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;442;RESEP KC;0;0;contains;Resep identifier;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;442;KF.*340.*RESEP;1;0;regex;KF + number + resep;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;419;liph_cikarang;0;0;contains;Generic fallback for LIPH Cikarang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;418;liph_harapan_indah;0;0;contains;Generic fallback for LIPH Harapan Indah;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;417;liph_narogong;0;0;contains;Generic fallback for LIPH Narogong;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;397;transfer_internal_mandiri;0;0;contains;Generic fallback for Transfer Internal Mandiri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;398;transfer_ke_outlet_operasional;0;0;contains;Generic fallback for Transfer ke Outlet Operasional;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;400;premi_bpjs_kesehatan;0;0;contains;Generic fallback for Premi BPJS Kesehatan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;440;RESEP SUZI;0;0;contains;Resep identifier;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;440;KF.*264.*RESEP;1;0;regex;KF + number + resep;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;440;RESEP.*264;1;0;regex;Resep + number;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;402;klaim_sinar_mas;0;0;contains;Generic fallback for Klaim Sinar Mas;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;403;klaim_hanwha;0;0;contains;Generic fallback for Klaim Hanwha;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;404;klaim_perta;0;0;contains;Generic fallback for Klaim Perta;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;407;pph_21_gaji_karyawan;0;0;contains;Generic fallback for PPh 21 Gaji Karyawan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;409;ppn_masukan_pembelian;0;0;contains;Generic fallback for PPN Masukan Pembelian;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;462;obat_paten_branded;0;0;contains;Generic fallback for Obat Paten Branded;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;455;bop_klinik_wisma_asri;0;0;contains;Generic fallback for BOP Klinik Wisma Asri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;441;RESEP HI;0;0;contains;Resep identifier;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;441;KF.*330.*RESEP;1;0;regex;KF + number + resep;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;565;obat_narkotika_&_psikotropika;0;0;contains;Generic fallback for Obat Narkotika & Psikotropika;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;324;liph_kf_zamrud;0;0;contains;Generic fallback for LIPH KF Zamrud;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;564;obat_cold_chain;0;0;contains;Generic fallback for Obat Cold Chain;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;326;LIPH.*SUMMARECON;1;0;regex;LIPH + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;326;LIPH KF SUMMARECON;0;0;contains;Full LIPH name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;294;KF 0406;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;294;KALIMALANG;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;294;KF KALIMALANG;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;294;KRG;0;0;contains;Abbreviation;NULL;NULL;NULL;NULL;6;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;328;qris_static_kf_outlet;0;0;contains;Generic fallback for QRIS Static KF Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;553;pph_final_usaha;0;0;contains;Generic fallback for PPh Final Usaha;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;325;LIPH.*KALIABANG;1;0;regex;LIPH + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;325;LIPH KF KALIABANG;0;0;contains;Full LIPH name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;302;kf_0810_kintamani;0;0;contains;Generic fallback for KF 0810 Kintamani;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;331;ASURANSI SINAR MAS;0;0;contains;Sinar Mas insurance;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;331;SINAR MAS;0;0;contains;Company name;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;332;HANWHA LIFE;0;0;contains;Hanwha insurance;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;332;HANWHA;0;0;contains;Company name;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;323;liph_kf_granwis;0;0;contains;Generic fallback for LIPH KF Granwis;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;322;liph_kf_cibitung;0;0;contains;Generic fallback for LIPH KF Cibitung;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;312;KIMIA FARMA APOTEK;0;0;contains;From KF Apotek;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;312;IRKF BEKASI;0;0;contains;IR KF Bekasi;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;555;liph_klinik_wisma_asri;0;0;contains;Generic fallback for LIPH Klinik Wisma Asri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;316;LIPH.*0264;1;0;regex;LIPH + KF number;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;316;LIPH.*NAROGONG;1;0;regex;LIPH + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;316;LIPH KF.*0264;1;0;regex;LIPH KF + number;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;568;bonus_kinerja_tahunan;0;0;contains;Generic fallback for Bonus Kinerja Tahunan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;317;LIPH.*0330;1;0;regex;LIPH + KF number;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;317;LIPH.*HARAPAN;1;0;regex;LIPH + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;318;LIPH.*0340;1;0;regex;LIPH + KF number;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;318;LIPH.*CIKARANG;1;0;regex;LIPH + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;318;LIPH KF CIKARANG;0;0;contains;Full LIPH name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;303;kf_0944_parungkd;0;0;contains;Generic fallback for KF 0944 Parungkd;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;319;liph_kf_pekayon;0;0;contains;Generic fallback for LIPH KF Pekayon;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;320;liph_kf_jati_asih;0;0;contains;Generic fallback for LIPH KF Jati Asih;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;321;LIPH.*0406;1;0;regex;LIPH + KF number;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;321;LIPH.*KALIMALANG;1;0;regex;LIPH + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;333;PERTA LIFE;0;0;contains;Perta insurance;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;333;PERTA;0;0;contains;Company name;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;301;kf_0618_kranji;0;0;contains;Generic fallback for KF 0618 Kranji;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;300;KF 0624;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;300;KF0624;0;0;contains;KF number no space;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;300;CISC;0;0;contains;Location code;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;300;GGC;0;0;contains;Alternative code;NULL;NULL;NULL;NULL;8;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;292;kf_0390_cakung_gede;0;0;contains;Generic fallback for KF 0390 Cakung Gede;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;549;MCM INHOUSETRF DARI;0;0;contains;MCM from vendor;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;549;INHOUSETRF DARI;0;0;contains;Inhouse from;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;548;MCM INHOUSETRF KE;0;0;contains;MCM to employee;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;548;INHOUSETRF KE;0;0;contains;Inhouse to;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;291;KF 0367;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;291;JATI ASIH;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;291;JATIASIH;0;0;contains;No space variant;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;291;KF JATIASIH;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;290;KF 0347;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;290;PEKAYON;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;290;KF PEKAYON;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;289;KF 0340;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;289;KF0340;0;0;contains;KF number no space;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;289;KF CIKARANG;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;289;CIKARANG;0;0;contains;Location name;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;289;CKRG;0;0;contains;Abbreviation;NULL;NULL;NULL;NULL;7;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;288;KF 0330;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;288;KF0330;0;0;contains;KF number no space;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;288;HARAPAN INDAH;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;288;HARAPAN INDA;0;0;contains;Common typo;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;288;330;0;0;contains;Number only;NULL;NULL;NULL;NULL;8;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;287;KF 0264;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;287;KF0264;0;0;contains;KF number no space;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;287;KF 264;0;0;contains;KF number no zero;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;287;NAROGONG;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;287;264;0;0;contains;Number only;NULL;NULL;NULL;NULL;8;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;293;kf_0405_daan;0;0;contains;Generic fallback for KF 0405 Daan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;336;BO.*BEKASI;1;0;regex;BO Bekasi;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;336;TBHBO BEKASI;0;0;contains;TBH BO;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;335;BOP.*MG3.*BEKASI;1;0;regex;BOP MG3;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;335;MG3 BEKASI;0;0;contains;MG3 location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;299;KF 0591;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;299;ZAMRUD;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;299;KF ZAMRUD;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;297;kf_0503_taman_mini;0;0;contains;Generic fallback for KF 0503 Taman Mini;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;298;kf_0586_cileungsi;0;0;contains;Generic fallback for KF 0586 Cileungsi;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;295;KF 0007;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;295;KF 007;0;0;contains;KF number no leading zero;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;295;CIBITUNG;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;295;KF CIBITUNG;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;296;KF 0456;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;296;GRANWIS;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;296;KF GRANWIS;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;296;GRANWISATA;0;0;contains;Full location name;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;551;premi_asuransi_gedung;0;0;contains;Generic fallback for Premi Asuransi Gedung;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;464;komputer_&_laptop;0;0;contains;Generic fallback for Komputer & Laptop;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;467;kantong_plastik;0;0;contains;Generic fallback for Kantong Plastik;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;473;tunjangan_makan_harian;0;0;contains;Generic fallback for Tunjangan Makan Harian;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;567;bonus_target_penjualan;0;0;contains;Generic fallback for Bonus Target Penjualan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;454;klaim_bpjs_obat;0;0;contains;Generic fallback for Klaim BPJS Obat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;566;obat_onkologi;0;0;contains;Generic fallback for Obat Onkologi;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;444;kf_cakra_raya_resep;0;0;contains;Generic fallback for KF Cakra Raya Resep;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;463;obat_import;0;0;contains;Generic fallback for Obat Import;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;457;air_pdam_outlet;0;0;contains;Generic fallback for Air PDAM Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;459;CCTV.*CIBITUNG;1;0;regex;CCTV Cibitung;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;460;CCTV.*POGE;1;0;regex;CCTV Daan (POGE);NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;460;PENGADAAN CCTV;0;0;contains;CCTV procurement;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;451;otopay_qr_outlet_lain;0;0;contains;Generic fallback for OTOPAY QR Outlet Lain;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;458;air_pdam_kantor_pusat;0;0;contains;Generic fallback for Air PDAM Kantor Pusat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;446;transfer_customer_corporate;0;0;contains;Generic fallback for Transfer Customer Corporate;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;445;transfer_customer_retail;0;0;contains;Generic fallback for Transfer Customer Retail;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;572;pest_control_emergency;0;0;contains;Generic fallback for Pest Control Emergency;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;497;BON.*PERBAIKAN.*KALIABANG;1;0;regex;Bon repair;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;497;KALIABANG BON PERBAIKAN;0;0;contains;Full bon name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;561;renovasi_outlet;0;0;contains;Generic fallback for Renovasi Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;513;merchant_qr_bca;0;0;contains;Generic fallback for Merchant QR BCA;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;514;merchant_qr_mandiri;0;0;contains;Generic fallback for Merchant QR Mandiri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;517;rumat_kf_cikarang;0;0;contains;Generic fallback for Rumat KF Cikarang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;518;rumat_kf_narogong;0;0;contains;Generic fallback for Rumat KF Narogong;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;519;rumat_kf_kalimalang;0;0;contains;Generic fallback for Rumat KF Kalimalang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;521;internet_indihome;0;0;contains;Generic fallback for Internet Indihome;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;524;PC.*OUTLET;1;0;regex;PC outlet;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;524;TBH.*PC;1;0;regex;Additional PC;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;524;BS.*PC.*KF;1;0;regex;PC maintenance;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;550;mcm_inhousetrf_internal;0;0;contains;Generic fallback for MCM InhouseTrf Internal;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;529;consumables_medis;0;0;contains;Generic fallback for Consumables Medis;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;545;security_kantor;0;0;contains;Generic fallback for Security Kantor;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;531;peralatan_penunjang;0;0;contains;Generic fallback for Peralatan Penunjang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;532;pembersih_&_disinfektan;0;0;contains;Generic fallback for Pembersih & Disinfektan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;537;tunjangan_kesehatan_karyawan;0;0;contains;Generic fallback for Tunjangan Kesehatan Karyawan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;538;asuransi_kesehatan_karyawan;0;0;contains;Generic fallback for Asuransi Kesehatan Karyawan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;539;fee_apoteker_konsultasi;0;0;contains;Generic fallback for Fee Apoteker Konsultasi;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;542;distributor_alkes_utama;0;0;contains;Generic fallback for Distributor Alkes Utama;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;510;cod_obat;0;0;contains;Generic fallback for COD Obat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;509;transfer_antar_cabang;0;0;contains;Generic fallback for Transfer Antar Cabang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;475;DINAS.*LEBRAN.*ZAMRUD;1;0;regex;Dinas Zamrud;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;475;DINAS LEBARAN ZAMRUD;0;0;contains;Full dinas name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;560;ipl_kantor;0;0;contains;Generic fallback for IPL Kantor;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;559;IPL.*KF;1;0;regex;IPL + KF;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;559;IPL;0;0;contains;IPL general;NULL;NULL;NULL;NULL;7;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;556;alat_kesehatan_medis;0;0;contains;Generic fallback for Alat Kesehatan Medis;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;476;DINAS.*LEBRAN.*PEKAYON;1;0;regex;Dinas Pekayon;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;476;DINAS LBRAN PEKAYON;0;0;contains;Dinas abbr;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;482;cleaning_service_outlet;0;0;contains;Generic fallback for Cleaning Service Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;483;cleaning_service_kantor;0;0;contains;Generic fallback for Cleaning Service Kantor;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;485;admin_bank_bulanan;0;0;contains;Generic fallback for Admin Bank Bulanan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;489;premi_asuransi_jiwa_karyawan;0;0;contains;Generic fallback for Premi Asuransi Jiwa Karyawan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;493;pph_23_sewa;0;0;contains;Generic fallback for PPh 23 Sewa;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;554;bon_pembelian_operasional;0;0;contains;Generic fallback for Bon Pembelian Operasional;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;552;premi_asuransi_inventaris;0;0;contains;Generic fallback for Premi Asuransi Inventaris;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;502;qris_dynamic_transaction;0;0;contains;Generic fallback for QRIS Dynamic Transaction;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;503;edc_credit_visa;0;0;contains;Generic fallback for EDC Credit Visa;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;504;edc_credit_mastercard;0;0;contains;Generic fallback for EDC Credit Mastercard;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;508;transfer_dari_pusat;0;0;contains;Generic fallback for Transfer dari Pusat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;544;security_outlet;0;0;contains;Generic fallback for Security Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;355;service_ac_outlet_wisma;0;0;contains;Generic fallback for Service AC Outlet Wisma;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;345;bop_outlet_september;0;0;contains;Generic fallback for BOP Outlet September;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;385;kimia_farma_trading;0;0;contains;Generic fallback for Kimia Farma Trading;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;344;bop_outlet_agustus;0;0;contains;Generic fallback for BOP Outlet Agustus;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;388;it_support_network;0;0;contains;Generic fallback for IT Support Network;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;343;bop_outlet_juli;0;0;contains;Generic fallback for BOP Outlet Juli;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;342;bop_outlet_juni;0;0;contains;Generic fallback for BOP Outlet Juni;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;341;bop_outlet_mei;0;0;contains;Generic fallback for BOP Outlet Mei;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;391;TRANSFER FEE.*BCA;1;0;regex;BCA fee;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;391;TRANSFER FEE;0;0;contains;General transfer fee;NULL;NULL;NULL;NULL;8;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;340;bop_outlet_april;0;0;contains;Generic fallback for BOP Outlet April;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;392;transfer_fee_bni;0;0;contains;Generic fallback for Transfer Fee BNI;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;393;transfer_fee_mandiri;0;0;contains;Generic fallback for Transfer Fee Mandiri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;339;bop_outlet_maret;0;0;contains;Generic fallback for BOP Outlet Maret;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;399;transfer_ke_outlet_emergency;0;0;contains;Generic fallback for Transfer ke Outlet Emergency;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;338;BOP.*FEBRUARI;1;0;regex;BOP month February;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;338;BOP FEBRUARI 2025;0;0;contains;BOP Feb 2025;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;401;premi_asuransi_swasta;0;0;contains;Generic fallback for Premi Asuransi Swasta;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;381;reimburse_hotel;0;0;contains;Generic fallback for Reimburse Hotel;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;380;reimburse_tiket_pesawat;0;0;contains;Generic fallback for Reimburse Tiket Pesawat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;361;obat_generic_dari_pbf;0;0;contains;Generic fallback for Obat Generic dari PBF;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;354;SERVICE.*AC.*CIKARANG;1;0;regex;AC service Cikarang;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;354;SERVICE AC2 KF CKRG;0;0;contains;AC service pattern;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;351;listrik_pln_outlet_wisma_asri;0;0;contains;Generic fallback for Listrik PLN Outlet Wisma Asri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;350;listrik_pln_outlet_cikarang;0;0;contains;Generic fallback for Listrik PLN Outlet Cikarang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;349;listrik_pln_outlet_narogong;0;0;contains;Generic fallback for Listrik PLN Outlet Narogong;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;348;bop_outlet_desember;0;0;contains;Generic fallback for BOP Outlet Desember;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;347;bop_outlet_november;0;0;contains;Generic fallback for BOP Outlet November;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;370;gaji_asisten_apoteker;0;0;contains;Generic fallback for Gaji Asisten Apoteker;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;371;gaji_admin_outlet;0;0;contains;Generic fallback for Gaji Admin Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;373;gaji_staff;0;0;contains;Generic fallback for Gaji Staff;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;374;tunjangan_transport_karyawan_tetap;0;0;contains;Generic fallback for Tunjangan Transport Karyawan Tetap;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;346;bop_outlet_oktober;0;0;contains;Generic fallback for BOP Outlet Oktober;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;357;service_ac_kantor_pusat;0;0;contains;Generic fallback for Service AC Kantor Pusat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;377;thr_natal;0;0;contains;Generic fallback for THR Natal;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;379;jasa_praktik_spesialis_lainnya;0;0;contains;Generic fallback for Jasa Praktik Spesialis Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;337;BOP.*JANUARI;1;0;regex;BOP month January;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;389;PRIMAGRAPHIA;0;0;contains;Primagraphia company;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;389;PRIMAGRAPHIA DIGITAL;0;0;contains;Full company name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;414;BON.*SEMENTARA.*KRANGGAN;1;0;regex;Bon Kranggan;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;414;KF KRANGGAN BON;0;0;contains;Kranggan bon;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;311;kf_kota_serang;0;0;contains;Generic fallback for KF Kota Serang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;310;SUMMARECON;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;310;KF SUMMARECON;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;310;SUMMA;0;0;contains;Abbreviation;NULL;NULL;NULL;NULL;7;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;423;liph_outlet_lainnya;0;0;contains;Generic fallback for LIPH Outlet Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;309;kf_boulevard;0;0;contains;Generic fallback for KF Boulevard;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;426;rumat_cikarang;0;0;contains;Generic fallback for Rumat Cikarang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;308;kf_sepat;0;0;contains;Generic fallback for KF Sepat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;307;kf_rawa_lumbu;0;0;contains;Generic fallback for KF Rawa Lumbu;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;429;edc_debit_bca;0;0;contains;Generic fallback for EDC Debit BCA;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;430;edc_debit_mandiri;0;0;contains;Generic fallback for EDC Debit Mandiri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;431;edc_debit_bni;0;0;contains;Generic fallback for EDC Debit BNI;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;305;KALI ABANG;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;305;KALIABANG;0;0;contains;No space variant;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;305;KF KALIABANG;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;433;ATMB TRF;0;0;contains;ATM Banking transfer;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;433;ATMB TRF CREDT;0;0;contains;ATM transfer credit;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;313;transfer_dari_kimia_farma_trading;0;0;contains;Generic fallback for Transfer dari Kimia Farma Trading;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;434;mobile_banking_transfer;0;0;contains;Generic fallback for Mobile Banking Transfer;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;314;transfer_dari_pbf;0;0;contains;Generic fallback for Transfer dari PBF;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;405;klaim_pasien_rawat_jalan;0;0;contains;Generic fallback for Klaim Pasien Rawat Jalan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;387;it_support_software;0;0;contains;Generic fallback for IT Support Software;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;406;klaim_pasien_rawat_inap;0;0;contains;Generic fallback for Klaim Pasien Rawat Inap;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;408;pph_21_bonus;0;0;contains;Generic fallback for PPh 21 Bonus;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;329;qris_dynamic;0;0;contains;Generic fallback for QRIS Dynamic;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;410;pbb_gedung_outlet;0;0;contains;Generic fallback for PBB Gedung Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;386;it_support_hardware;0;0;contains;Generic fallback for IT Support Hardware;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;304;kf_cakra_raya;0;0;contains;Generic fallback for KF Cakra Raya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;411;pbb_kantor;0;0;contains;Generic fallback for PBB Kantor;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;306;kf_jati_rahayu;0;0;contains;Generic fallback for KF Jati Rahayu;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;533;supplies_kebersihan;0;0;contains;Generic fallback for Supplies Kebersihan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;569;fee_konsultan_it;0;0;contains;Generic fallback for Fee Konsultan IT;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;356;service_ac_outlet_lainnya;0;0;contains;Generic fallback for Service AC Outlet Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;520;rumat_outlet_lainnya;0;0;contains;Generic fallback for Rumat Outlet Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;570;fee_konsultan_bisnis;0;0;contains;Generic fallback for Fee Konsultan Bisnis;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;525;maintenance_printer;0;0;contains;Generic fallback for Maintenance Printer;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;353;listrik_pln_outlet_lainnya;0;0;contains;Generic fallback for Listrik PLN Outlet Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;523;telepon_kantor;0;0;contains;Generic fallback for Telepon Kantor;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;571;pest_control_rutin;0;0;contains;Generic fallback for Pest Control Rutin;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;528;alat_kesehatan_personal;0;0;contains;Generic fallback for Alat Kesehatan Personal;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;535;fee_freelancer_it;0;0;contains;Generic fallback for Fee Freelancer IT;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;315;transfer_dari_distributor_obat;0;0;contains;Generic fallback for Transfer dari Distributor Obat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;546;biaya_kliring_cek;0;0;contains;Generic fallback for Biaya Kliring Cek;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;334;klaim_asuransi_lainnya;0;0;contains;Generic fallback for Klaim Asuransi Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;543;distributor_alkes_lainnya;0;0;contains;Generic fallback for Distributor Alkes Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;557;alat_kesehatan_personal;0;0;contains;Generic fallback for Alat Kesehatan Personal;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;327;setoran_tunai_outlet_lain;0;0;contains;Generic fallback for Setoran Tunai Outlet Lain;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;563;perbaikan_atap;0;0;contains;Generic fallback for Perbaikan Atap;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;547;biaya_kliring_giro;0;0;contains;Generic fallback for Biaya Kliring Giro;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;558;consumables_medis;0;0;contains;Generic fallback for Consumables Medis;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;330;qris_merchant;0;0;contains;Generic fallback for QRIS Merchant;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;447;transfer_customer_online;0;0;contains;Generic fallback for Transfer Customer Online;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;484;supplier_atk_utama;0;0;contains;Generic fallback for Supplier ATK Utama;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;390;percetakan_lainnya;0;0;contains;Generic fallback for Percetakan Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;481;pbf_sekunder;0;0;contains;Generic fallback for PBF Sekunder;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;479;reimburse_bensin_karyawan;0;0;contains;Generic fallback for Reimburse Bensin Karyawan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;394;transfer_fee_bank_lain;0;0;contains;Generic fallback for Transfer Fee Bank Lain;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;474;tunjangan_makan_lembur;0;0;contains;Generic fallback for Tunjangan Makan Lembur;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;472;gaji_part-time_admin;0;0;contains;Generic fallback for Gaji Part-time Admin;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;471;gaji_part-time_outlet;0;0;contains;Generic fallback for Gaji Part-time Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;469;box_packaging;0;0;contains;Generic fallback for Box Packaging;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;468;paper_bag;0;0;contains;Generic fallback for Paper Bag;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;466;perangkat_jaringan;0;0;contains;Generic fallback for Perangkat Jaringan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;465;printer_&_scanner;0;0;contains;Generic fallback for Printer & Scanner;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;456;bop_klinik_lainnya;0;0;contains;Generic fallback for BOP Klinik Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;415;bon_sementara_outlet_lain;0;0;contains;Generic fallback for Bon Sementara Outlet Lain;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;427;rumat_outlet_lainnya;0;0;contains;Generic fallback for Rumat Outlet Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;449;setoran_klinik_lainnya;0;0;contains;Generic fallback for Setoran Klinik Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;461;cctv_outlet_lainnya;0;0;contains;Generic fallback for CCTV Outlet Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;382;reimburse_transport_dinas;0;0;contains;Generic fallback for Reimburse Transport Dinas;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;364;rak_&_lemari;0;0;contains;Generic fallback for Rak & Lemari;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;362;obat_generic_lainnya;0;0;contains;Generic fallback for Obat Generic Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;512;cod_layanan;0;0;contains;Generic fallback for COD Layanan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;477;dinas_lebaran_outlet_lainnya;0;0;contains;Generic fallback for Dinas Lebaran Outlet Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;511;cod_alkes;0;0;contains;Generic fallback for COD Alkes;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;363;meja_&_kursi;0;0;contains;Generic fallback for Meja & Kursi;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;366;atk_kantor;0;0;contains;Generic fallback for ATK Kantor;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;506;klinik_umum;0;0;contains;Generic fallback for Klinik Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;367;atk_outlet;0;0;contains;Generic fallback for ATK Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;515;merchant_qr_lainnya;0;0;contains;Generic fallback for Merchant QR Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;495;pajak_motor_operasional;0;0;contains;Generic fallback for Pajak Motor Operasional;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;496;pajak_mobil_operasional;0;0;contains;Generic fallback for Pajak Mobil Operasional;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;498;bon_perbaikan_outlet_lain;0;0;contains;Generic fallback for Bon Perbaikan Outlet Lain;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;375;tunjangan_transport_part-time;0;0;contains;Generic fallback for Tunjangan Transport Part-time;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;562;cat_&_pengecatan;0;0;contains;Generic fallback for Cat & Pengecatan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;365;furniture_display;0;0;contains;Generic fallback for Furniture Display;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;541;reimburse_tol;0;0;contains;Generic fallback for Reimburse Tol;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;486;biaya_materai;0;0;contains;Generic fallback for Biaya Materai;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;536;fee_freelancer_marketing;0;0;contains;Generic fallback for Fee Freelancer Marketing;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;540;reimburse_parkir;0;0;contains;Generic fallback for Reimburse Parkir;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;359;biaya_kebersihan_&_keamanan_umum_umum;0;0;contains;Generic fallback for Biaya Kebersihan & Keamanan - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;438;dividen_umum_umum;0;0;contains;Generic fallback for Dividen - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;432;transaksi_tunai_umum_umum;0;0;contains;Generic fallback for Transaksi Tunai - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;436;refund_&_return_umum_umum;0;0;contains;Generic fallback for Refund & Return - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;435;koreksi_transaksi_umum_umum;0;0;contains;Generic fallback for Koreksi Transaksi - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;439;lain-lain_umum_umum;0;0;contains;Generic fallback for Lain-lain - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;424;kas_kecil_outlet_umum_umum;0;0;contains;Generic fallback for Kas Kecil Outlet - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;416;piutang_umum_umum;0;0;contains;Generic fallback for Piutang - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;437;investasi_umum_umum;0;0;contains;Generic fallback for Investasi - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;358;biaya_sewa_umum_umum;0;0;contains;Generic fallback for Biaya Sewa - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;368;sticker_&_spanduk_umum;0;0;contains;Generic fallback for Sticker & Spanduk - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;470;brosur_&_leaflet_umum;0;0;contains;Generic fallback for Brosur & Leaflet - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;412;pinjaman_diberikan_umum_umum;0;0;contains;Generic fallback for Pinjaman Diberikan - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;534;merchandise_umum;0;0;contains;Generic fallback for Merchandise - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;413;pelunasan_pinjaman_diterima_umum_umum;0;0;contains;Generic fallback for Pelunasan Pinjaman Diterima - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;659;KF 0591;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;659;ZAMRUD;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;659;KF ZAMRUD;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;660;KF 0624;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;660;KF0624;0;0;contains;KF number no space;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;660;CISC;0;0;contains;Location code;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;660;GGC;0;0;contains;Alternative code;NULL;NULL;NULL;NULL;8;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;661;kf_0618_kranji;0;0;contains;Generic fallback for KF 0618 Kranji;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;662;kf_0810_kintamani;0;0;contains;Generic fallback for KF 0810 Kintamani;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;663;kf_0944_parungkd;0;0;contains;Generic fallback for KF 0944 Parungkd;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;779;bop_klinik_wisma_asri;0;0;contains;Generic fallback for BOP Klinik Wisma Asri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;777;klaim_bpjs_kesehatan_rawat_inap;0;0;contains;Generic fallback for Klaim BPJS Kesehatan Rawat Inap;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;776;klaim_bpjs_kesehatan_rawat_jalan;0;0;contains;Generic fallback for Klaim BPJS Kesehatan Rawat Jalan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;774;OTOPAY.*QR.*SUMMARECON;1;0;regex;OTOPAY Summarecon;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;774;OTOPAY QR;0;0;contains;OTOPAY general;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;772;KLINIK.*WISMA.*SETOR;1;0;regex;Klinik setoran;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;772;SETOR.*KLINIK.*WISMA;1;0;regex;Setoran klinik;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;672;KIMIA FARMA APOTEK;0;0;contains;From KF Apotek;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;672;IRKF BEKASI;0;0;contains;IR KF Bekasi;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;676;LIPH.*0264;1;0;regex;LIPH + KF number;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;676;LIPH.*NAROGONG;1;0;regex;LIPH + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;676;LIPH KF.*0264;1;0;regex;LIPH KF + number;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;677;LIPH.*0330;1;0;regex;LIPH + KF number;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;677;LIPH.*HARAPAN;1;0;regex;LIPH + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;658;kf_0586_cileungsi;0;0;contains;Generic fallback for KF 0586 Cileungsi;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;657;kf_0503_taman_mini;0;0;contains;Generic fallback for KF 0503 Taman Mini;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;632;rumat_wisma_asri;0;0;contains;Generic fallback for Rumat Wisma Asri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;635;QR.*STATIC;1;0;regex;QR static pattern;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;635;QRIS.*STATIC;1;0;regex;QRIS static;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;786;obat_paten_branded;0;0;contains;Generic fallback for Obat Paten Branded;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;751;pph_23_jasa_profesional;0;0;contains;Generic fallback for PPh 23 Jasa Profesional;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;647;KF 0264;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;647;KF0264;0;0;contains;KF number no space;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;647;KF 264;0;0;contains;KF number no zero;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;647;NAROGONG;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;647;264;0;0;contains;Number only;NULL;NULL;NULL;NULL;8;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;649;KF 0340;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;649;KF0340;0;0;contains;KF number no space;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;649;KF CIKARANG;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;649;CIKARANG;0;0;contains;Location name;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;649;CKRG;0;0;contains;Abbreviation;NULL;NULL;NULL;NULL;7;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;650;KF 0347;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;650;PEKAYON;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;650;KF PEKAYON;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;651;KF 0367;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;651;JATI ASIH;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;651;JATIASIH;0;0;contains;No space variant;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;651;KF JATIASIH;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;652;kf_0390_cakung_gede;0;0;contains;Generic fallback for KF 0390 Cakung Gede;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;653;kf_0405_daan;0;0;contains;Generic fallback for KF 0405 Daan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;654;KF 0406;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;654;KALIMALANG;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;654;KF KALIMALANG;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;654;KRG;0;0;contains;Abbreviation;NULL;NULL;NULL;NULL;6;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;655;KF 0007;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;655;KF 007;0;0;contains;KF number no leading zero;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;655;CIBITUNG;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;655;KF CIBITUNG;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;656;KF 0456;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;656;GRANWIS;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;656;KF GRANWIS;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;656;GRANWISATA;0;0;contains;Full location name;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;678;LIPH.*0340;1;0;regex;LIPH + KF number;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;678;LIPH.*CIKARANG;1;0;regex;LIPH + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;678;LIPH KF CIKARANG;0;0;contains;Full LIPH name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;679;liph_kf_pekayon;0;0;contains;Generic fallback for LIPH KF Pekayon;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;680;liph_kf_jati_asih;0;0;contains;Generic fallback for LIPH KF Jati Asih;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;696;BO.*BEKASI;1;0;regex;BO Bekasi;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;696;TBHBO BEKASI;0;0;contains;TBH BO;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;760;rumat_klinik_wisma;0;0;contains;Generic fallback for Rumat Klinik Wisma;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;759;liph_resep_cikarang;0;0;contains;Generic fallback for LIPH Resep Cikarang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;758;liph_resep_narogong;0;0;contains;Generic fallback for LIPH Resep Narogong;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;753;ppn_keluaran_penjualan;0;0;contains;Generic fallback for PPN Keluaran Penjualan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;750;klaim_bpjs_rawat_inap;0;0;contains;Generic fallback for Klaim BPJS Rawat Inap;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;749;klaim_bpjs_rawat_jalan;0;0;contains;Generic fallback for Klaim BPJS Rawat Jalan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;747;transfer_dari_outlet_setoran;0;0;contains;Generic fallback for Transfer dari Outlet Setoran;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;746;pemindahan_antar_rekening;0;0;contains;Generic fallback for Pemindahan Antar Rekening;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;712;PERUSAHAAN LISTRIK NEGARA;0;0;contains;PLN full name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;712;LISTRIK NEGARA;0;0;contains;PLN short;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;739;pbf_utama;0;0;contains;Generic fallback for PBF Utama;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;737;jasa_praktik_dokter_umum_klinik;0;0;contains;Generic fallback for Jasa Praktik Dokter Umum Klinik;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;695;BOP.*MG3.*BEKASI;1;0;regex;BOP MG3;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;695;MG3 BEKASI;0;0;contains;MG3 location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;764;RESEP SUZI;0;0;contains;Resep identifier;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;764;KF.*264.*RESEP;1;0;regex;KF + number + resep;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;764;RESEP.*264;1;0;regex;Resep + number;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;693;PERTA LIFE;0;0;contains;Perta insurance;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;693;PERTA;0;0;contains;Company name;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;681;LIPH.*0406;1;0;regex;LIPH + KF number;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;681;LIPH.*KALIMALANG;1;0;regex;LIPH + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;682;liph_kf_cibitung;0;0;contains;Generic fallback for LIPH KF Cibitung;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;683;liph_kf_granwis;0;0;contains;Generic fallback for LIPH KF Granwis;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;684;liph_kf_zamrud;0;0;contains;Generic fallback for LIPH KF Zamrud;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;685;LIPH.*KALIABANG;1;0;regex;LIPH + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;685;LIPH KF KALIABANG;0;0;contains;Full LIPH name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;686;LIPH.*SUMMARECON;1;0;regex;LIPH + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;686;LIPH KF SUMMARECON;0;0;contains;Full LIPH name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;767;RESEP CB;0;0;contains;Resep identifier;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;767;KF.*007.*RESEP;1;0;regex;KF + number + resep;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;688;qris_static_kf_outlet;0;0;contains;Generic fallback for QRIS Static KF Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;766;RESEP KC;0;0;contains;Resep identifier;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;766;KF.*340.*RESEP;1;0;regex;KF + number + resep;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;765;RESEP HI;0;0;contains;Resep identifier;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;765;KF.*330.*RESEP;1;0;regex;KF + number + resep;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;691;ASURANSI SINAR MAS;0;0;contains;Sinar Mas insurance;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;691;SINAR MAS;0;0;contains;Company name;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;692;HANWHA LIFE;0;0;contains;Hanwha insurance;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;692;HANWHA;0;0;contains;Company name;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;720;obat_generic_dari_kimia_farma;0;0;contains;Generic fallback for Obat Generic dari Kimia Farma;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;591;kimia_farma_distribusi;0;0;contains;Generic fallback for Kimia Farma Distribusi;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;607;premi_bpjs_kesehatan;0;0;contains;Generic fallback for Premi BPJS Kesehatan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;843;bonus_kinerja_tahunan;0;0;contains;Generic fallback for Bonus Kinerja Tahunan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;610;klaim_hanwha;0;0;contains;Generic fallback for Klaim Hanwha;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;604;transfer_internal_mandiri;0;0;contains;Generic fallback for Transfer Internal Mandiri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;611;klaim_perta;0;0;contains;Generic fallback for Klaim Perta;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;614;pph_21_gaji_karyawan;0;0;contains;Generic fallback for PPh 21 Gaji Karyawan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;817;transfer_antar_outlet;0;0;contains;Generic fallback for Transfer Antar Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;616;ppn_masukan_pembelian;0;0;contains;Generic fallback for PPN Masukan Pembelian;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;815;KLINIK.*WISMA;1;0;regex;Klinik + Wisma;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;815;KLINIK KF WISMA;0;0;contains;Full klinik name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;815;KLINIK WISMA ASRI;0;0;contains;Klinik location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;814;liph_klinik_wisma_asri;0;0;contains;Generic fallback for LIPH Klinik Wisma Asri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;583;thr_lebaran;0;0;contains;Generic fallback for THR Lebaran;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;605;transfer_ke_outlet_operasional;0;0;contains;Generic fallback for Transfer ke Outlet Operasional;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;836;maintenance_peralatan_medis;0;0;contains;Generic fallback for Maintenance Peralatan Medis;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;590;KIMIA FARMA APOTEK;0;0;contains;KF Apotek;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;590;DARI KIMIA FARMA;0;0;contains;From KF;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;590;KE KIMIA FARMA;0;0;contains;To KF;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;832;internet_corporate;0;0;contains;Generic fallback for Internet Corporate;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;837;alat_medis;0;0;contains;Generic fallback for Alat Medis;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;648;KF 0330;0;0;contains;KF number match;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;648;KF0330;0;0;contains;KF number no space;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;648;HARAPAN INDAH;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;648;HARAPAN INDA;0;0;contains;Common typo;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;648;330;0;0;contains;Number only;NULL;NULL;NULL;NULL;8;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;840;peralatan_diagnostik;0;0;contains;Generic fallback for Peralatan Diagnostik;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;826;RUMAT.*WISMA;1;0;regex;Rumat Wisma;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;826;RUMATKFWISMA;0;0;contains;Rumat no space;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;826;RUMAT KF WISMA;0;0;contains;Full rumat name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;585;JASA PRAKTEK SPESIALIS.*KALIMALANG;1;0;regex;Doctor fee;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;585;JASA PRAKTEK SPESIALIS KF KALIMALANG;0;0;contains;Full doctor fee;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;602;transfer_internal_bca;0;0;contains;Generic fallback for Transfer Internal BCA;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;603;transfer_internal_bni;0;0;contains;Generic fallback for Transfer Internal BNI;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;579;gaji_manajemen;0;0;contains;Generic fallback for Gaji Manajemen;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;812;pph_final_usaha;0;0;contains;Generic fallback for PPh Final Usaha;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;808;MCM INHOUSETRF DARI;0;0;contains;MCM from vendor;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;808;INHOUSETRF DARI;0;0;contains;Inhouse from;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;857;obat_narkotika_&_psikotropika;0;0;contains;Generic fallback for Obat Narkotika & Psikotropika;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;856;obat_cold_chain;0;0;contains;Generic fallback for Obat Cold Chain;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;629;liph_kali_abang;0;0;contains;Generic fallback for LIPH Kali Abang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;807;MCM INHOUSETRF KE;0;0;contains;MCM to employee;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;807;INHOUSETRF KE;0;0;contains;Inhouse to;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;628;liph_kalimalang;0;0;contains;Generic fallback for LIPH Kalimalang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;576;gaji_apoteker;0;0;contains;Generic fallback for Gaji Apoteker;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;627;liph_pekayon;0;0;contains;Generic fallback for LIPH Pekayon;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;626;liph_cikarang;0;0;contains;Generic fallback for LIPH Cikarang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;624;liph_narogong;0;0;contains;Generic fallback for LIPH Narogong;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;609;klaim_sinar_mas;0;0;contains;Generic fallback for Klaim Sinar Mas;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;810;premi_asuransi_gedung;0;0;contains;Generic fallback for Premi Asuransi Gedung;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;625;liph_harapan_indah;0;0;contains;Generic fallback for LIPH Harapan Indah;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;852;ipl_kantor;0;0;contains;Generic fallback for IPL Kantor;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;851;IPL.*KF;1;0;regex;IPL + KF;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;851;IPL;0;0;contains;IPL general;NULL;NULL;NULL;NULL;7;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;841;peralatan_penunjang;0;0;contains;Generic fallback for Peralatan Penunjang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;735;DINAS.*LEBRAN.*PEKAYON;1;0;regex;Dinas Pekayon;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;735;DINAS LBRAN PEKAYON;0;0;contains;Dinas abbr;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;839;consumables_medis;0;0;contains;Generic fallback for Consumables Medis;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;734;DINAS.*LEBRAN.*ZAMRUD;1;0;regex;Dinas Zamrud;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;734;DINAS LEBARAN ZAMRUD;0;0;contains;Full dinas name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;732;tunjangan_makan_harian;0;0;contains;Generic fallback for Tunjangan Makan Harian;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;726;kantong_plastik;0;0;contains;Generic fallback for Kantong Plastik;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;853;renovasi_outlet;0;0;contains;Generic fallback for Renovasi Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;741;cleaning_service_outlet;0;0;contains;Generic fallback for Cleaning Service Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;742;cleaning_service_kantor;0;0;contains;Generic fallback for Cleaning Service Kantor;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;847;pest_control_emergency;0;0;contains;Generic fallback for Pest Control Emergency;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;748;premi_asuransi_jiwa_karyawan;0;0;contains;Generic fallback for Premi Asuransi Jiwa Karyawan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;756;BON.*PERBAIKAN.*KALIABANG;1;0;regex;Bon repair;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;756;KALIABANG BON PERBAIKAN;0;0;contains;Full bon name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;752;pph_23_sewa;0;0;contains;Generic fallback for PPh 23 Sewa;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;744;admin_bank_bulanan;0;0;contains;Generic fallback for Admin Bank Bulanan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;858;obat_onkologi;0;0;contains;Generic fallback for Obat Onkologi;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;761;qris_dynamic_transaction;0;0;contains;Generic fallback for QRIS Dynamic Transaction;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;762;edc_credit_visa;0;0;contains;Generic fallback for EDC Credit Visa;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;763;edc_credit_mastercard;0;0;contains;Generic fallback for EDC Credit Mastercard;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;842;bonus_target_penjualan;0;0;contains;Generic fallback for Bonus Target Penjualan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;834;PC.*OUTLET;1;0;regex;PC outlet;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;834;TBH.*PC;1;0;regex;Additional PC;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;834;BS.*PC.*KF;1;0;regex;PC maintenance;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;813;bon_pembelian_operasional;0;0;contains;Generic fallback for Bon Pembelian Operasional;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;811;premi_asuransi_inventaris;0;0;contains;Generic fallback for Premi Asuransi Inventaris;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;809;mcm_inhousetrf_internal;0;0;contains;Generic fallback for MCM InhouseTrf Internal;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;782;air_pdam_kantor_pusat;0;0;contains;Generic fallback for Air PDAM Kantor Pusat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;783;CCTV.*CIBITUNG;1;0;regex;CCTV Cibitung;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;784;CCTV.*POGE;1;0;regex;CCTV Daan (POGE);NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;784;PENGADAAN CCTV;0;0;contains;CCTV procurement;NULL;NULL;NULL;NULL;9;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;787;obat_import;0;0;contains;Generic fallback for Obat Import;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;788;komputer_&_laptop;0;0;contains;Generic fallback for Komputer & Laptop;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;791;pembersih_&_disinfektan;0;0;contains;Generic fallback for Pembersih & Disinfektan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;796;tunjangan_kesehatan_karyawan;0;0;contains;Generic fallback for Tunjangan Kesehatan Karyawan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;797;asuransi_kesehatan_karyawan;0;0;contains;Generic fallback for Asuransi Kesehatan Karyawan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;798;fee_apoteker_konsultasi;0;0;contains;Generic fallback for Fee Apoteker Konsultasi;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;801;distributor_alkes_utama;0;0;contains;Generic fallback for Distributor Alkes Utama;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;803;security_outlet;0;0;contains;Generic fallback for Security Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;848;alat_kesehatan_medis;0;0;contains;Generic fallback for Alat Kesehatan Medis;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;818;transfer_dari_pusat;0;0;contains;Generic fallback for Transfer dari Pusat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;831;internet_indihome;0;0;contains;Generic fallback for Internet Indihome;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;829;rumat_kf_kalimalang;0;0;contains;Generic fallback for Rumat KF Kalimalang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;828;rumat_kf_narogong;0;0;contains;Generic fallback for Rumat KF Narogong;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;827;rumat_kf_cikarang;0;0;contains;Generic fallback for Rumat KF Cikarang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;824;merchant_qr_mandiri;0;0;contains;Generic fallback for Merchant QR Mandiri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;778;klaim_bpjs_obat;0;0;contains;Generic fallback for Klaim BPJS Obat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;768;kf_cakra_raya_resep;0;0;contains;Generic fallback for KF Cakra Raya Resep;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;769;transfer_customer_retail;0;0;contains;Generic fallback for Transfer Customer Retail;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;770;transfer_customer_corporate;0;0;contains;Generic fallback for Transfer Customer Corporate;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;823;merchant_qr_bca;0;0;contains;Generic fallback for Merchant QR BCA;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;820;cod_obat;0;0;contains;Generic fallback for COD Obat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;775;otopay_qr_outlet_lain;0;0;contains;Generic fallback for OTOPAY QR Outlet Lain;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;781;air_pdam_outlet;0;0;contains;Generic fallback for Air PDAM Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;819;transfer_antar_cabang;0;0;contains;Generic fallback for Transfer Antar Cabang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;804;security_kantor;0;0;contains;Generic fallback for Security Kantor;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;641;mobile_banking_transfer;0;0;contains;Generic fallback for Mobile Banking Transfer;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;674;transfer_dari_pbf;0;0;contains;Generic fallback for Transfer dari PBF;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;595;it_support_network;0;0;contains;Generic fallback for IT Support Network;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;594;it_support_software;0;0;contains;Generic fallback for IT Support Software;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;689;qris_dynamic;0;0;contains;Generic fallback for QRIS Dynamic;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;613;klaim_pasien_rawat_inap;0;0;contains;Generic fallback for Klaim Pasien Rawat Inap;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;615;pph_21_bonus;0;0;contains;Generic fallback for PPh 21 Bonus;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;697;BOP.*JANUARI;1;0;regex;BOP month January;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;698;BOP.*FEBRUARI;1;0;regex;BOP month February;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;698;BOP FEBRUARI 2025;0;0;contains;BOP Feb 2025;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;699;bop_outlet_maret;0;0;contains;Generic fallback for BOP Outlet Maret;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;700;bop_outlet_april;0;0;contains;Generic fallback for BOP Outlet April;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;701;bop_outlet_mei;0;0;contains;Generic fallback for BOP Outlet Mei;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;702;bop_outlet_juni;0;0;contains;Generic fallback for BOP Outlet Juni;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;703;bop_outlet_juli;0;0;contains;Generic fallback for BOP Outlet Juli;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;673;transfer_dari_kimia_farma_trading;0;0;contains;Generic fallback for Transfer dari Kimia Farma Trading;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;612;klaim_pasien_rawat_jalan;0;0;contains;Generic fallback for Klaim Pasien Rawat Jalan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;671;kf_kota_serang;0;0;contains;Generic fallback for KF Kota Serang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;606;transfer_ke_outlet_emergency;0;0;contains;Generic fallback for Transfer ke Outlet Emergency;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;586;jasa_praktik_spesialis_lainnya;0;0;contains;Generic fallback for Jasa Praktik Spesialis Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;600;transfer_fee_mandiri;0;0;contains;Generic fallback for Transfer Fee Mandiri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;599;transfer_fee_bni;0;0;contains;Generic fallback for Transfer Fee BNI;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;596;PRIMAGRAPHIA;0;0;contains;Primagraphia company;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;596;PRIMAGRAPHIA DIGITAL;0;0;contains;Full company name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;664;kf_cakra_raya;0;0;contains;Generic fallback for KF Cakra Raya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;598;TRANSFER FEE.*BCA;1;0;regex;BCA fee;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;598;TRANSFER FEE;0;0;contains;General transfer fee;NULL;NULL;NULL;NULL;8;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;665;KALI ABANG;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;665;KALIABANG;0;0;contains;No space variant;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;665;KF KALIABANG;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;666;kf_jati_rahayu;0;0;contains;Generic fallback for KF Jati Rahayu;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;667;kf_rawa_lumbu;0;0;contains;Generic fallback for KF Rawa Lumbu;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;668;kf_sepat;0;0;contains;Generic fallback for KF Sepat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;669;kf_boulevard;0;0;contains;Generic fallback for KF Boulevard;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;608;premi_asuransi_swasta;0;0;contains;Generic fallback for Premi Asuransi Swasta;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;592;kimia_farma_trading;0;0;contains;Generic fallback for Kimia Farma Trading;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;670;SUMMARECON;0;0;contains;Location name;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;670;KF SUMMARECON;0;0;contains;KF + location;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;670;SUMMA;0;0;contains;Abbreviation;NULL;NULL;NULL;NULL;7;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;704;bop_outlet_agustus;0;0;contains;Generic fallback for BOP Outlet Agustus;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;584;thr_natal;0;0;contains;Generic fallback for THR Natal;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;717;service_ac_kantor_pusat;0;0;contains;Generic fallback for Service AC Kantor Pusat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;618;pbb_kantor;0;0;contains;Generic fallback for PBB Kantor;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;621;BON.*SEMENTARA.*KRANGGAN;1;0;regex;Bon Kranggan;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;621;KF KRANGGAN BON;0;0;contains;Kranggan bon;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;636;edc_debit_bca;0;0;contains;Generic fallback for EDC Debit BCA;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;593;it_support_hardware;0;0;contains;Generic fallback for IT Support Hardware;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;721;obat_generic_dari_pbf;0;0;contains;Generic fallback for Obat Generic dari PBF;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;581;tunjangan_transport_karyawan_tetap;0;0;contains;Generic fallback for Tunjangan Transport Karyawan Tetap;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;580;gaji_staff;0;0;contains;Generic fallback for Gaji Staff;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;630;liph_outlet_lainnya;0;0;contains;Generic fallback for LIPH Outlet Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;578;gaji_admin_outlet;0;0;contains;Generic fallback for Gaji Admin Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;577;gaji_asisten_apoteker;0;0;contains;Generic fallback for Gaji Asisten Apoteker;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;633;rumat_cikarang;0;0;contains;Generic fallback for Rumat Cikarang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;637;edc_debit_mandiri;0;0;contains;Generic fallback for EDC Debit Mandiri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;640;ATMB TRF;0;0;contains;ATM Banking transfer;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;640;ATMB TRF CREDT;0;0;contains;ATM transfer credit;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;705;bop_outlet_september;0;0;contains;Generic fallback for BOP Outlet September;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;706;bop_outlet_oktober;0;0;contains;Generic fallback for BOP Outlet Oktober;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;707;bop_outlet_november;0;0;contains;Generic fallback for BOP Outlet November;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;708;bop_outlet_desember;0;0;contains;Generic fallback for BOP Outlet Desember;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;709;listrik_pln_outlet_narogong;0;0;contains;Generic fallback for Listrik PLN Outlet Narogong;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;710;listrik_pln_outlet_cikarang;0;0;contains;Generic fallback for Listrik PLN Outlet Cikarang;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;711;listrik_pln_outlet_wisma_asri;0;0;contains;Generic fallback for Listrik PLN Outlet Wisma Asri;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;617;pbb_gedung_outlet;0;0;contains;Generic fallback for PBB Gedung Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;715;service_ac_outlet_wisma;0;0;contains;Generic fallback for Service AC Outlet Wisma;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;714;SERVICE.*AC.*CIKARANG;1;0;regex;AC service Cikarang;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;714;SERVICE AC2 KF CKRG;0;0;contains;AC service pattern;NULL;NULL;NULL;NULL;10;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;638;edc_debit_bni;0;0;contains;Generic fallback for EDC Debit BNI;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;588;reimburse_hotel;0;0;contains;Generic fallback for Reimburse Hotel;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;587;reimburse_tiket_pesawat;0;0;contains;Generic fallback for Reimburse Tiket Pesawat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;622;bon_sementara_outlet_lain;0;0;contains;Generic fallback for Bon Sementara Outlet Lain;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;821;cod_alkes;0;0;contains;Generic fallback for COD Alkes;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;816;klinik_umum;0;0;contains;Generic fallback for Klinik Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;822;cod_layanan;0;0;contains;Generic fallback for COD Layanan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;806;biaya_kliring_giro;0;0;contains;Generic fallback for Biaya Kliring Giro;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;825;merchant_qr_lainnya;0;0;contains;Generic fallback for Merchant QR Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;855;perbaikan_atap;0;0;contains;Generic fallback for Perbaikan Atap;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;850;consumables_medis;0;0;contains;Generic fallback for Consumables Medis;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;849;alat_kesehatan_personal;0;0;contains;Generic fallback for Alat Kesehatan Personal;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;845;fee_konsultan_bisnis;0;0;contains;Generic fallback for Fee Konsultan Bisnis;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;844;fee_konsultan_it;0;0;contains;Generic fallback for Fee Konsultan IT;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;582;tunjangan_transport_part-time;0;0;contains;Generic fallback for Tunjangan Transport Part-time;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;601;transfer_fee_bank_lain;0;0;contains;Generic fallback for Transfer Fee Bank Lain;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;573;atk_kantor;0;0;contains;Generic fallback for ATK Kantor;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;838;alat_kesehatan_personal;0;0;contains;Generic fallback for Alat Kesehatan Personal;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;835;maintenance_printer;0;0;contains;Generic fallback for Maintenance Printer;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;846;pest_control_rutin;0;0;contains;Generic fallback for Pest Control Rutin;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;833;telepon_kantor;0;0;contains;Generic fallback for Telepon Kantor;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;830;rumat_outlet_lainnya;0;0;contains;Generic fallback for Rumat Outlet Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;597;percetakan_lainnya;0;0;contains;Generic fallback for Percetakan Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;589;reimburse_transport_dinas;0;0;contains;Generic fallback for Reimburse Transport Dinas;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;574;atk_outlet;0;0;contains;Generic fallback for ATK Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;805;biaya_kliring_cek;0;0;contains;Generic fallback for Biaya Kliring Cek;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;736;dinas_lebaran_outlet_lainnya;0;0;contains;Generic fallback for Dinas Lebaran Outlet Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;785;cctv_outlet_lainnya;0;0;contains;Generic fallback for CCTV Outlet Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;687;setoran_tunai_outlet_lain;0;0;contains;Generic fallback for Setoran Tunai Outlet Lain;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;738;reimburse_bensin_karyawan;0;0;contains;Generic fallback for Reimburse Bensin Karyawan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;780;bop_klinik_lainnya;0;0;contains;Generic fallback for BOP Klinik Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;773;setoran_klinik_lainnya;0;0;contains;Generic fallback for Setoran Klinik Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;771;transfer_customer_online;0;0;contains;Generic fallback for Transfer Customer Online;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;675;transfer_dari_distributor_obat;0;0;contains;Generic fallback for Transfer dari Distributor Obat;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;716;service_ac_outlet_lainnya;0;0;contains;Generic fallback for Service AC Outlet Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;690;qris_merchant;0;0;contains;Generic fallback for QRIS Merchant;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;694;klaim_asuransi_lainnya;0;0;contains;Generic fallback for Klaim Asuransi Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;757;bon_perbaikan_outlet_lain;0;0;contains;Generic fallback for Bon Perbaikan Outlet Lain;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;755;pajak_mobil_operasional;0;0;contains;Generic fallback for Pajak Mobil Operasional;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;754;pajak_motor_operasional;0;0;contains;Generic fallback for Pajak Motor Operasional;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;743;supplier_atk_utama;0;0;contains;Generic fallback for Supplier ATK Utama;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;733;tunjangan_makan_lembur;0;0;contains;Generic fallback for Tunjangan Makan Lembur;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;789;printer_&_scanner;0;0;contains;Generic fallback for Printer & Scanner;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;723;meja_&_kursi;0;0;contains;Generic fallback for Meja & Kursi;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;634;rumat_outlet_lainnya;0;0;contains;Generic fallback for Rumat Outlet Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;724;rak_&_lemari;0;0;contains;Generic fallback for Rak & Lemari;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;802;distributor_alkes_lainnya;0;0;contains;Generic fallback for Distributor Alkes Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;722;obat_generic_lainnya;0;0;contains;Generic fallback for Obat Generic Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;727;paper_bag;0;0;contains;Generic fallback for Paper Bag;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;728;box_packaging;0;0;contains;Generic fallback for Box Packaging;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;730;gaji_part-time_outlet;0;0;contains;Generic fallback for Gaji Part-time Outlet;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;794;fee_freelancer_it;0;0;contains;Generic fallback for Fee Freelancer IT;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;731;gaji_part-time_admin;0;0;contains;Generic fallback for Gaji Part-time Admin;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;792;supplies_kebersihan;0;0;contains;Generic fallback for Supplies Kebersihan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;740;pbf_sekunder;0;0;contains;Generic fallback for PBF Sekunder;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;790;perangkat_jaringan;0;0;contains;Generic fallback for Perangkat Jaringan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;713;listrik_pln_outlet_lainnya;0;0;contains;Generic fallback for Listrik PLN Outlet Lainnya;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;854;cat_&_pengecatan;0;0;contains;Generic fallback for Cat & Pengecatan;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;725;furniture_display;0;0;contains;Generic fallback for Furniture Display;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;799;reimburse_parkir;0;0;contains;Generic fallback for Reimburse Parkir;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;745;biaya_materai;0;0;contains;Generic fallback for Biaya Materai;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;795;fee_freelancer_marketing;0;0;contains;Generic fallback for Fee Freelancer Marketing;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;800;reimburse_tol;0;0;contains;Generic fallback for Reimburse Tol;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;620;pelunasan_pinjaman_diterima_umum_umum;0;0;contains;Generic fallback for Pelunasan Pinjaman Diterima - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;575;sticker_&_spanduk_umum;0;0;contains;Generic fallback for Sticker & Spanduk - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;619;pinjaman_diberikan_umum_umum;0;0;contains;Generic fallback for Pinjaman Diberikan - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;623;piutang_umum_umum;0;0;contains;Generic fallback for Piutang - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;631;kas_kecil_outlet_umum_umum;0;0;contains;Generic fallback for Kas Kecil Outlet - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;645;dividen_umum_umum;0;0;contains;Generic fallback for Dividen - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;639;transaksi_tunai_umum_umum;0;0;contains;Generic fallback for Transaksi Tunai - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;729;brosur_&_leaflet_umum;0;0;contains;Generic fallback for Brosur & Leaflet - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;793;merchandise_umum;0;0;contains;Generic fallback for Merchandise - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;642;koreksi_transaksi_umum_umum;0;0;contains;Generic fallback for Koreksi Transaksi - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;719;biaya_kebersihan_&_keamanan_umum_umum;0;0;contains;Generic fallback for Biaya Kebersihan & Keamanan - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;718;biaya_sewa_umum_umum;0;0;contains;Generic fallback for Biaya Sewa - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;643;refund_&_return_umum_umum;0;0;contains;Generic fallback for Refund & Return - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;646;lain-lain_umum_umum;0;0;contains;Generic fallback for Lain-lain - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL
+1;644;investasi_umum_umum;0;0;contains;Generic fallback for Investasi - Umum - Umum;NULL;NULL;NULL;NULL;5;1;0;NULL;0;manual;50;0;0;NULL;NULL

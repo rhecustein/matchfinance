@@ -10,508 +10,321 @@ use Carbon\Carbon;
 class AccountKeywordSeeder extends Seeder
 {
     private $now;
-    private $companyId = 1;
 
     /**
      * Run the database seeds.
      * 
-     * FULL VERSION dengan Multi-Tier Priority & Negative Keywords
-     * Berdasarkan analisis 26,357 transaksi bank real
+     * CSV VERSION - Import from account_keywords.csv
+     * 
+     * Note: Seeder ini membutuhkan:
+     * - Companies table sudah terisi (CompanySeeder)
+     * - Accounts table sudah terisi (AccountSeeder)
+     * - File database/seeders/data/account_keywords.csv harus ada
      */
     public function run(): void
     {
-        $this->command->info('🔑 Seeding Account Keywords (FULL VERSION)...');
+        $this->command->info('🔑 Seeding Account Keywords from CSV...');
+        $this->command->newLine();
         
         $this->now = Carbon::now();
 
-        // Validasi company
-        $company = DB::table('companies')->where('id', $this->companyId)->first();
-        if (!$company) {
-            $this->command->error('❌ Company with ID = 1 not found!');
+        // Path ke file CSV
+        $csvPath = database_path('seeders/data/account_keywords.csv');
+        
+        // Validasi file CSV exists
+        if (!file_exists($csvPath)) {
+            $this->command->error('❌ CSV file not found at: ' . $csvPath);
+            $this->command->info('💡 Please create the file at: database/seeders/data/account_keywords.csv');
             return;
         }
 
-        // Ambil semua accounts
-        $accounts = DB::table('accounts')
-            ->where('company_id', $this->companyId)
-            ->get();
+        // Ambil companies
+        $companies = DB::table('companies')->get();
+        
+        if ($companies->isEmpty()) {
+            $this->command->error('❌ No companies found! Please run CompanySeeder first.');
+            return;
+        }
 
+        // Ambil accounts
+        $accounts = DB::table('accounts')->get();
+        
         if ($accounts->isEmpty()) {
             $this->command->error('❌ No accounts found! Please run AccountSeeder first.');
             return;
         }
 
-        $this->command->info("   Generating keywords for {$accounts->count()} outlets...");
+        // Baca dan parse CSV
+        $accountKeywords = $this->readCsvFile($csvPath);
+        
+        if ($accountKeywords->isEmpty()) {
+            $this->command->error('❌ No data found in CSV file!');
+            return;
+        }
+
+        $this->command->info("📄 Found {$accountKeywords->count()} account keywords in CSV");
         $this->command->newLine();
 
-        $keywords = [];
-        $totalKeywords = 0;
+        $allAccountKeywords = [];
+        $keywordsByAccount = [];
 
-        foreach ($accounts as $account) {
-            $accountKeywords = $this->generateKeywordsForAccount($account);
-            $keywords = array_merge($keywords, $accountKeywords);
-            $totalKeywords += count($accountKeywords);
+        // Generate account keywords untuk setiap company
+        foreach ($companies as $company) {
+            $this->command->info("   Processing company: {$company->name}");
             
-            $this->command->info("   ✓ {$account->code} - {$account->name}: " . count($accountKeywords) . " keywords");
+            // Filter account keywords untuk company ini dari CSV
+            $companyAccountKeywords = $accountKeywords->where('company_id', $company->id);
+            
+            foreach ($companyAccountKeywords as $accountKeyword) {
+                // Cari account_id yang sesuai untuk company ini
+                $account = $accounts->where('company_id', $company->id)
+                                   ->where('id', $accountKeyword['account_id'])
+                                   ->first();
+                
+                if (!$account) {
+                    $this->command->warn("   ⚠️  Account ID {$accountKeyword['account_id']} not found for company {$company->id}, skipping...");
+                    continue;
+                }
+
+                $allAccountKeywords[] = [
+                    'uuid' => Str::uuid(),
+                    'company_id' => $company->id,
+                    'account_id' => $account->id,
+                    'keyword' => $accountKeyword['keyword'],
+                    'is_regex' => $accountKeyword['is_regex'],
+                    'case_sensitive' => $accountKeyword['case_sensitive'],
+                    'match_type' => $accountKeyword['match_type'],
+                    'pattern_description' => $accountKeyword['pattern_description'],
+                    'priority' => $accountKeyword['priority'],
+                    'is_active' => true,
+                    'match_count' => 0,
+                    'last_matched_at' => null,
+                    'created_at' => $this->now->copy()->subDays(rand(5, 120)),
+                    'updated_at' => $this->now,
+                    'deleted_at' => null,
+                ];
+
+                // Track keywords per account untuk summary
+                $accountKey = "{$company->id}_{$account->id}";
+                if (!isset($keywordsByAccount[$accountKey])) {
+                    $keywordsByAccount[$accountKey] = [
+                        'account' => $account,
+                        'count' => 0
+                    ];
+                }
+                $keywordsByAccount[$accountKey]['count']++;
+            }
         }
 
-        // Insert ke database
-        DB::table('account_keywords')->insert($keywords);
+        if (!empty($allAccountKeywords)) {
+            // Insert in chunks to avoid memory issues
+            $chunks = array_chunk($allAccountKeywords, 200);
+            foreach ($chunks as $chunk) {
+                DB::table('account_keywords')->insert($chunk);
+            }
+            
+            $this->command->newLine();
+            $this->command->info('✅ Account Keywords seeded successfully!');
+            $this->command->info("   Total account keywords created: " . count($allAccountKeywords));
+            $this->command->info("   Companies: " . $companies->count());
+            
+            $this->displaySummary($keywordsByAccount);
+        } else {
+            $this->command->warn('⚠️  No account keywords created. Check if accounts and companies exist.');
+        }
+    }
+
+    /**
+     * Read and parse CSV file
+     * 
+     * @param string $csvPath
+     * @return \Illuminate\Support\Collection
+     */
+    private function readCsvFile(string $csvPath): \Illuminate\Support\Collection
+    {
+        $accountKeywords = collect();
+        
+        try {
+            $file = fopen($csvPath, 'r');
+            
+            if ($file === false) {
+                throw new \Exception('Failed to open CSV file');
+            }
+
+            // Skip header row
+            $header = fgetcsv($file, 0, ';'); // Delimiter adalah semicolon
+            
+            // Validasi header
+            $expectedHeaders = [
+                'company_id', 'account_id', 'keyword', 'is_regex',
+                'case_sensitive', 'match_type', 'pattern_description', 'priority'
+            ];
+            
+            if ($header !== $expectedHeaders) {
+                $this->command->warn('⚠️  CSV header format mismatch');
+                $this->command->warn('    Expected: ' . implode(', ', $expectedHeaders));
+                $this->command->warn('    Got: ' . implode(', ', $header));
+            }
+
+            // Baca setiap baris
+            $lineNumber = 1;
+            while (($row = fgetcsv($file, 0, ';')) !== false) {
+                $lineNumber++;
+                
+                // Skip empty rows
+                if (empty($row[0]) && empty($row[1]) && empty($row[2])) {
+                    continue;
+                }
+
+                // Validasi data minimal
+                if (count($row) < 8) {
+                    $this->command->warn("   ⚠️  Line {$lineNumber}: Incomplete data (expected 8 columns, got " . count($row) . "), skipping...");
+                    continue;
+                }
+
+                // Validasi match_type
+                $validMatchTypes = ['exact', 'contains', 'starts_with', 'ends_with', 'regex'];
+                $matchType = trim($row[5]);
+                
+                if (!in_array($matchType, $validMatchTypes)) {
+                    $this->command->warn("   ⚠️  Line {$lineNumber}: Invalid match_type '{$matchType}', skipping...");
+                    continue;
+                }
+
+                // Parse dan konversi data
+                $accountKeywords->push([
+                    'company_id' => (int) trim($row[0]),
+                    'account_id' => (int) trim($row[1]),
+                    'keyword' => trim($row[2]),
+                    'is_regex' => (bool) (int) trim($row[3]),
+                    'case_sensitive' => (bool) (int) trim($row[4]),
+                    'match_type' => $matchType,
+                    'pattern_description' => $this->parseNullableString($row[6]),
+                    'priority' => (int) trim($row[7]),
+                ]);
+            }
+
+            fclose($file);
+
+            return $accountKeywords;
+
+        } catch (\Exception $e) {
+            $this->command->error('❌ Error reading CSV: ' . $e->getMessage());
+            return collect();
+        }
+    }
+
+    /**
+     * Parse nullable string
+     */
+    private function parseNullableString($value): ?string
+    {
+        $trimmed = trim($value);
+        return ($trimmed === '' || strtoupper($trimmed) === 'NULL') ? null : $trimmed;
+    }
+
+    /**
+     * Display summary
+     */
+    private function displaySummary(array $keywordsByAccount): void
+    {
+        $this->command->newLine();
+        $this->command->info('📊 ACCOUNT KEYWORDS SUMMARY:');
+        $this->command->info('='.str_repeat('=', 79));
+
+        // Match type distribution
+        $matchTypes = DB::table('account_keywords')
+            ->select('match_type', DB::raw('count(*) as count'))
+            ->groupBy('match_type')
+            ->orderBy('count', 'desc')
+            ->get();
 
         $this->command->newLine();
-        $this->command->info('✅ Account Keywords seeded successfully!');
-        $this->command->info("   Total accounts: {$accounts->count()}");
-        $this->command->info("   Total keywords: {$totalKeywords}");
-        $this->command->info("   Avg keywords per account: " . round($totalKeywords / $accounts->count(), 1));
-    }
-
-    /**
-     * Generate comprehensive keywords untuk satu account
-     * Menggunakan 4-Tier Priority System
-     */
-    private function generateKeywordsForAccount($account): array
-    {
-        $keywords = [];
-        $name = $account->name;
-        $code = $account->code;
-
-        // Parse informasi outlet
-        $kfNumber = $this->extractKFNumber($name);
-        $location = $this->extractLocation($name);
-        $isResep = stripos($name, 'RESEP') !== false;
-        $isKlinik = stripos($name, 'KLINIK') !== false;
-        $isApotek = stripos($name, 'APOTEK') !== false;
-        $isPPO = stripos($name, 'PPO') !== false;
-        $isKDI = stripos($name, 'KDI') !== false;
-        $isKTIM = stripos($name, 'KTIM') !== false;
-
-        // ========================================
-        // TIER 1: EXACT MATCH (Priority 10)
-        // ========================================
-        
-        // 1.1 Kode outlet exact
-        $keywords[] = $this->makeKeyword($account->id, [
-            'keyword' => $code,
-            'match_type' => 'contains',
-            'priority' => 10,
-            'pattern_description' => "Exact code: {$code}",
-        ]);
-
-        // 1.2 Kode tanpa underscore
-        $codeNoUnderscore = str_replace('_', '', $code);
-        if ($codeNoUnderscore !== $code) {
-            $keywords[] = $this->makeKeyword($account->id, [
-                'keyword' => $codeNoUnderscore,
-                'match_type' => 'contains',
-                'priority' => 10,
-                'pattern_description' => "Code without underscore: {$codeNoUnderscore}",
-            ]);
+        $this->command->info('📋 Match Type Distribution:');
+        foreach ($matchTypes as $type) {
+            $bar = str_repeat('█', min((int)($type->count / 10), 30));
+            $this->command->info(sprintf("   %-15s %s (%d)", $type->match_type, $bar, $type->count));
         }
 
-        // 1.3 KF + Nomor lengkap (jika ada)
-        if ($kfNumber) {
-            // KF 0264 (dengan spasi)
-            $keywords[] = $this->makeKeyword($account->id, [
-                'keyword' => "KF {$kfNumber}",
-                'match_type' => 'contains',
-                'case_sensitive' => false,
-                'priority' => 10,
-                'pattern_description' => "KF + number with space: KF {$kfNumber}",
-            ]);
+        // Regex vs non-regex
+        $regexStats = DB::table('account_keywords')
+            ->select('is_regex', DB::raw('count(*) as count'))
+            ->groupBy('is_regex')
+            ->get();
 
-            // KF0264 (tanpa spasi)
-            $keywords[] = $this->makeKeyword($account->id, [
-                'keyword' => "KF{$kfNumber}",
-                'match_type' => 'contains',
-                'case_sensitive' => false,
-                'priority' => 10,
-                'pattern_description' => "KF + number without space: KF{$kfNumber}",
-            ]);
+        $this->command->newLine();
+        $this->command->info('🔍 Pattern Complexity:');
+        foreach ($regexStats as $stat) {
+            $type = $stat->is_regex ? 'Regex patterns' : 'Simple patterns';
+            $total = array_sum(array_column($regexStats->toArray(), 'count'));
+            $percent = $total > 0 ? round(($stat->count / $total) * 100, 1) : 0;
+            $this->command->info(sprintf("   %-20s %d (%s%%)", $type, $stat->count, $percent));
         }
 
-        // 1.4 Nama lokasi lengkap (case-insensitive)
-        if ($location && strlen($location) >= 4) {
-            $keywords[] = $this->makeKeyword($account->id, [
-                'keyword' => $location,
-                'match_type' => 'contains',
-                'case_sensitive' => false,
-                'priority' => 10,
-                'pattern_description' => "Full location name: {$location}",
-            ]);
+        // Priority distribution
+        $priorities = DB::table('account_keywords')
+            ->select('priority', DB::raw('count(*) as count'))
+            ->groupBy('priority')
+            ->orderBy('priority', 'desc')
+            ->get();
+
+        $this->command->newLine();
+        $this->command->info('🎯 Priority Distribution:');
+        foreach ($priorities as $prio) {
+            $bar = str_repeat('█', min((int)($prio->count / 10), 30));
+            $this->command->info(sprintf("   Priority %d: %s (%d)", $prio->priority, $bar, $prio->count));
         }
 
-        // ========================================
-        // TIER 2: STRONG MATCH (Priority 8-9)
-        // ========================================
-        
-        // 2.1 KF + Nomor tanpa leading zero
-        if ($kfNumber) {
-            $kfNumberNoZero = ltrim($kfNumber, '0');
-            if ($kfNumberNoZero !== $kfNumber && !empty($kfNumberNoZero)) {
-                $keywords[] = $this->makeKeyword($account->id, [
-                    'keyword' => "KF {$kfNumberNoZero}",
-                    'match_type' => 'contains',
-                    'case_sensitive' => false,
-                    'priority' => 9,
-                    'pattern_description' => "KF + number no zero: KF {$kfNumberNoZero}",
-                ]);
+        // Top accounts by keyword count
+        $topAccounts = DB::table('accounts as a')
+            ->join('account_keywords as ak', 'ak.account_id', '=', 'a.id')
+            ->select('a.code', 'a.name', DB::raw('count(ak.id) as keyword_count'))
+            ->groupBy('a.id', 'a.code', 'a.name')
+            ->orderBy('keyword_count', 'desc')
+            ->limit(10)
+            ->get();
 
-                $keywords[] = $this->makeKeyword($account->id, [
-                    'keyword' => "KF{$kfNumberNoZero}",
-                    'match_type' => 'contains',
-                    'case_sensitive' => false,
-                    'priority' => 9,
-                    'pattern_description' => "KF + number no zero (no space): KF{$kfNumberNoZero}",
-                ]);
-            }
+        $this->command->newLine();
+        $this->command->info('🏆 Top 10 Accounts by Keywords:');
+        foreach ($topAccounts as $idx => $account) {
+            $this->command->info(sprintf("   %2d. [%s] %-40s %d keywords", 
+                $idx + 1,
+                $account->code,
+                substr($account->name, 0, 40),
+                $account->keyword_count
+            ));
         }
 
-        // 2.2 Nomor saja (4 digit) - dengan negative keywords
-        if ($kfNumber && strlen($kfNumber) === 4) {
-            $keywords[] = $this->makeKeyword($account->id, [
-                'keyword' => $kfNumber,
-                'match_type' => 'contains',
-                'priority' => 8,
-                'pattern_description' => "Number only: {$kfNumber} (Context: after KF or in transaction code)",
-            ]);
+        // Case sensitive statistics
+        $caseStats = DB::table('account_keywords')
+            ->select('case_sensitive', DB::raw('count(*) as count'))
+            ->groupBy('case_sensitive')
+            ->get();
+
+        $this->command->newLine();
+        $this->command->info('🔤 Case Sensitivity:');
+        foreach ($caseStats as $stat) {
+            $type = $stat->case_sensitive ? 'Case sensitive' : 'Case insensitive';
+            $this->command->info(sprintf("   %-20s %d keywords", $type, $stat->count));
         }
 
-        // 2.3 Prefix spesifik + lokasi
-        if ($location) {
-            // LIPH KF + lokasi (untuk setoran)
-            $keywords[] = $this->makeKeyword($account->id, [
-                'keyword' => "LIPH KF {$location}",
-                'match_type' => 'contains',
-                'case_sensitive' => false,
-                'priority' => 9,
-                'pattern_description' => "LIPH prefix: LIPH KF {$location}",
-            ]);
+        // Average keywords per account
+        $totalKeywords = DB::table('account_keywords')->count();
+        $totalAccounts = DB::table('accounts')
+            ->whereIn('id', function($query) {
+                $query->select('account_id')
+                      ->from('account_keywords')
+                      ->distinct();
+            })
+            ->count();
 
-            // Variasi tanpa spasi
-            $locationNoSpace = str_replace(' ', '', $location);
-            if ($locationNoSpace !== $location) {
-                $keywords[] = $this->makeKeyword($account->id, [
-                    'keyword' => "LIPH KF{$locationNoSpace}",
-                    'match_type' => 'contains',
-                    'case_sensitive' => false,
-                    'priority' => 8,
-                    'pattern_description' => "LIPH no space: LIPH KF{$locationNoSpace}",
-                ]);
-            }
+        $avgKeywords = $totalAccounts > 0 ? round($totalKeywords / $totalAccounts, 1) : 0;
 
-            // KLINIK KF + lokasi (khusus untuk klinik)
-            if ($isKlinik) {
-                $keywords[] = $this->makeKeyword($account->id, [
-                    'keyword' => "KLINIK KF {$location}",
-                    'match_type' => 'contains',
-                    'case_sensitive' => false,
-                    'priority' => 9,
-                    'pattern_description' => "Klinik prefix: KLINIK KF {$location}",
-                ]);
-
-                $keywords[] = $this->makeKeyword($account->id, [
-                    'keyword' => "KLINIK {$location}",
-                    'match_type' => 'contains',
-                    'case_sensitive' => false,
-                    'priority' => 9,
-                    'pattern_description' => "Klinik location: KLINIK {$location}",
-                ]);
-            }
-
-            // QR + KF pattern
-            if ($kfNumber) {
-                $keywords[] = $this->makeKeyword($account->id, [
-                    'keyword' => "QR.*KF.*{$kfNumber}",
-                    'match_type' => 'regex',
-                    'is_regex' => true,
-                    'case_sensitive' => false,
-                    'priority' => 8,
-                    'pattern_description' => "QR pattern: QR...KF...{$kfNumber}",
-                ]);
-            }
-        }
-
-        // ========================================
-        // TIER 3: PARTIAL MATCH (Priority 6-7)
-        // ========================================
-        
-        // 3.1 Nama lokasi pendek (single word)
-        if ($location) {
-            $locationWords = preg_split('/[\s_]+/', $location);
-            foreach ($locationWords as $word) {
-                if (strlen($word) >= 4 && !in_array(strtoupper($word), ['RESEP', 'APOTEK', 'KLINIK'])) {
-                    $keywords[] = $this->makeKeyword($account->id, [
-                        'keyword' => $word,
-                        'match_type' => 'contains',
-                        'case_sensitive' => false,
-                        'priority' => 7,
-                        'pattern_description' => "Location word: {$word} (from {$location})",
-                    ]);
-                }
-            }
-        }
-
-        // 3.2 Typo umum & variasi
-        $typos = $this->getTypoVariations($location, $name);
-        foreach ($typos as $typo) {
-            $keywords[] = $this->makeKeyword($account->id, [
-                'keyword' => $typo['keyword'],
-                'match_type' => 'contains',
-                'case_sensitive' => false,
-                'priority' => 7,
-                'pattern_description' => "Typo/variation: {$typo['description']}",
-            ]);
-        }
-
-        // 3.3 Kode internal (pc, bs, bo, dll)
-        $internalCodes = $this->getInternalCodes($location, $code);
-        foreach ($internalCodes as $ic) {
-            $keywords[] = $this->makeKeyword($account->id, [
-                'keyword' => $ic,
-                'match_type' => 'contains',
-                'case_sensitive' => false,
-                'priority' => 6,
-                'pattern_description' => "Internal code: {$ic}",
-            ]);
-        }
-
-        // ========================================
-        // TIER 4: FALLBACK (Priority 5)
-        // ========================================
-        
-        // 4.1 Singkatan lokasi
-        $abbreviations = $this->getLocationAbbreviations($location);
-        foreach ($abbreviations as $abbr) {
-            $keywords[] = $this->makeKeyword($account->id, [
-                'keyword' => $abbr,
-                'match_type' => 'contains',
-                'case_sensitive' => false,
-                'priority' => 5,
-                'pattern_description' => "Abbreviation: {$abbr} for {$location}",
-            ]);
-        }
-
-        // ========================================
-        // SPECIAL CASES: RESEP, PPO, KDI, KTIM
-        // ========================================
-        
-        if ($isResep) {
-            $keywords = array_merge($keywords, $this->getResepKeywords($account->id, $kfNumber, $location));
-        }
-
-        if ($isPPO) {
-            $keywords[] = $this->makeKeyword($account->id, [
-                'keyword' => 'PPO',
-                'match_type' => 'contains',
-                'case_sensitive' => false,
-                'priority' => 9,
-                'pattern_description' => 'PPO outlet identifier',
-            ]);
-        }
-
-        if ($isKDI) {
-            $keywords[] = $this->makeKeyword($account->id, [
-                'keyword' => 'KDI',
-                'match_type' => 'contains',
-                'case_sensitive' => false,
-                'priority' => 10,
-                'pattern_description' => 'KDI (Kimia Diagnostika) identifier',
-            ]);
-        }
-
-        if ($isKTIM) {
-            $keywords[] = $this->makeKeyword($account->id, [
-                'keyword' => 'KTIM',
-                'match_type' => 'contains',
-                'case_sensitive' => false,
-                'priority' => 10,
-                'pattern_description' => 'KTIM (Kimia Farma Trading) identifier',
-            ]);
-        }
-
-        return $keywords;
-    }
-
-    /**
-     * Extract nomor KF dari nama outlet
-     */
-    private function extractKFNumber($name): ?string
-    {
-        if (preg_match('/KF[\s_]?(\d{4})/i', $name, $matches)) {
-            return $matches[1];
-        }
-        return null;
-    }
-
-    /**
-     * Extract nama lokasi dari nama outlet
-     */
-    private function extractLocation($name): ?string
-    {
-        // Remove KF number pattern
-        $cleaned = preg_replace('/KF[\s_]?\d{4}[\s_]?/i', '', $name);
-        
-        // Remove RESEP, APOTEK, PPO, KLINIK
-        $cleaned = preg_replace('/(RESEP|APOTEK|PPO|KLINIK)[\s_]?/i', '', $cleaned);
-        
-        // Trim
-        $cleaned = trim($cleaned);
-        
-        return !empty($cleaned) ? $cleaned : null;
-    }
-
-    /**
-     * Generate typo variations berdasarkan pola real dari database
-     */
-    private function getTypoVariations($location, $fullName): array
-    {
-        $variations = [];
-
-        if (!$location) return $variations;
-
-        $locationUpper = strtoupper($location);
-
-        // Specific typo patterns dari analisis data
-        $typoMap = [
-            'HARAPAN INDAH' => [
-                ['keyword' => 'HARAPAN INDA', 'description' => 'Common typo: INDA instead of INDAH']
-            ],
-            'WISMA ASRI' => [
-                ['keyword' => 'KFWISMA', 'description' => 'Concatenated: KF+WISMA'],
-                ['keyword' => 'KF WISMA', 'description' => 'Shortened: KF WISMA (without ASRI)'],
-                ['keyword' => 'WISMA', 'description' => 'Short form: WISMA only']
-            ],
-            'CIKARANG' => [
-                ['keyword' => 'CKRG', 'description' => 'Abbreviation: CKRG'],
-                ['keyword' => 'KF CKRG', 'description' => 'KF + abbreviation']
-            ],
-            'KALI ABANG' => [
-                ['keyword' => 'KALIABANG', 'description' => 'No space: KALIABANG']
-            ],
-            'CAKRA RAYA' => [
-                ['keyword' => 'CAKRARAYA', 'description' => 'No space: CAKRARAYA']
-            ],
-            'JATI ASIH' => [
-                ['keyword' => 'JATIASIH', 'description' => 'No space: JATIASIH']
-            ],
-        ];
-
-        if (isset($typoMap[$locationUpper])) {
-            $variations = $typoMap[$locationUpper];
-        }
-
-        return $variations;
-    }
-
-    /**
-     * Generate internal codes (pc, bs, bo, dll)
-     */
-    private function getInternalCodes($location, $code): array
-    {
-        $codes = [];
-
-        if (!$location) return $codes;
-
-        $locationLower = strtolower(str_replace(' ', '', $location));
-
-        // Pattern: "pc wisma", "bs kf granwis", "BO BEKASI"
-        $codes[] = "pc {$locationLower}";
-        $codes[] = "bs {$locationLower}";
-        $codes[] = "bo {$locationLower}";
-
-        return $codes;
-    }
-
-    /**
-     * Generate abbreviations
-     */
-    private function getLocationAbbreviations($location): array
-    {
-        $abbr = [];
-
-        if (!$location) return $abbr;
-
-        // Common abbreviations dari data
-        $abbrMap = [
-            'CIKARANG' => ['ckrg'],
-            'KALIMALANG' => ['krg'],
-            'GRANWIS' => ['grwis'],
-            'SUMMARECON' => ['summa'],
-        ];
-
-        $locationUpper = strtoupper($location);
-        if (isset($abbrMap[$locationUpper])) {
-            $abbr = $abbrMap[$locationUpper];
-        }
-
-        return $abbr;
-    }
-
-    /**
-     * Generate keywords khusus untuk outlet RESEP
-     */
-    private function getResepKeywords($accountId, $kfNumber, $location): array
-    {
-        $keywords = [];
-
-        // RESEP + nomor KF
-        if ($kfNumber) {
-            $keywords[] = $this->makeKeyword($accountId, [
-                'keyword' => "RESEP {$kfNumber}",
-                'match_type' => 'contains',
-                'case_sensitive' => false,
-                'priority' => 9,
-                'pattern_description' => "Resep pattern: RESEP {$kfNumber}",
-            ]);
-
-            $kfNumberNoZero = ltrim($kfNumber, '0');
-            if ($kfNumberNoZero !== $kfNumber) {
-                $keywords[] = $this->makeKeyword($accountId, [
-                    'keyword' => "RESEP {$kfNumberNoZero}",
-                    'match_type' => 'contains',
-                    'case_sensitive' => false,
-                    'priority' => 9,
-                    'pattern_description' => "Resep no zero: RESEP {$kfNumberNoZero}",
-                ]);
-            }
-        }
-
-        // RESEP + lokasi
-        if ($location) {
-            $keywords[] = $this->makeKeyword($accountId, [
-                'keyword' => "RESEP {$location}",
-                'match_type' => 'contains',
-                'case_sensitive' => false,
-                'priority' => 8,
-                'pattern_description' => "Resep location: RESEP {$location}",
-            ]);
-        }
-
-        return $keywords;
-    }
-
-    /**
-     * Helper untuk membuat keyword array
-     */
-    private function makeKeyword(int $accountId, array $data): array
-    {
-        $defaults = [
-            'uuid' => Str::uuid(),
-            'company_id' => $this->companyId,
-            'account_id' => $accountId,
-            'keyword' => '',
-            'is_regex' => false,
-            'case_sensitive' => false,
-            'match_type' => 'contains',
-            'pattern_description' => null,
-            'priority' => 5,
-            'is_active' => true,
-            'match_count' => 0,
-            'last_matched_at' => null,
-            'created_at' => $this->now,
-            'updated_at' => $this->now,
-        ];
-
-        return array_merge($defaults, $data);
+        $this->command->newLine();
+        $this->command->info("Total Account Keywords: {$totalKeywords}");
+        $this->command->info("Accounts with Keywords: {$totalAccounts}");
+        $this->command->info("Average Keywords per Account: {$avgKeywords}");
+        $this->command->newLine();
+        $this->command->info('💡 Account keywords are ready for Chart of Accounts matching!');
     }
 }

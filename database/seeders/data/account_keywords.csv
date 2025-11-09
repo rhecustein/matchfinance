@@ -1,0 +1,437 @@
+﻿company_id;account_id;keyword;is_regex;case_sensitive;match_type;pattern_description;priority
+1;1;A_01;0;0;contains;Exact code: A_01;10
+1;1;A01;0;0;contains;Code without underscore: A01;10
+1;1;KF 0264;0;0;contains;KF + number with space: KF 0264;10
+1;1;KF0264;0;0;contains;KF + number without space: KF0264;10
+1;1;NAROGONG;0;0;contains;Full location name: NAROGONG;10
+1;1;KF 264;0;0;contains;KF + number no zero: KF 264;9
+1;1;KF264;0;0;contains;KF + number no zero (no space): KF264;9
+1;1;264;0;0;contains;Number only: 0264 (Context: after KF or in transaction code);8
+1;1;LIPH KF NAROGONG;0;0;contains;LIPH prefix: LIPH KF NAROGONG;9
+1;1;QR.*KF.*0264;1;0;regex;QR pattern: QR...KF...0264;8
+1;1;NAROGONG;0;0;contains;Location word: NAROGONG (from NAROGONG);7
+1;1;pc narogong;0;0;contains;Internal code: pc narogong;6
+1;1;bs narogong;0;0;contains;Internal code: bs narogong;6
+1;1;bo narogong;0;0;contains;Internal code: bo narogong;6
+1;2;A_01I1;0;0;contains;Exact code: A_01I1;10
+1;2;A01I1;0;0;contains;Code without underscore: A01I1;10
+1;2;KF_264 SUZI;0;0;contains;Full location name: KF_264 SUZI;10
+1;2;LIPH KF KF_264 SUZI;0;0;contains;LIPH prefix: LIPH KF KF_264 SUZI;9
+1;2;LIPH KFKF_264SUZI;0;0;contains;LIPH no space: LIPH KFKF_264SUZI;8
+1;2;SUZI;0;0;contains;Location word: SUZI (from KF_264 SUZI);7
+1;2;pc kf_264suzi;0;0;contains;Internal code: pc kf_264suzi;6
+1;2;bs kf_264suzi;0;0;contains;Internal code: bs kf_264suzi;6
+1;2;bo kf_264suzi;0;0;contains;Internal code: bo kf_264suzi;6
+1;2;RESEP KF_264 SUZI;0;0;contains;Resep location: RESEP KF_264 SUZI;8
+1;3;A_02;0;0;contains;Exact code: A_02;10
+1;3;A02;0;0;contains;Code without underscore: A02;10
+1;3;KF 0330;0;0;contains;KF + number with space: KF 0330;10
+1;3;KF0330;0;0;contains;KF + number without space: KF0330;10
+1;3;HARAPAN INDAH;0;0;contains;Full location name: HARAPAN INDAH;10
+1;3;KF 330;0;0;contains;KF + number no zero: KF 330;9
+1;3;KF330;0;0;contains;KF + number no zero (no space): KF330;9
+1;3;330;0;0;contains;Number only: 0330 (Context: after KF or in transaction code);8
+1;3;LIPH KF HARAPAN INDAH;0;0;contains;LIPH prefix: LIPH KF HARAPAN INDAH;9
+1;3;LIPH KFHARAPANINDAH;0;0;contains;LIPH no space: LIPH KFHARAPANINDAH;8
+1;3;QR.*KF.*0330;1;0;regex;QR pattern: QR...KF...0330;8
+1;3;HARAPAN;0;0;contains;Location word: HARAPAN (from HARAPAN INDAH);7
+1;3;INDAH;0;0;contains;Location word: INDAH (from HARAPAN INDAH);7
+1;3;HARAPAN INDA;0;0;contains;Typo/variation: Common typo: INDA instead of INDAH;7
+1;3;pc harapanindah;0;0;contains;Internal code: pc harapanindah;6
+1;3;bs harapanindah;0;0;contains;Internal code: bs harapanindah;6
+1;3;bo harapanindah;0;0;contains;Internal code: bo harapanindah;6
+1;4;A_02I1;0;0;contains;Exact code: A_02I1;10
+1;4;A02I1;0;0;contains;Code without underscore: A02I1;10
+1;4;KF 0330;0;0;contains;KF + number with space: KF 0330;10
+1;4;KF0330;0;0;contains;KF + number without space: KF0330;10
+1;4;KF 330;0;0;contains;KF + number no zero: KF 330;9
+1;4;KF330;0;0;contains;KF + number no zero (no space): KF330;9
+1;4;330;0;0;contains;Number only: 0330 (Context: after KF or in transaction code);8
+1;4;LIPH KF HI;0;0;contains;LIPH prefix: LIPH KF HI;9
+1;4;QR.*KF.*0330;1;0;regex;QR pattern: QR...KF...0330;8
+1;4;pc hi;0;0;contains;Internal code: pc hi;6
+1;4;bs hi;0;0;contains;Internal code: bs hi;6
+1;4;bo hi;0;0;contains;Internal code: bo hi;6
+1;4;RESEP 0330;0;0;contains;Resep pattern: RESEP 0330;9
+1;4;RESEP 330;0;0;contains;Resep no zero: RESEP 330;9
+1;4;RESEP HI;0;0;contains;Resep location: RESEP HI;8
+1;5;A_03;0;0;contains;Exact code: A_03;10
+1;5;A03;0;0;contains;Code without underscore: A03;10
+1;5;KF 0340;0;0;contains;KF + number with space: KF 0340;10
+1;5;KF0340;0;0;contains;KF + number without space: KF0340;10
+1;5;CIKARANG;0;0;contains;Full location name: CIKARANG;10
+1;5;KF 340;0;0;contains;KF + number no zero: KF 340;9
+1;5;KF340;0;0;contains;KF + number no zero (no space): KF340;9
+1;5;340;0;0;contains;Number only: 0340 (Context: after KF or in transaction code);8
+1;5;LIPH KF CIKARANG;0;0;contains;LIPH prefix: LIPH KF CIKARANG;9
+1;5;QR.*KF.*0340;1;0;regex;QR pattern: QR...KF...0340;8
+1;5;CIKARANG;0;0;contains;Location word: CIKARANG (from CIKARANG);7
+1;5;CKRG;0;0;contains;Typo/variation: Abbreviation: CKRG;7
+1;5;KF CKRG;0;0;contains;Typo/variation: KF + abbreviation;7
+1;5;pc cikarang;0;0;contains;Internal code: pc cikarang;6
+1;5;bs cikarang;0;0;contains;Internal code: bs cikarang;6
+1;5;bo cikarang;0;0;contains;Internal code: bo cikarang;6
+1;5;ckrg;0;0;contains;Abbreviation: ckrg for CIKARANG;5
+1;6;A_03I1;0;0;contains;Exact code: A_03I1;10
+1;6;A03I1;0;0;contains;Code without underscore: A03I1;10
+1;6;KF 340 KC;0;0;contains;Full location name: KF 340 KC;10
+1;6;LIPH KF KF 340 KC;0;0;contains;LIPH prefix: LIPH KF KF 340 KC;9
+1;6;LIPH KFKF340KC;0;0;contains;LIPH no space: LIPH KFKF340KC;8
+1;6;pc kf340kc;0;0;contains;Internal code: pc kf340kc;6
+1;6;bs kf340kc;0;0;contains;Internal code: bs kf340kc;6
+1;6;bo kf340kc;0;0;contains;Internal code: bo kf340kc;6
+1;6;RESEP KF 340 KC;0;0;contains;Resep location: RESEP KF 340 KC;8
+1;7;A_04;0;0;contains;Exact code: A_04;10
+1;7;A04;0;0;contains;Code without underscore: A04;10
+1;7;KF 0347;0;0;contains;KF + number with space: KF 0347;10
+1;7;KF0347;0;0;contains;KF + number without space: KF0347;10
+1;7;PEKAYON;0;0;contains;Full location name: PEKAYON;10
+1;7;KF 347;0;0;contains;KF + number no zero: KF 347;9
+1;7;KF347;0;0;contains;KF + number no zero (no space): KF347;9
+1;7;347;0;0;contains;Number only: 0347 (Context: after KF or in transaction code);8
+1;7;LIPH KF PEKAYON;0;0;contains;LIPH prefix: LIPH KF PEKAYON;9
+1;7;QR.*KF.*0347;1;0;regex;QR pattern: QR...KF...0347;8
+1;7;PEKAYON;0;0;contains;Location word: PEKAYON (from PEKAYON);7
+1;7;pc pekayon;0;0;contains;Internal code: pc pekayon;6
+1;7;bs pekayon;0;0;contains;Internal code: bs pekayon;6
+1;7;bo pekayon;0;0;contains;Internal code: bo pekayon;6
+1;8;A_05;0;0;contains;Exact code: A_05;10
+1;8;A05;0;0;contains;Code without underscore: A05;10
+1;8;KF 0367;0;0;contains;KF + number with space: KF 0367;10
+1;8;KF0367;0;0;contains;KF + number without space: KF0367;10
+1;8;JATI ASIH;0;0;contains;Full location name: JATI ASIH;10
+1;8;KF 367;0;0;contains;KF + number no zero: KF 367;9
+1;8;KF367;0;0;contains;KF + number no zero (no space): KF367;9
+1;8;367;0;0;contains;Number only: 0367 (Context: after KF or in transaction code);8
+1;8;LIPH KF JATI ASIH;0;0;contains;LIPH prefix: LIPH KF JATI ASIH;9
+1;8;LIPH KFJATIASIH;0;0;contains;LIPH no space: LIPH KFJATIASIH;8
+1;8;QR.*KF.*0367;1;0;regex;QR pattern: QR...KF...0367;8
+1;8;JATI;0;0;contains;Location word: JATI (from JATI ASIH);7
+1;8;ASIH;0;0;contains;Location word: ASIH (from JATI ASIH);7
+1;8;JATIASIH;0;0;contains;Typo/variation: No space: JATIASIH;7
+1;8;pc jatiasih;0;0;contains;Internal code: pc jatiasih;6
+1;8;bs jatiasih;0;0;contains;Internal code: bs jatiasih;6
+1;8;bo jatiasih;0;0;contains;Internal code: bo jatiasih;6
+1;9;A_06;0;0;contains;Exact code: A_06;10
+1;9;A06;0;0;contains;Code without underscore: A06;10
+1;9;KF 0390;0;0;contains;KF + number with space: KF 0390;10
+1;9;KF0390;0;0;contains;KF + number without space: KF0390;10
+1;9;CAKUNG GEDE;0;0;contains;Full location name: CAKUNG GEDE;10
+1;9;KF 390;0;0;contains;KF + number no zero: KF 390;9
+1;9;KF390;0;0;contains;KF + number no zero (no space): KF390;9
+1;9;390;0;0;contains;Number only: 0390 (Context: after KF or in transaction code);8
+1;9;LIPH KF CAKUNG GEDE;0;0;contains;LIPH prefix: LIPH KF CAKUNG GEDE;9
+1;9;LIPH KFCAKUNGGEDE;0;0;contains;LIPH no space: LIPH KFCAKUNGGEDE;8
+1;9;QR.*KF.*0390;1;0;regex;QR pattern: QR...KF...0390;8
+1;9;CAKUNG;0;0;contains;Location word: CAKUNG (from CAKUNG GEDE);7
+1;9;GEDE;0;0;contains;Location word: GEDE (from CAKUNG GEDE);7
+1;9;pc cakunggede;0;0;contains;Internal code: pc cakunggede;6
+1;9;bs cakunggede;0;0;contains;Internal code: bs cakunggede;6
+1;9;bo cakunggede;0;0;contains;Internal code: bo cakunggede;6
+1;10;A_07;0;0;contains;Exact code: A_07;10
+1;10;A07;0;0;contains;Code without underscore: A07;10
+1;10;KF 0405;0;0;contains;KF + number with space: KF 0405;10
+1;10;KF0405;0;0;contains;KF + number without space: KF0405;10
+1;10;DAAN;0;0;contains;Full location name: DAAN;10
+1;10;KF 405;0;0;contains;KF + number no zero: KF 405;9
+1;10;KF405;0;0;contains;KF + number no zero (no space): KF405;9
+1;10;405;0;0;contains;Number only: 0405 (Context: after KF or in transaction code);8
+1;10;LIPH KF DAAN;0;0;contains;LIPH prefix: LIPH KF DAAN;9
+1;10;QR.*KF.*0405;1;0;regex;QR pattern: QR...KF...0405;8
+1;10;DAAN;0;0;contains;Location word: DAAN (from DAAN);7
+1;10;pc daan;0;0;contains;Internal code: pc daan;6
+1;10;bs daan;0;0;contains;Internal code: bs daan;6
+1;10;bo daan;0;0;contains;Internal code: bo daan;6
+1;11;A_08;0;0;contains;Exact code: A_08;10
+1;11;A08;0;0;contains;Code without underscore: A08;10
+1;11;KF 0406;0;0;contains;KF + number with space: KF 0406;10
+1;11;KF0406;0;0;contains;KF + number without space: KF0406;10
+1;11;KALIMALANG;0;0;contains;Full location name: KALIMALANG;10
+1;11;KF 406;0;0;contains;KF + number no zero: KF 406;9
+1;11;KF406;0;0;contains;KF + number no zero (no space): KF406;9
+1;11;406;0;0;contains;Number only: 0406 (Context: after KF or in transaction code);8
+1;11;LIPH KF KALIMALANG;0;0;contains;LIPH prefix: LIPH KF KALIMALANG;9
+1;11;QR.*KF.*0406;1;0;regex;QR pattern: QR...KF...0406;8
+1;11;KALIMALANG;0;0;contains;Location word: KALIMALANG (from KALIMALANG);7
+1;11;pc kalimalang;0;0;contains;Internal code: pc kalimalang;6
+1;11;bs kalimalang;0;0;contains;Internal code: bs kalimalang;6
+1;11;bo kalimalang;0;0;contains;Internal code: bo kalimalang;6
+1;11;krg;0;0;contains;Abbreviation: krg for KALIMALANG;5
+1;12;A_09;0;0;contains;Exact code: A_09;10
+1;12;A09;0;0;contains;Code without underscore: A09;10
+1;12;KF 0007;0;0;contains;KF + number with space: KF 0007;10
+1;12;KF0007;0;0;contains;KF + number without space: KF0007;10
+1;12;CIBITUNG;0;0;contains;Full location name: CIBITUNG;10
+1;12;KF 7;0;0;contains;KF + number no zero: KF 7;9
+1;12;KF7;0;0;contains;KF + number no zero (no space): KF7;9
+1;12;7;0;0;contains;Number only: 0007 (Context: after KF or in transaction code);8
+1;12;LIPH KF CIBITUNG;0;0;contains;LIPH prefix: LIPH KF CIBITUNG;9
+1;12;QR.*KF.*0007;1;0;regex;QR pattern: QR...KF...0007;8
+1;12;CIBITUNG;0;0;contains;Location word: CIBITUNG (from CIBITUNG);7
+1;12;pc cibitung;0;0;contains;Internal code: pc cibitung;6
+1;12;bs cibitung;0;0;contains;Internal code: bs cibitung;6
+1;12;bo cibitung;0;0;contains;Internal code: bo cibitung;6
+1;13;A_091I;0;0;contains;Exact code: A_091I;10
+1;13;A091I;0;0;contains;Code without underscore: A091I;10
+1;13;KF 007 CB;0;0;contains;Full location name: KF 007 CB;10
+1;13;LIPH KF KF 007 CB;0;0;contains;LIPH prefix: LIPH KF KF 007 CB;9
+1;13;LIPH KFKF007CB;0;0;contains;LIPH no space: LIPH KFKF007CB;8
+1;13;pc kf007cb;0;0;contains;Internal code: pc kf007cb;6
+1;13;bs kf007cb;0;0;contains;Internal code: bs kf007cb;6
+1;13;bo kf007cb;0;0;contains;Internal code: bo kf007cb;6
+1;13;RESEP KF 007 CB;0;0;contains;Resep location: RESEP KF 007 CB;8
+1;14;A_11;0;0;contains;Exact code: A_11;10
+1;14;A11;0;0;contains;Code without underscore: A11;10
+1;14;KF 0456;0;0;contains;KF + number with space: KF 0456;10
+1;14;KF0456;0;0;contains;KF + number without space: KF0456;10
+1;14;GRANWIS;0;0;contains;Full location name: GRANWIS;10
+1;14;KF 456;0;0;contains;KF + number no zero: KF 456;9
+1;14;KF456;0;0;contains;KF + number no zero (no space): KF456;9
+1;14;456;0;0;contains;Number only: 0456 (Context: after KF or in transaction code);8
+1;14;LIPH KF GRANWIS;0;0;contains;LIPH prefix: LIPH KF GRANWIS;9
+1;14;QR.*KF.*0456;1;0;regex;QR pattern: QR...KF...0456;8
+1;14;GRANWIS;0;0;contains;Location word: GRANWIS (from GRANWIS);7
+1;14;pc granwis;0;0;contains;Internal code: pc granwis;6
+1;14;bs granwis;0;0;contains;Internal code: bs granwis;6
+1;14;bo granwis;0;0;contains;Internal code: bo granwis;6
+1;14;grwis;0;0;contains;Abbreviation: grwis for GRANWIS;5
+1;15;A_13;0;0;contains;Exact code: A_13;10
+1;15;A13;0;0;contains;Code without underscore: A13;10
+1;15;KF 0503;0;0;contains;KF + number with space: KF 0503;10
+1;15;KF0503;0;0;contains;KF + number without space: KF0503;10
+1;15;TAMAN MINI;0;0;contains;Full location name: TAMAN MINI;10
+1;15;KF 503;0;0;contains;KF + number no zero: KF 503;9
+1;15;KF503;0;0;contains;KF + number no zero (no space): KF503;9
+1;15;503;0;0;contains;Number only: 0503 (Context: after KF or in transaction code);8
+1;15;LIPH KF TAMAN MINI;0;0;contains;LIPH prefix: LIPH KF TAMAN MINI;9
+1;15;LIPH KFTAMANMINI;0;0;contains;LIPH no space: LIPH KFTAMANMINI;8
+1;15;QR.*KF.*0503;1;0;regex;QR pattern: QR...KF...0503;8
+1;15;TAMAN;0;0;contains;Location word: TAMAN (from TAMAN MINI);7
+1;15;MINI;0;0;contains;Location word: MINI (from TAMAN MINI);7
+1;15;pc tamanmini;0;0;contains;Internal code: pc tamanmini;6
+1;15;bs tamanmini;0;0;contains;Internal code: bs tamanmini;6
+1;15;bo tamanmini;0;0;contains;Internal code: bo tamanmini;6
+1;16;A_15;0;0;contains;Exact code: A_15;10
+1;16;A15;0;0;contains;Code without underscore: A15;10
+1;16;KF 0586;0;0;contains;KF + number with space: KF 0586;10
+1;16;KF0586;0;0;contains;KF + number without space: KF0586;10
+1;16;CILEUNGSI;0;0;contains;Full location name: CILEUNGSI;10
+1;16;KF 586;0;0;contains;KF + number no zero: KF 586;9
+1;16;KF586;0;0;contains;KF + number no zero (no space): KF586;9
+1;16;586;0;0;contains;Number only: 0586 (Context: after KF or in transaction code);8
+1;16;LIPH KF CILEUNGSI;0;0;contains;LIPH prefix: LIPH KF CILEUNGSI;9
+1;16;QR.*KF.*0586;1;0;regex;QR pattern: QR...KF...0586;8
+1;16;CILEUNGSI;0;0;contains;Location word: CILEUNGSI (from CILEUNGSI);7
+1;16;pc cileungsi;0;0;contains;Internal code: pc cileungsi;6
+1;16;bs cileungsi;0;0;contains;Internal code: bs cileungsi;6
+1;16;bo cileungsi;0;0;contains;Internal code: bo cileungsi;6
+1;17;A_20;0;0;contains;Exact code: A_20;10
+1;17;A20;0;0;contains;Code without underscore: A20;10
+1;17;KF 0591;0;0;contains;KF + number with space: KF 0591;10
+1;17;KF0591;0;0;contains;KF + number without space: KF0591;10
+1;17;ZAMRUD;0;0;contains;Full location name: ZAMRUD;10
+1;17;KF 591;0;0;contains;KF + number no zero: KF 591;9
+1;17;KF591;0;0;contains;KF + number no zero (no space): KF591;9
+1;17;591;0;0;contains;Number only: 0591 (Context: after KF or in transaction code);8
+1;17;LIPH KF ZAMRUD;0;0;contains;LIPH prefix: LIPH KF ZAMRUD;9
+1;17;QR.*KF.*0591;1;0;regex;QR pattern: QR...KF...0591;8
+1;17;ZAMRUD;0;0;contains;Location word: ZAMRUD (from ZAMRUD);7
+1;17;pc zamrud;0;0;contains;Internal code: pc zamrud;6
+1;17;bs zamrud;0;0;contains;Internal code: bs zamrud;6
+1;17;bo zamrud;0;0;contains;Internal code: bo zamrud;6
+1;18;A_21;0;0;contains;Exact code: A_21;10
+1;18;A21;0;0;contains;Code without underscore: A21;10
+1;18;KF 0624;0;0;contains;KF + number with space: KF 0624;10
+1;18;KF0624;0;0;contains;KF + number without space: KF0624;10
+1;18;CISC;0;0;contains;Full location name: CISC;10
+1;18;KF 624;0;0;contains;KF + number no zero: KF 624;9
+1;18;KF624;0;0;contains;KF + number no zero (no space): KF624;9
+1;18;624;0;0;contains;Number only: 0624 (Context: after KF or in transaction code);8
+1;18;LIPH KF CISC;0;0;contains;LIPH prefix: LIPH KF CISC;9
+1;18;QR.*KF.*0624;1;0;regex;QR pattern: QR...KF...0624;8
+1;18;CISC;0;0;contains;Location word: CISC (from CISC);7
+1;18;pc cisc;0;0;contains;Internal code: pc cisc;6
+1;18;bs cisc;0;0;contains;Internal code: bs cisc;6
+1;18;bo cisc;0;0;contains;Internal code: bo cisc;6
+1;19;A_22;0;0;contains;Exact code: A_22;10
+1;19;A22;0;0;contains;Code without underscore: A22;10
+1;19;KF 0618;0;0;contains;KF + number with space: KF 0618;10
+1;19;KF0618;0;0;contains;KF + number without space: KF0618;10
+1;19;KRANJI;0;0;contains;Full location name: KRANJI;10
+1;19;KF 618;0;0;contains;KF + number no zero: KF 618;9
+1;19;KF618;0;0;contains;KF + number no zero (no space): KF618;9
+1;19;618;0;0;contains;Number only: 0618 (Context: after KF or in transaction code);8
+1;19;LIPH KF KRANJI;0;0;contains;LIPH prefix: LIPH KF KRANJI;9
+1;19;QR.*KF.*0618;1;0;regex;QR pattern: QR...KF...0618;8
+1;19;KRANJI;0;0;contains;Location word: KRANJI (from KRANJI);7
+1;19;pc kranji;0;0;contains;Internal code: pc kranji;6
+1;19;bs kranji;0;0;contains;Internal code: bs kranji;6
+1;19;bo kranji;0;0;contains;Internal code: bo kranji;6
+1;20;A_23;0;0;contains;Exact code: A_23;10
+1;20;A23;0;0;contains;Code without underscore: A23;10
+1;20;KF 0810;0;0;contains;KF + number with space: KF 0810;10
+1;20;KF0810;0;0;contains;KF + number without space: KF0810;10
+1;20;KINTAMANI;0;0;contains;Full location name: KINTAMANI;10
+1;20;KF 810;0;0;contains;KF + number no zero: KF 810;9
+1;20;KF810;0;0;contains;KF + number no zero (no space): KF810;9
+1;20;810;0;0;contains;Number only: 0810 (Context: after KF or in transaction code);8
+1;20;LIPH KF KINTAMANI;0;0;contains;LIPH prefix: LIPH KF KINTAMANI;9
+1;20;QR.*KF.*0810;1;0;regex;QR pattern: QR...KF...0810;8
+1;20;KINTAMANI;0;0;contains;Location word: KINTAMANI (from KINTAMANI);7
+1;20;pc kintamani;0;0;contains;Internal code: pc kintamani;6
+1;20;bs kintamani;0;0;contains;Internal code: bs kintamani;6
+1;20;bo kintamani;0;0;contains;Internal code: bo kintamani;6
+1;21;A_24;0;0;contains;Exact code: A_24;10
+1;21;A24;0;0;contains;Code without underscore: A24;10
+1;21;KF 0944;0;0;contains;KF + number with space: KF 0944;10
+1;21;KF0944;0;0;contains;KF + number without space: KF0944;10
+1;21;PARUNGKD;0;0;contains;Full location name: PARUNGKD;10
+1;21;KF 944;0;0;contains;KF + number no zero: KF 944;9
+1;21;KF944;0;0;contains;KF + number no zero (no space): KF944;9
+1;21;944;0;0;contains;Number only: 0944 (Context: after KF or in transaction code);8
+1;21;LIPH KF PARUNGKD;0;0;contains;LIPH prefix: LIPH KF PARUNGKD;9
+1;21;QR.*KF.*0944;1;0;regex;QR pattern: QR...KF...0944;8
+1;21;PARUNGKD;0;0;contains;Location word: PARUNGKD (from PARUNGKD);7
+1;21;pc parungkd;0;0;contains;Internal code: pc parungkd;6
+1;21;bs parungkd;0;0;contains;Internal code: bs parungkd;6
+1;21;bo parungkd;0;0;contains;Internal code: bo parungkd;6
+1;22;A_25;0;0;contains;Exact code: A_25;10
+1;22;A25;0;0;contains;Code without underscore: A25;10
+1;22;KF KALIMANGSIS;0;0;contains;Full location name: KF KALIMANGSIS;10
+1;22;LIPH KF KF KALIMANGSIS;0;0;contains;LIPH prefix: LIPH KF KF KALIMANGSIS;9
+1;22;LIPH KFKFKALIMANGSIS;0;0;contains;LIPH no space: LIPH KFKFKALIMANGSIS;8
+1;22;KALIMANGSIS;0;0;contains;Location word: KALIMANGSIS (from KF KALIMANGSIS);7
+1;22;pc kfkalimangsis;0;0;contains;Internal code: pc kfkalimangsis;6
+1;22;bs kfkalimangsis;0;0;contains;Internal code: bs kfkalimangsis;6
+1;22;bo kfkalimangsis;0;0;contains;Internal code: bo kfkalimangsis;6
+1;23;A_26;0;0;contains;Exact code: A_26;10
+1;23;A26;0;0;contains;Code without underscore: A26;10
+1;23;KTIM EKA 47;0;0;contains;Full location name: KTIM EKA 47;10
+1;23;LIPH KF KTIM EKA 47;0;0;contains;LIPH prefix: LIPH KF KTIM EKA 47;9
+1;23;LIPH KFKTIMEKA47;0;0;contains;LIPH no space: LIPH KFKTIMEKA47;8
+1;23;KTIM;0;0;contains;Location word: KTIM (from KTIM EKA 47);7
+1;23;pc ktimeka47;0;0;contains;Internal code: pc ktimeka47;6
+1;23;bs ktimeka47;0;0;contains;Internal code: bs ktimeka47;6
+1;23;bo ktimeka47;0;0;contains;Internal code: bo ktimeka47;6
+1;23;KTIM;0;0;contains;KTIM (Kimia Farma Trading) identifier;10
+1;24;A_29;0;0;contains;Exact code: A_29;10
+1;24;A29;0;0;contains;Code without underscore: A29;10
+1;24;KF_WISMA ASRI;0;0;contains;Full location name: KF_WISMA ASRI;10
+1;24;LIPH KF KF_WISMA ASRI;0;0;contains;LIPH prefix: LIPH KF KF_WISMA ASRI;9
+1;24;LIPH KFKF_WISMAASRI;0;0;contains;LIPH no space: LIPH KFKF_WISMAASRI;8
+1;24;WISMA;0;0;contains;Location word: WISMA (from KF_WISMA ASRI);7
+1;24;ASRI;0;0;contains;Location word: ASRI (from KF_WISMA ASRI);7
+1;24;pc kf_wismaasri;0;0;contains;Internal code: pc kf_wismaasri;6
+1;24;bs kf_wismaasri;0;0;contains;Internal code: bs kf_wismaasri;6
+1;24;bo kf_wismaasri;0;0;contains;Internal code: bo kf_wismaasri;6
+1;25;A_30;0;0;contains;Exact code: A_30;10
+1;25;A30;0;0;contains;Code without underscore: A30;10
+1;25;KF CAKRA RAYA;0;0;contains;Full location name: KF CAKRA RAYA;10
+1;25;LIPH KF KF CAKRA RAYA;0;0;contains;LIPH prefix: LIPH KF KF CAKRA RAYA;9
+1;25;LIPH KFKFCAKRARAYA;0;0;contains;LIPH no space: LIPH KFKFCAKRARAYA;8
+1;25;CAKRA;0;0;contains;Location word: CAKRA (from KF CAKRA RAYA);7
+1;25;RAYA;0;0;contains;Location word: RAYA (from KF CAKRA RAYA);7
+1;25;pc kfcakraraya;0;0;contains;Internal code: pc kfcakraraya;6
+1;25;bs kfcakraraya;0;0;contains;Internal code: bs kfcakraraya;6
+1;25;bo kfcakraraya;0;0;contains;Internal code: bo kfcakraraya;6
+1;26;A_301I;0;0;contains;Exact code: A_301I;10
+1;26;A301I;0;0;contains;Code without underscore: A301I;10
+1;26;KF CAKRA RAYA;0;0;contains;Full location name: KF CAKRA RAYA;10
+1;26;LIPH KF KF CAKRA RAYA;0;0;contains;LIPH prefix: LIPH KF KF CAKRA RAYA;9
+1;26;LIPH KFKFCAKRARAYA;0;0;contains;LIPH no space: LIPH KFKFCAKRARAYA;8
+1;26;CAKRA;0;0;contains;Location word: CAKRA (from KF CAKRA RAYA);7
+1;26;RAYA;0;0;contains;Location word: RAYA (from KF CAKRA RAYA);7
+1;26;pc kfcakraraya;0;0;contains;Internal code: pc kfcakraraya;6
+1;26;bs kfcakraraya;0;0;contains;Internal code: bs kfcakraraya;6
+1;26;bo kfcakraraya;0;0;contains;Internal code: bo kfcakraraya;6
+1;26;RESEP KF CAKRA RAYA;0;0;contains;Resep location: RESEP KF CAKRA RAYA;8
+1;27;A_31;0;0;contains;Exact code: A_31;10
+1;27;A31;0;0;contains;Code without underscore: A31;10
+1;27;KF KALI ABANG BEKASI;0;0;contains;Full location name: KF KALI ABANG BEKASI;10
+1;27;LIPH KF KF KALI ABANG BEKASI;0;0;contains;LIPH prefix: LIPH KF KF KALI ABANG BEKASI;9
+1;27;LIPH KFKFKALIABANGBEKASI;0;0;contains;LIPH no space: LIPH KFKFKALIABANGBEKASI;8
+1;27;KALI;0;0;contains;Location word: KALI (from KF KALI ABANG BEKASI);7
+1;27;ABANG;0;0;contains;Location word: ABANG (from KF KALI ABANG BEKASI);7
+1;27;BEKASI;0;0;contains;Location word: BEKASI (from KF KALI ABANG BEKASI);7
+1;27;pc kfkaliabangbekasi;0;0;contains;Internal code: pc kfkaliabangbekasi;6
+1;27;bs kfkaliabangbekasi;0;0;contains;Internal code: bs kfkaliabangbekasi;6
+1;27;bo kfkaliabangbekasi;0;0;contains;Internal code: bo kfkaliabangbekasi;6
+1;28;A_311I;0;0;contains;Exact code: A_311I;10
+1;28;A311I;0;0;contains;Code without underscore: A311I;10
+1;28;KF SUZUKI PULOGADUNG;0;0;contains;Full location name: KF SUZUKI PULOGADUNG;10
+1;28;LIPH KF KF SUZUKI PULOGADUNG;0;0;contains;LIPH prefix: LIPH KF KF SUZUKI PULOGADUNG;9
+1;28;LIPH KFKFSUZUKIPULOGADUNG;0;0;contains;LIPH no space: LIPH KFKFSUZUKIPULOGADUNG;8
+1;28;SUZUKI;0;0;contains;Location word: SUZUKI (from KF SUZUKI PULOGADUNG);7
+1;28;PULOGADUNG;0;0;contains;Location word: PULOGADUNG (from KF SUZUKI PULOGADUNG);7
+1;28;pc kfsuzukipulogadung;0;0;contains;Internal code: pc kfsuzukipulogadung;6
+1;28;bs kfsuzukipulogadung;0;0;contains;Internal code: bs kfsuzukipulogadung;6
+1;28;bo kfsuzukipulogadung;0;0;contains;Internal code: bo kfsuzukipulogadung;6
+1;28;PPO;0;0;contains;PPO outlet identifier;9
+1;29;A_32;0;0;contains;Exact code: A_32;10
+1;29;A32;0;0;contains;Code without underscore: A32;10
+1;29;KF JATI RAHAYU;0;0;contains;Full location name: KF JATI RAHAYU;10
+1;29;LIPH KF KF JATI RAHAYU;0;0;contains;LIPH prefix: LIPH KF KF JATI RAHAYU;9
+1;29;LIPH KFKFJATIRAHAYU;0;0;contains;LIPH no space: LIPH KFKFJATIRAHAYU;8
+1;29;JATI;0;0;contains;Location word: JATI (from KF JATI RAHAYU);7
+1;29;RAHAYU;0;0;contains;Location word: RAHAYU (from KF JATI RAHAYU);7
+1;29;pc kfjatirahayu;0;0;contains;Internal code: pc kfjatirahayu;6
+1;29;bs kfjatirahayu;0;0;contains;Internal code: bs kfjatirahayu;6
+1;29;bo kfjatirahayu;0;0;contains;Internal code: bo kfjatirahayu;6
+1;30;A_35;0;0;contains;Exact code: A_35;10
+1;30;A35;0;0;contains;Code without underscore: A35;10
+1;30;KDI MITRA PERKEBUNAN;0;0;contains;Full location name: KDI MITRA PERKEBUNAN;10
+1;30;LIPH KF KDI MITRA PERKEBUNAN;0;0;contains;LIPH prefix: LIPH KF KDI MITRA PERKEBUNAN;9
+1;30;LIPH KFKDIMITRAPERKEBUNAN;0;0;contains;LIPH no space: LIPH KFKDIMITRAPERKEBUNAN;8
+1;30;MITRA;0;0;contains;Location word: MITRA (from KDI MITRA PERKEBUNAN);7
+1;30;PERKEBUNAN;0;0;contains;Location word: PERKEBUNAN (from KDI MITRA PERKEBUNAN);7
+1;30;pc kdimitraperkebunan;0;0;contains;Internal code: pc kdimitraperkebunan;6
+1;30;bs kdimitraperkebunan;0;0;contains;Internal code: bs kdimitraperkebunan;6
+1;30;bo kdimitraperkebunan;0;0;contains;Internal code: bo kdimitraperkebunan;6
+1;30;KDI;0;0;contains;KDI (Kimia Diagnostika) identifier;10
+1;31;A_36;0;0;contains;Exact code: A_36;10
+1;31;A36;0;0;contains;Code without underscore: A36;10
+1;31;KF RAWA LUMBU;0;0;contains;Full location name: KF RAWA LUMBU;10
+1;31;LIPH KF KF RAWA LUMBU;0;0;contains;LIPH prefix: LIPH KF KF RAWA LUMBU;9
+1;31;LIPH KFKFRAWALUMBU;0;0;contains;LIPH no space: LIPH KFKFRAWALUMBU;8
+1;31;RAWA;0;0;contains;Location word: RAWA (from KF RAWA LUMBU);7
+1;31;LUMBU;0;0;contains;Location word: LUMBU (from KF RAWA LUMBU);7
+1;31;pc kfrawalumbu;0;0;contains;Internal code: pc kfrawalumbu;6
+1;31;bs kfrawalumbu;0;0;contains;Internal code: bs kfrawalumbu;6
+1;31;bo kfrawalumbu;0;0;contains;Internal code: bo kfrawalumbu;6
+1;32;A_37;0;0;contains;Exact code: A_37;10
+1;32;A37;0;0;contains;Code without underscore: A37;10
+1;32;KF SEPAT;0;0;contains;Full location name: KF SEPAT;10
+1;32;LIPH KF KF SEPAT;0;0;contains;LIPH prefix: LIPH KF KF SEPAT;9
+1;32;LIPH KFKFSEPAT;0;0;contains;LIPH no space: LIPH KFKFSEPAT;8
+1;32;SEPAT;0;0;contains;Location word: SEPAT (from KF SEPAT);7
+1;32;pc kfsepat;0;0;contains;Internal code: pc kfsepat;6
+1;32;bs kfsepat;0;0;contains;Internal code: bs kfsepat;6
+1;32;bo kfsepat;0;0;contains;Internal code: bo kfsepat;6
+1;33;A_41;0;0;contains;Exact code: A_41;10
+1;33;A41;0;0;contains;Code without underscore: A41;10
+1;33;KF BOULEVARD;0;0;contains;Full location name: KF BOULEVARD;10
+1;33;LIPH KF KF BOULEVARD;0;0;contains;LIPH prefix: LIPH KF KF BOULEVARD;9
+1;33;LIPH KFKFBOULEVARD;0;0;contains;LIPH no space: LIPH KFKFBOULEVARD;8
+1;33;BOULEVARD;0;0;contains;Location word: BOULEVARD (from KF BOULEVARD);7
+1;33;pc kfboulevard;0;0;contains;Internal code: pc kfboulevard;6
+1;33;bs kfboulevard;0;0;contains;Internal code: bs kfboulevard;6
+1;33;bo kfboulevard;0;0;contains;Internal code: bo kfboulevard;6
+1;34;A_45;0;0;contains;Exact code: A_45;10
+1;34;A45;0;0;contains;Code without underscore: A45;10
+1;34;KF SUMMARECON;0;0;contains;Full location name: KF SUMMARECON;10
+1;34;LIPH KF KF SUMMARECON;0;0;contains;LIPH prefix: LIPH KF KF SUMMARECON;9
+1;34;LIPH KFKFSUMMARECON;0;0;contains;LIPH no space: LIPH KFKFSUMMARECON;8
+1;34;SUMMARECON;0;0;contains;Location word: SUMMARECON (from KF SUMMARECON);7
+1;34;pc kfsummarecon;0;0;contains;Internal code: pc kfsummarecon;6
+1;34;bs kfsummarecon;0;0;contains;Internal code: bs kfsummarecon;6
+1;34;bo kfsummarecon;0;0;contains;Internal code: bo kfsummarecon;6
+1;35;A_49;0;0;contains;Exact code: A_49;10
+1;35;A49;0;0;contains;Code without underscore: A49;10
+1;35;KF KOTA SERANG;0;0;contains;Full location name: KF KOTA SERANG;10
+1;35;LIPH KF KF KOTA SERANG;0;0;contains;LIPH prefix: LIPH KF KF KOTA SERANG;9
+1;35;LIPH KFKFKOTASERANG;0;0;contains;LIPH no space: LIPH KFKFKOTASERANG;8
+1;35;KOTA;0;0;contains;Location word: KOTA (from KF KOTA SERANG);7
+1;35;SERANG;0;0;contains;Location word: SERANG (from KF KOTA SERANG);7
+1;35;pc kfkotaserang;0;0;contains;Internal code: pc kfkotaserang;6
+1;35;bs kfkotaserang;0;0;contains;Internal code: bs kfkotaserang;6
+1;35;bo kfkotaserang;0;0;contains;Internal code: bo kfkotaserang;6

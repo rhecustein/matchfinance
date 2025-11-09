@@ -10,119 +10,291 @@ use Carbon\Carbon;
 class AccountSeeder extends Seeder
 {
     private $now;
-    private $companyId = 1; // Static company_id
 
     /**
      * Run the database seeds.
      * 
-     * Note: Seeder ini untuk Accounts (Outlet) berdasarkan data gambar
-     * Company ID = 1 (Static)
+     * CSV VERSION - Import from accounts.csv
+     * 
+     * Note: Seeder ini membutuhkan:
+     * - Companies table sudah terisi (CompanySeeder)
+     * - File database/seeders/data/accounts.csv harus ada
      */
     public function run(): void
     {
-        $this->command->info('🏪 Seeding Accounts (Outlets)...');
+        $this->command->info('🏪 Seeding Accounts from CSV...');
+        $this->command->newLine();
         
         $this->now = Carbon::now();
 
-        // Cek apakah company_id = 1 ada
-        $company = DB::table('companies')->where('id', $this->companyId)->first();
+        // Path ke file CSV
+        $csvPath = database_path('seeders/data/accounts.csv');
         
-        if (!$company) {
-            $this->command->error('❌ Company with ID = 1 not found! Please run CompanySeeder first.');
+        // Validasi file CSV exists
+        if (!file_exists($csvPath)) {
+            $this->command->error('❌ CSV file not found at: ' . $csvPath);
+            $this->command->info('💡 Please create the file at: database/seeders/data/accounts.csv');
             return;
         }
 
-        $this->command->info("   Company: {$company->name}");
-
-        // Data Outlets dari gambar
-        $outlets = $this->getOutletsData();
-
-        $accounts = [];
-        foreach ($outlets as $outlet) {
-            $accounts[] = [
-                'uuid' => Str::uuid(),
-                'company_id' => $this->companyId,
-                'name' => $outlet['name'],
-                'code' => $outlet['code'],
-                'description' => "Outlet {$outlet['name']}",
-                'account_type' => 'revenue', // Semua outlet = revenue account
-                'color' => $this->getRandomColor(),
-                'priority' => 5,
-                'is_active' => true,
-                'created_at' => $this->now,
-                'updated_at' => $this->now,
-            ];
+        // Ambil companies
+        $companies = DB::table('companies')->get();
+        
+        if ($companies->isEmpty()) {
+            $this->command->error('❌ No companies found! Please run CompanySeeder first.');
+            return;
         }
 
-        // Insert ke database
-        DB::table('accounts')->insert($accounts);
+        // Baca dan parse CSV
+        $accounts = $this->readCsvFile($csvPath);
+        
+        if ($accounts->isEmpty()) {
+            $this->command->error('❌ No data found in CSV file!');
+            return;
+        }
+
+        $this->command->info("📄 Found {$accounts->count()} accounts in CSV");
+        $this->command->newLine();
+
+        $allAccounts = [];
+
+        // Generate accounts untuk setiap company
+        foreach ($companies as $company) {
+            $this->command->info("   Processing company: {$company->name}");
+            
+            // Filter accounts untuk company ini dari CSV
+            $companyAccounts = $accounts->where('company_id', $company->id);
+            
+            if ($companyAccounts->isEmpty()) {
+                $this->command->warn("   ⚠️  No accounts found for company {$company->id}");
+                continue;
+            }
+
+            foreach ($companyAccounts as $account) {
+                $allAccounts[] = [
+                    'uuid' => Str::uuid(),
+                    'company_id' => $company->id,
+                    'name' => $account['name'],
+                    'code' => $account['code'],
+                    'description' => $account['description'],
+                    'account_type' => $account['account_type'],
+                    'color' => $this->getColorByType($account['account_type']),
+                    'priority' => $this->getPriorityByType($account['account_type']),
+                    'is_active' => true,
+                    'created_at' => $this->now->copy()->subDays(rand(30, 180)),
+                    'updated_at' => $this->now,
+                    'deleted_at' => null,
+                ];
+            }
+        }
+
+        if (!empty($allAccounts)) {
+            // Insert in chunks to avoid memory issues
+            $chunks = array_chunk($allAccounts, 50);
+            foreach ($chunks as $chunk) {
+                DB::table('accounts')->insert($chunk);
+            }
+            
+            $this->command->newLine();
+            $this->command->info('✅ Accounts seeded successfully!');
+            $this->command->info("   Total accounts created: " . count($allAccounts));
+            $this->command->info("   Companies: " . $companies->count());
+            
+            $this->displaySummary();
+        } else {
+            $this->command->warn('⚠️  No accounts created. Check if companies exist.');
+        }
+    }
+
+    /**
+     * Read and parse CSV file
+     * 
+     * @param string $csvPath
+     * @return \Illuminate\Support\Collection
+     */
+    private function readCsvFile(string $csvPath): \Illuminate\Support\Collection
+    {
+        $accounts = collect();
+        
+        try {
+            $file = fopen($csvPath, 'r');
+            
+            if ($file === false) {
+                throw new \Exception('Failed to open CSV file');
+            }
+
+            // Skip header row
+            $header = fgetcsv($file, 0, ';'); // Delimiter adalah semicolon
+            
+            // Validasi header
+            $expectedHeaders = ['company_id', 'name', 'code', 'description', 'account_type'];
+            if ($header !== $expectedHeaders) {
+                $this->command->warn('⚠️  CSV header format: expected ' . implode(', ', $expectedHeaders));
+                $this->command->warn('    Got: ' . implode(', ', $header));
+            }
+
+            // Baca setiap baris
+            $lineNumber = 1;
+            while (($row = fgetcsv($file, 0, ';')) !== false) {
+                $lineNumber++;
+                
+                // Skip empty rows
+                if (empty($row[0]) && empty($row[1]) && empty($row[2])) {
+                    continue;
+                }
+
+                // Validasi data
+                if (count($row) < 5) {
+                    $this->command->warn("   ⚠️  Line {$lineNumber}: Incomplete data, skipping...");
+                    continue;
+                }
+
+                // Validasi account_type
+                $validTypes = ['asset', 'liability', 'equity', 'revenue', 'expense'];
+                $accountType = trim($row[4]);
+                
+                if (!in_array($accountType, $validTypes)) {
+                    $this->command->warn("   ⚠️  Line {$lineNumber}: Invalid account_type '{$accountType}', skipping...");
+                    continue;
+                }
+
+                $accounts->push([
+                    'company_id' => (int) trim($row[0]),
+                    'name' => trim($row[1]),
+                    'code' => trim($row[2]),
+                    'description' => trim($row[3]),
+                    'account_type' => $accountType,
+                ]);
+            }
+
+            fclose($file);
+
+            return $accounts;
+
+        } catch (\Exception $e) {
+            $this->command->error('❌ Error reading CSV: ' . $e->getMessage());
+            return collect();
+        }
+    }
+
+    /**
+     * Get color based on account type
+     * 
+     * @param string $accountType
+     * @return string
+     */
+    private function getColorByType(string $accountType): string
+    {
+        $colorMap = [
+            'asset' => '#10B981',      // Green - Asset
+            'liability' => '#EF4444',  // Red - Liability
+            'equity' => '#8B5CF6',     // Purple - Equity
+            'revenue' => '#3B82F6',    // Blue - Revenue
+            'expense' => '#F59E0B',    // Amber - Expense
+        ];
+
+        return $colorMap[$accountType] ?? '#6B7280'; // Default Gray
+    }
+
+    /**
+     * Get priority based on account type
+     * 
+     * @param string $accountType
+     * @return int
+     */
+    private function getPriorityByType(string $accountType): int
+    {
+        $priorityMap = [
+            'revenue' => 10,   // Highest priority
+            'expense' => 9,
+            'asset' => 8,
+            'liability' => 7,
+            'equity' => 6,
+        ];
+
+        return $priorityMap[$accountType] ?? 5; // Default priority
+    }
+
+    /**
+     * Display summary
+     */
+    private function displaySummary(): void
+    {
+        $this->command->newLine();
+        $this->command->info('📊 ACCOUNTS SUMMARY:');
+        $this->command->info('='.str_repeat('=', 79));
+
+        // Account type distribution
+        $typeDistribution = DB::table('accounts')
+            ->select('account_type', DB::raw('count(*) as count'))
+            ->groupBy('account_type')
+            ->orderBy('count', 'desc')
+            ->get();
 
         $this->command->newLine();
-        $this->command->info('✅ Accounts seeded successfully!');
-        $this->command->info("   Total outlets: " . count($accounts));
-        $this->command->info("   Company ID: {$this->companyId}");
-    }
-
-    /**
-     * Data Outlets dari gambar yang diberikan
-     */
-    private function getOutletsData(): array
-    {
-        return [
-            ['code' => 'A_01', 'name' => 'KF 0264 NAROGONG'],
-            ['code' => 'A_01I1', 'name' => 'KF_264 RESEP SUZI'],
-            ['code' => 'A_02', 'name' => 'KF 0330 HARAPAN INDAH'],
-            ['code' => 'A_02I1', 'name' => 'KF 0330 RESEP HI'],
-            ['code' => 'A_03', 'name' => 'KF 0340 CIKARANG'],
-            ['code' => 'A_03I1', 'name' => 'KF 340 RESEP KC'],
-            ['code' => 'A_04', 'name' => 'KF 0347 PEKAYON'],
-            ['code' => 'A_05', 'name' => 'KF 0367 JATI ASIH'],
-            ['code' => 'A_06', 'name' => 'KF 0390 CAKUNG GEDE'],
-            ['code' => 'A_07', 'name' => 'KF 0405 DAAN'],
-            ['code' => 'A_08', 'name' => 'KF 0406 KALIMALANG'],
-            ['code' => 'A_09', 'name' => 'KF 0007 CIBITUNG'],
-            ['code' => 'A_091I', 'name' => 'KF 007 RESEP CB'],
-            ['code' => 'A_11', 'name' => 'KF 0456 GRANWIS'],
-            ['code' => 'A_13', 'name' => 'KF 0503 TAMAN MINI'],
-            ['code' => 'A_15', 'name' => 'KF 0586 CILEUNGSI'],
-            ['code' => 'A_20', 'name' => 'KF 0591_ZAMRUD'],
-            ['code' => 'A_21', 'name' => 'KF 0624 CISC'],
-            ['code' => 'A_22', 'name' => 'KF 0618 KRANJI'],
-            ['code' => 'A_23', 'name' => 'KF 0810 KINTAMANI'],
-            ['code' => 'A_24', 'name' => 'KF 0944 PARUNGKD'],
-            ['code' => 'A_25', 'name' => 'KF KALIMANGSIS'],
-            ['code' => 'A_26', 'name' => 'KTIM EKA 47'],
-            ['code' => 'A_29', 'name' => 'KF_WISMA ASRI'],
-            ['code' => 'A_30', 'name' => 'KF CAKRA RAYA'],
-            ['code' => 'A_301I', 'name' => 'KF CAKRA RAYA RESEP'],
-            ['code' => 'A_31', 'name' => 'KF KALI ABANG BEKASI'],
-            ['code' => 'A_311I', 'name' => 'PPO KF SUZUKI PULOGADUNG'],
-            ['code' => 'A_32', 'name' => 'KF JATI RAHAYU'],
-            ['code' => 'A_35', 'name' => 'KDI MITRA PERKEBUNAN'],
-            ['code' => 'A_36', 'name' => 'KF RAWA LUMBU'],
-            ['code' => 'A_37', 'name' => 'KF SEPAT'],
-            ['code' => 'A_41', 'name' => 'KF BOULEVARD'],
-            ['code' => 'A_45', 'name' => 'APOTEK KF SUMMARECON'],
-            ['code' => 'A_49', 'name' => 'KF KOTA SERANG'],
-        ];
-    }
-
-    /**
-     * Generate random color untuk UI
-     */
-    private function getRandomColor(): string
-    {
-        $colors = [
-            '#3B82F6', // Blue
-            '#10B981', // Green
-            '#F59E0B', // Amber
-            '#EF4444', // Red
-            '#8B5CF6', // Purple
-            '#EC4899', // Pink
-            '#06B6D4', // Cyan
-            '#84CC16', // Lime
+        $this->command->info('💼 Account Type Distribution:');
+        
+        $typeIcons = [
+            'asset' => '💰',
+            'liability' => '📊',
+            'equity' => '💎',
+            'revenue' => '💵',
+            'expense' => '💸',
         ];
 
-        return $colors[array_rand($colors)];
+        foreach ($typeDistribution as $type) {
+            $icon = $typeIcons[$type->account_type] ?? '📋';
+            $bar = str_repeat('█', min((int)($type->count / 2), 30));
+            $this->command->info(sprintf("   %s %-12s %s (%d)", 
+                $icon,
+                ucfirst($type->account_type), 
+                $bar, 
+                $type->count
+            ));
+        }
+
+        // Top 10 accounts
+        $topAccounts = DB::table('accounts')
+            ->select('name', 'code', 'account_type')
+            ->orderBy('priority', 'desc')
+            ->orderBy('name')
+            ->limit(10)
+            ->get();
+
+        $this->command->newLine();
+        $this->command->info('🏆 Top 10 Accounts (by priority):');
+        foreach ($topAccounts as $idx => $account) {
+            $this->command->info(sprintf("   %2d. [%s] %-40s (%s)", 
+                $idx + 1,
+                $account->code,
+                substr($account->name, 0, 40),
+                strtoupper($account->account_type)
+            ));
+        }
+
+        // Company distribution
+        $companyDistribution = DB::table('accounts as a')
+            ->join('companies as c', 'c.id', '=', 'a.company_id')
+            ->select('c.name as company_name', DB::raw('count(a.id) as count'))
+            ->groupBy('c.id', 'c.name')
+            ->get();
+
+        $this->command->newLine();
+        $this->command->info('🏢 Accounts per Company:');
+        foreach ($companyDistribution as $dist) {
+            $this->command->info(sprintf("   %-30s %d accounts", 
+                $dist->company_name, 
+                $dist->count
+            ));
+        }
+
+        $total = DB::table('accounts')->count();
+        $activeCount = DB::table('accounts')->where('is_active', true)->count();
+        
+        $this->command->newLine();
+        $this->command->info("Total Accounts: {$total}");
+        $this->command->info("Active Accounts: {$activeCount}");
+        $this->command->newLine();
+        $this->command->info('💡 Accounts are ready for Chart of Accounts mapping!');
     }
 }
